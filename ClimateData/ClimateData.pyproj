@@ -30,10 +30,10 @@
     <Folder Include="data\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="data\climdiv-avgtmp.txt" />
-    <Content Include="data\climdiv-maxtmp.txt" />
-    <Content Include="data\climdiv-mintmp.txt" />
-    <Content Include="data\climdiv-precip.txt" />
+    <Content Include="data\climdiv-avgtmp.csv" />
+    <Content Include="data\climdiv-maxtmp.csv" />
+    <Content Include="data\climdiv-mintmp.csv" />
+    <Content Include="data\climdiv-precip.csv" />
     <Content Include="data\county-readme.txt" />
     <Content Include="data\county-to-climdivs.txt" />
     <Content Include="data\divisional-readme.txt" />
