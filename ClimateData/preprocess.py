@@ -36,7 +36,7 @@ if __name__ == '__main__':
             dff = pd.DataFrame(df, columns=cols)
         else:
             df.columns = cols
-            # Insure id parity here! It's just assumed right now
+            # Insure id parity here! 
             for v1, v2 in zip(dff.iloc[:,0], df.iloc[:,0]):
                 if v1 != v2:
                     raise RuntimeError('Invalid Data Join')
