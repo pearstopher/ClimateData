@@ -24,7 +24,7 @@ if __name__ == '__main__':
         for m in months:
             cols.append(f'{prefix}-{m}')
 
-        df = pd.read_csv(f'{datadir}climdiv-{filename}.csv', delimiter='  ', header=None, index_col=False, usecols=icols, dtype=d)
+        df = pd.read_csv(f'{datadir}climdiv-{filename}.csv', delimiter=',', header=None, index_col=False, usecols=icols, dtype=d)
         
         # Remove datatype field, since it's the same throughout the entirity of each file
         s = df.iloc[:,0]
@@ -48,3 +48,4 @@ if __name__ == '__main__':
 
         #df.to_csv(f'{datadir}{filename}.csv', header=False, index=False)
     dff.to_csv(f'{datadir}complete.csv', index=False)
+    print('Succesful merge!')
