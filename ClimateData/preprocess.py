@@ -32,13 +32,17 @@ if __name__ == '__main__':
         df.iloc[:,0] = s
 
         if i == 0:
+            # Add USA Country code
+            cc = pd.DataFrame(['01']*len(df), dtype=(str))
+            df.iloc[:,0] = cc.iloc[:,0].str[:] + df.iloc[:,0].str[:]
+
             df.columns = cols
             dff = pd.DataFrame(df, columns=cols)
         else:
             df.columns = cols
             # Insure id parity here! 
             for v1, v2 in zip(dff.iloc[:,0], df.iloc[:,0]):
-                if v1 != v2:
+                if v1[2:] != v2:
                     raise RuntimeError('Invalid Data Join')
 
             df = df.iloc[:,1:]
