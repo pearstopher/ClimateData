@@ -36,12 +36,15 @@ if __name__ == '__main__':
             cc = pd.DataFrame(['01']*len(df), dtype=(str))
             df.iloc[:,0] = cc.iloc[:,0].str[:] + df.iloc[:,0].str[:]
 
+            # Add columns (along with id column this first time)
             df.columns = cols
             dff = pd.DataFrame(df, columns=cols)
         else:
+            # Add columns
             df.columns = cols
             # Insure id parity here! 
             for v1, v2 in zip(dff.iloc[:,0], df.iloc[:,0]):
+                # Don't compare country code as it hasn't been added to anything but the primary id
                 if v1[2:] != v2:
                     raise RuntimeError('Invalid Data Join')
 
