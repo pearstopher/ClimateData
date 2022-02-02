@@ -50,6 +50,10 @@ if __name__ == '__main__':
 
         print(dff)
 
+        # Create individual files
         #df.to_csv(f'{datadir}{filename}.csv', header=False, index=False)
+
+    # WARNING: If you open this file in Excel without specifying the first 
+    # column is a string, it will remove all the first zeros in the ID column
     dff.to_csv(f'{datadir}complete.csv', index=False)
     print('Succesful merge!')
