@@ -1,0 +1,7 @@
+POSTAL_FIPS_ID is the code where digits
+	0-1 - State
+	3-5 - county
+
+
+TODO: Identify and how to convert these to coordinates
+NCDC_FIPS_ID & CLIMDIV_ID

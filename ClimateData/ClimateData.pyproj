@@ -33,6 +33,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="data\processed\county-to-climdivs.csv" />
+    <Content Include="data\processed\NotesOn-county-to-climdiv.txt" />
     <Content Include="data\raw\climdiv-avgtmp.csv" />
     <Content Include="data\raw\climdiv-maxtmp.csv" />
     <Content Include="data\raw\climdiv-mintmp.csv" />
