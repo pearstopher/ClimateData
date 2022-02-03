@@ -28,12 +28,15 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="data\" />
+    <Folder Include="data\processed\" />
+    <Folder Include="data\raw\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="data\climdiv-avgtmp.csv" />
-    <Content Include="data\climdiv-maxtmp.csv" />
-    <Content Include="data\climdiv-mintmp.csv" />
-    <Content Include="data\climdiv-precip.csv" />
+    <Content Include="data\processed\county-to-climdivs.csv" />
+    <Content Include="data\raw\climdiv-avgtmp.csv" />
+    <Content Include="data\raw\climdiv-maxtmp.csv" />
+    <Content Include="data\raw\climdiv-mintmp.csv" />
+    <Content Include="data\raw\climdiv-precip.csv" />
     <Content Include="data\county-readme.txt" />
     <Content Include="data\county-to-climdivs.txt" />
     <Content Include="data\divisional-readme.txt" />

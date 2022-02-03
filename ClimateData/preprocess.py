@@ -4,7 +4,8 @@ import csv
 import numpy as np
 import pandas as pd
 
-datadir = './data/'
+datadir = './data/raw/'
+outputDir = './data/processed/'
 order = ['min', 'avg', 'max', 'precip']
 filesToStrip = ['mintmp', 'avgtmp', 'maxtmp', 'precip']
 colsPrefix = ['tmp-avg', 'tmp-max', 'tmp-min', 'precip']
@@ -58,5 +59,5 @@ if __name__ == '__main__':
 
     # WARNING: If you open this file in Excel without specifying the first 
     # column is a string, it will remove all the first zeros in the ID column
-    dff.to_csv(f'{datadir}complete.csv', index=False)
+    dff.to_csv(f'{outputDir}complete.csv', index=False)
     print('Succesful merge!')
