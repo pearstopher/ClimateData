@@ -21,9 +21,9 @@ if __name__ == '__main__':
     for filename, prefix, i in zip(filesToStrip, colsPrefix, range(len(colsPrefix))):
 
         # Build column names
-        cols = ['id']
+        cols = ['id Integer PRIMARY KEY']
         for m in months:
-            cols.append(f'{prefix}-{m}')
+            cols.append(f'{prefix}-{m} Float')
 
         df = pd.read_csv(f'{datadir}climdiv-{filename}.csv', delimiter=',', header=None, index_col=False, usecols=icols, dtype=d)
         
