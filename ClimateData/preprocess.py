@@ -12,11 +12,8 @@ colsPrefix = ['tmp-avg', 'tmp-max', 'tmp-min', 'precip']
 months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 if __name__ == '__main__':
-    icols = [i for i in range(13)]
-    dtypes = [str] + [str] * 12
-    d = pd.DataFrame(np.vstack([icols, dtypes])).to_dict(orient='records')[1]
-
     dff = pd.DataFrame()
+    icols = [i for i in range(13)]
 
     for filename, prefix, i in zip(filesToStrip, colsPrefix, range(len(colsPrefix))):
 
