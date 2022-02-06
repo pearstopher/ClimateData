@@ -1,64 +1,35 @@
 import psycopg2
 import csv
+import os
+from os import listdir
+import json
+from psycopg2.extensions import AsIs
 
+outputDir = './data/processed/'
 
-def setup_database():
+def setup_database_old():
     conn = psycopg2.connect("host=localhost dbname=postgres user=postgres password=PASSWORD")
     cur = conn.cursor()
-    
+
+    tableName  = os.path.basename('county_codes.csv').split(".")[0]
+    print(tableName)
+    with open(f'{outputDir}county_codes.csv', 'r', encoding='utf-8-sig') as f:
+            reader = csv.reader(f)
+            columns = next(reader)
+    column_string = ", ".join(columns)
+    print(column_string)
+
     cur.execute("""
-        CREATE TABLE climate_data(
-        id INTEGER PRIMARY KEY,
-        "tmp-avg-Jan" FLOAT, 
-        "tmp-avg-Feb" FLOAT,
-        "tmp-avg-Mar" FLOAT,
-        "tmp-avg-Apr" FLOAT,
-        "tmp-avg-May" FLOAT,
-        "tmp-avg-Jun" FLOAT,
-        "tmp-avg-Jul" FLOAT,
-        "tmp-avg-Aug" FLOAT,
-        "tmp-avg-Sep" FLOAT,
-        "tmp-avg-Oct" FLOAT,
-        "tmp-avg-Nov" FLOAT,
-        "tmp-avg-Dec" FLOAT,
-        "tmp-max-Jan" FLOAT,
-        "tmp-max-Feb" FLOAT,
-        "tmp-max-Mar" FLOAT,
-        "tmp-max-Apr" FLOAT,
-        "tmp-max-May" FLOAT,
-        "tmp-max-Jun" FLOAT,
-        "tmp-max-Jul" FLOAT,
-        "tmp-max-Aug" FLOAT,
-        "tmp-max-Sep" FLOAT,
-        "tmp-max-Oct" FLOAT,
-        "tmp-max-Nov" FLOAT,
-        "tmp-max-Dec" FLOAT,
-        "tmp-min-Jan" FLOAT,
-        "tmp-min-Feb" FLOAT,
-        "tmp-min-Mar" FLOAT,
-        "tmp-min-Apr" FLOAT,
-        "tmp-min-May" FLOAT,
-        "tmp-min-Jun" FLOAT,
-        "tmp-min-Jul" FLOAT,
-        "tmp-min-Aug" FLOAT,
-        "tmp-min-Sep" FLOAT,
-        "tmp-min-Oct" FLOAT,
-        "tmp-min-Nov" FLOAT,
-        "tmp-min-Dec" FLOAT,
-        "precip-Jan" FLOAT,
-        "precip-Feb" FLOAT,
-        "precip-Mar" FLOAT,
-        "precip-Apr" FLOAT,
-        "precip-May" FLOAT,
-        "precip-Jun" FLOAT,
-        "precip-Jul" FLOAT,
-        "precip-Aug" FLOAT,
-        "precip-Sep" FLOAT,
-        "precip-Oct" FLOAT,
-        "precip-Nov" FLOAT,
-        "precip-Dec" FLOAT
-    )
-    """)
+        CREATE TABLE %s(
+        %s)
+        """,
+        [AsIs(tableName), AsIs(column_string),])
+
+    conn.commit()
+
+    with open(f'{outputDir}county_codes.csv', 'r', encoding='utf-8-sig') as f:
+        next(f) # Skip the header row.
+        cur.copy_from(f, f'{tableName}', sep=',')
     conn.commit()
 
 def load_data():
@@ -70,4 +41,37 @@ def load_data():
     conn.commit()
 
 
-load_data()
+def setup_database():
+    filenames = find_csv_filenames(f'{outputDir}')
+    for fileName in filenames:
+        print(fileName)
+        tableName  = os.path.basename(fileName).split(".")[0]
+        print(tableName)
+
+        with open(f'{outputDir}{fileName}', 'r', encoding='utf-8-sig') as f:
+            reader = csv.reader(f)
+            columns = next(reader)
+        column_string = ", ".join(columns)
+        print(column_string)
+        #conn = psycopg2.connect("host=localhost dbname=postgres user=postgres password=PASSWORD")
+        #cur = conn.cursor()
+        #cur.execute("""
+        #CREATE TABLE %s(
+        #%s)
+        #""",
+        #[AsIs(tableName), AsIs(column_string),])
+        #conn.commit()
+
+        #with open(f'{outputDir}{fileName}', 'r', encoding='utf-8-sig') as f:
+        #    next(f) # Skip the header row.
+        #    cur.copy_from(f, f'{tableName}', sep=',')
+        #conn.commit()
+
+def find_csv_filenames( path_to_dir, suffix=".csv" ):
+    filenames = listdir(path_to_dir)
+    return [ filename for filename in filenames if filename.endswith( suffix ) ]
+
+
+
+
+setup_database()
