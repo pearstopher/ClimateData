@@ -66,6 +66,7 @@ from https://www.nrcs.usda.gov/wps/portal/nrcs/detail/national/home/?cid=nrcs143
 01129	Washington	AL
 01131	Wilcox	AL
 01133	Winston	AL
+02105	Hoonah-Angoon	AK
 02013	Aleutians East	AK
 02016	Aleutians West	AK
 02020	Anchorage	AK
@@ -79,17 +80,22 @@ from https://www.nrcs.usda.gov/wps/portal/nrcs/detail/national/home/?cid=nrcs143
 02122	Kenai Peninsula	AK
 02130	Ketchikan Gateway	AK
 02150	Kodiak Island	AK
+02158	Kusilvak	AK
 02164	Lake and Peninsula	AK
 02170	Matanuska-Susitna	AK
 02180	Nome	AK
 02185	North Slope	AK
 02188	Northwest Arctic	AK
+02195	Petersburg	AK
+02198	Prince of Wales-Hyder	AK
 02201	Prince of Wales-Outer Ketchikan	AK
 02220	Sitka	AK
+02230	Skagway	AK
 02232	Skagway-Hoonah-Angoon	AK
 02240	Southeast Fairbanks	AK
 02261	Valdez-Cordova	AK
 02270	Wade Hampton	AK
+02275	Wrangell City and Borough	AK
 02280	Wrangell-Petersburg	AK
 02282	Yakutat	AK
 02290	Yukon-Koyukuk	AK
@@ -248,6 +254,7 @@ from https://www.nrcs.usda.gov/wps/portal/nrcs/detail/national/home/?cid=nrcs143
 08009	Baca	CO
 08011	Bent	CO
 08013	Boulder	CO
+08014	Broomfield	CO
 08015	Chaffee	CO
 08017	Cheyenne	CO
 08019	Clear Creek	CO
@@ -2408,6 +2415,7 @@ from https://www.nrcs.usda.gov/wps/portal/nrcs/detail/national/home/?cid=nrcs143
 46097	Miner	SD
 46099	Minnehaha	SD
 46101	Moody	SD
+46102	Oglala Lakota	SD
 46103	Pennington	SD
 46105	Perkins	SD
 46107	Potter	SD
