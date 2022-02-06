@@ -8,22 +8,22 @@ datadir = './data/raw/'
 outputDir = './data/processed/'
 order = ['min', 'avg', 'max', 'precip']
 filesToStrip = ['mintmp', 'avgtmp', 'maxtmp', 'precip']
-colsPrefix = ['tmp-avg', 'tmp-max', 'tmp-min', 'precip']
+colsPrefix = ['tmp_avg', 'tmp_max', 'tmp_min', 'precip']
 months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 
 if __name__ == '__main__':
-    icols = [i for i in range(13)]
-    dtypes = [str] + [str] * 12
+    icols = [i for i in range(len(months) + 1)]
+    dtypes = [str] + [str] * len(months)
     d = pd.DataFrame(np.vstack([icols, dtypes])).to_dict(orient='records')[1]
-
     dff = pd.DataFrame()
+
 
     for filename, prefix, i in zip(filesToStrip, colsPrefix, range(len(colsPrefix))):
 
         # Build column names
         cols = ['id INTEGER PRIMARY KEY']
         for m in months:
-            cols.append(f'{prefix}-{m} FLOAT')
+            cols.append(f'{prefix}_{m} FLOAT')
 
         df = pd.read_csv(f'{datadir}climdiv-{filename}.csv', delimiter=',', header=None, index_col=False, usecols=icols, dtype=d)
         
