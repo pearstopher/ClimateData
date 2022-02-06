@@ -2,7 +2,6 @@ import psycopg2
 import csv
 import os
 from os import listdir
-import json
 from psycopg2.extensions import AsIs
 
 
