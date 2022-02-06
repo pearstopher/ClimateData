@@ -29,7 +29,6 @@ def setup_database():
         %s)
         """,
         [AsIs(tableName), AsIs(column_string),])
-        print(cur.rowcount)
         conn.commit()
 
         with open(f'{outputDir}{fileName}', 'r', encoding='utf-8-sig') as f:
@@ -45,3 +44,4 @@ def find_csv_filenames( path_to_dir, suffix=".csv" ):
 
 
 setup_database()
+
