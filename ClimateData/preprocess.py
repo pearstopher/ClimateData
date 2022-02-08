@@ -59,5 +59,5 @@ if __name__ == '__main__':
 
     # WARNING: If you open this file in Excel without specifying the first 
     # column is a string, it will remove all the first zeros in the ID column
-    dff.to_csv(f'{outputDir}complete.csv', index=False)
+    dff.to_csv(f'{outputDir}weather.csv', index=False)
     print('Succesful merge!')
