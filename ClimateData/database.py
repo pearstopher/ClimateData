@@ -58,7 +58,27 @@ def drop_table(tableName):
     conn.close()
     
 
-#tableName, columnList and idList must be sent in as strings or lists of strings
+def drop_all_tables():
+    filenames = find_csv_filenames(f'{outputDir}')
+    tableNames = []
+    for fileName in filenames:
+        tableNames.append(os.path.basename(fileName).split(".")[0])
+
+    tableString = ", ".join(tableNames)
+    print("Dropping tables: " + tableString)
+
+    conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+    cur = conn.cursor()
+    cur.execute("""
+    DROP TABLE %s;
+    """,
+    [AsIs(tableString),])
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+#tableName, columnList and idList must be sent in as strings or lists of strings. Years are integers. 
 def get_data(tableName, columnList, idList, startYear, endYear):
     columnString = ", ".join(columnList)
     idYearList = []
@@ -82,12 +102,16 @@ def get_data(tableName, columnList, idList, startYear, endYear):
     results = cur.fetchall()
     cur.close()
     conn.close()
+
+    print(columnString)
     for row in results:
         print(row)
     return results
 
 
-setup_database()
+
+
+#setup_database()
 
 tableName = "weather"
 columnList = ["id", "tmp_avg_jan"]
@@ -95,4 +119,4 @@ idList = ["0101001", "0101005"]
 startYear = 1990
 endYear = 1995
 
-#get_data(tableName, columnList, idList, startYear, endYear)
+get_data(tableName, columnList, idList, startYear, endYear)
