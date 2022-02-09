@@ -78,6 +78,29 @@ def drop_all_tables():
     conn.close()
 
 
+def get_id(county, state, country):
+    conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+    cur = conn.cursor()
+    cur.execute("""
+    SELECT county_code FROM county_codes WHERE county_name = '%s' AND state = '%s' AND country = '%s';
+    """,
+    [AsIs(county), AsIs(state), AsIs(country)])
+    conn.commit()
+    results = cur.fetchone()
+    if results is not None:
+        results = str(results[0])
+        if len(results)< 7:
+            results = f'0{results}'
+        print(results)
+    else:
+        print("No id was found for given country, state and county") 
+        results = ""
+
+    cur.close()
+    conn.close()
+    return results
+
+
 #tableName, columnList and idList must be sent in as strings or lists of strings. Years are integers. 
 def get_data(tableName, columnList, idList, startYear, endYear):
     columnString = ", ".join(columnList)
@@ -110,7 +133,6 @@ def get_data(tableName, columnList, idList, startYear, endYear):
 
 
 
-
 setup_database()
 
 tableName = "weather"
@@ -118,5 +140,4 @@ columnList = ["id", "tmp_avg_jan"]
 idList = ["0101001", "0101005"]
 startYear = 1990
 endYear = 1995
-
 #get_data(tableName, columnList, idList, startYear, endYear)
