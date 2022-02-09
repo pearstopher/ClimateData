@@ -31,7 +31,7 @@ def test_countycodes():
       county_map[values[1]] = values[0]
 
   # iterate over data set
-  with open('./data/processed/complete.csv', 'r') as f:
+  with open('./data/processed/weather.csv', 'r') as f:
     # eat header
     f.readline()
 
