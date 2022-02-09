@@ -100,6 +100,51 @@ def get_id(county, state, country):
     conn.close()
     return results
 
+def get_ids_by_state(state, country):
+    conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+    cur = conn.cursor()
+    cur.execute("""
+    SELECT county_code FROM county_codes WHERE state = '%s' AND country = '%s';
+    """,
+    [AsIs(state), AsIs(country)])
+    conn.commit()
+    results = cur.fetchall()
+    formatted_results = []
+    if cur.rowcount != 0:
+        for row in results:
+            if len(str(row[0]))< 7:
+                formatted_results.append(f'0{row[0]}')
+    else:
+        print("No ids were found for given country and state")
+
+    print(formatted_results)
+    cur.close()
+    conn.close()
+    return formatted_results
+
+
+def get_ids_by_country(country):
+    conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+    cur = conn.cursor()
+    cur.execute("""
+    SELECT county_code FROM county_codes WHERE country = '%s';
+    """,
+    [AsIs(country)])
+    conn.commit()
+    results = cur.fetchall()
+    formatted_results = []
+    if cur.rowcount != 0:
+        for row in results:
+            if len(str(row[0]))< 7:
+                formatted_results.append(f'0{row[0]}')
+    else:
+        print("No ids were found for given country")
+
+    print(formatted_results)
+    cur.close()
+    conn.close()
+    return formatted_results
+
 
 #tableName, columnList and idList must be sent in as strings or lists of strings. Years are integers. 
 def get_data(tableName, columnList, idList, startYear, endYear):
