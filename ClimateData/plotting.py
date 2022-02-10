@@ -20,10 +20,11 @@ def get_test_data():
 
     print(df.head())
 
+    x_dates_format = []
     x_data = []
     for i in df['Codes']:
         for j in range(1,13):
-            #x_data.append(str(i)[-4:] + '-' + str(j))
+            x_dates_format.append(str(i)[-4:] + '-' + str(j))
             x_data.append(int(str(i)[-4:]) + j)
 
     y_data = []
@@ -31,7 +32,7 @@ def get_test_data():
         for j in row[1:]:
             y_data.append(j)
 
-    return [x_data, y_data]
+    return [x_data, y_data, x_dates_format]
  
 def plot_poly(x, y, deg):
     coefs = poly.polyfit(x, y, deg)
@@ -44,12 +45,16 @@ def scatter_plot(x, y):
     x_data = np.array(x)
     y_data = np.array(y)
 
-    x_axis = np.arange(x_data[0], x_data[-1])
+    y_axis = np.arange(0, 120, 10)
+    x_axis = np.arange(x_data[0], x_data[-1], 2)
+
+    plt.figure(figsize=(20,5))
     plt.xticks(x_axis)
-    plt.scatter(x, y)
+    plt.yticks(y_axis)
+    plt.scatter(x_data, y_data)
     plt.show()
 
-x, y = get_test_data()
+x, y, x_dates = get_test_data()
 degree = 3
 #plot_poly(x, y, degree)
 scatter_plot(x, y)
