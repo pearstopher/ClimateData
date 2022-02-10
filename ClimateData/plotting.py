@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import numpy.polynomial.polynomial as poly
+import pandas as pd
 
 '''
 TODO
@@ -11,20 +12,24 @@ functions to implement
 
 '''
 csv_path = 'ClimateData/ClimateData/data/raw/climdiv-avgtmp.csv'
+headers = ['Codes', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 def get_test_data():
-    y_data_temp = np.loadtxt(csv_path, delimiter=',', usecols=range(2,13), max_rows=127)
-    y_data = []
-    for i in y_data_temp:
-        for j in i:
-            y_data.append(j)
+    df = pd.read_csv(csv_path, delimiter=',', nrows=127, header=None)
+    df.columns = headers
 
+    print(df.head())
 
-    x_data_temp = np.loadtxt(csv_path, delimiter=',', usecols=1, max_rows=127)
     x_data = []
-    for i in x_data_temp:
-        for j in range(1, 12):
-            x_data.append(i + j)
+    for i in df['Codes']:
+        for j in range(1,13):
+            #x_data.append(str(i)[-4:] + '-' + str(j))
+            x_data.append(int(str(i)[-4:]) + j)
+
+    y_data = []
+    for i, row in df.head(127).iterrows():
+        for j in row[1:]:
+            y_data.append(j)
 
     return [x_data, y_data]
  
@@ -35,12 +40,34 @@ def plot_poly(x, y, deg):
     plt.plot(ordered_coefs)
     plt.show()
 
+def scatter_plot(x, y):
+    x_data = np.array(x)
+    y_data = np.array(y)
+
+    x_axis = np.arange(x_data[0], x_data[-1])
+    plt.xticks(x_axis)
+    plt.scatter(x, y)
+    plt.show()
 
 x, y = get_test_data()
 degree = 3
-plot_poly(x, y, degree)
+#plot_poly(x, y, degree)
+scatter_plot(x, y)
 
 
+# def get_test_data():
+    # y_data_temp = np.loadtxt(csv_path, delimiter=',', usecols=range(2,13), max_rows=127)
+    # y_data = []
+    # for i in y_data_temp:
+    #     for j in i:
+    #         y_data.append(j)
+
+
+    # x_data_temp = np.loadtxt(csv_path, delimiter=',', usecols=1, max_rows=127)
+    # x_data = []
+    # for i in x_data_temp:
+    #     for j in range(1, 12):
+    #         x_data.append(i + j)
 '''
 Sample data 
 01001021895,44,38.2,55.5,64.1,70.6,78.3,80.4,80.4,79,61.4,54.4,45.3
