@@ -1,36 +1,44 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import numpy.polynomial.polynomial as poly
 
 '''
-x = np.linspace(0,1,1000)
-f = 1/4
+TODO
+functions to implement
+- Plot per county data
+- Plot per state data
+- Plot per country data (Eventually)
 
-sine = np.sin(2*np.pi*f*x) + np.random.normal(scale=0.1, size=len(x))
-plt.plot(sine)
-
-poly = np.polyfit(x, sine, deg=3)
-
-fig, ax = plt.subplots()
-ax.plot(sine, label='data')
-ax.plot(np.polyval(poly, x), label='fit')
-ax.legend()
-plt.show()
 '''
-
 csv_path = 'ClimateData/ClimateData/data/raw/climdiv-avgtmp.csv'
-y_data_temp = np.loadtxt(csv_path, delimiter=',', usecols=range(2,13), max_rows=127)
-y_data = []
-for i in y_data_temp:
-    for j in i:
-        y_data.append(j)
 
-x_data_years = np.loadtxt(csv_path, delimiter=',', usecols=1, max_rows=127)
-x_data_years *= 12
+def get_test_data():
+    y_data_temp = np.loadtxt(csv_path, delimiter=',', usecols=range(2,13), max_rows=127)
+    y_data = []
+    for i in y_data_temp:
+        for j in i:
+            y_data.append(j)
 
-curve = np.polyfit(x_data_years, y_data, 3)
 
-plt.plot(curve)
-plt.show()
+    x_data_temp = np.loadtxt(csv_path, delimiter=',', usecols=1, max_rows=127)
+    x_data = []
+    for i in x_data_temp:
+        for j in range(1, 12):
+            x_data.append(i + j)
+
+    return [x_data, y_data]
+ 
+def plot_poly(x, y, deg):
+    coefs = poly.polyfit(x, y, deg)
+    ordered_coefs = [-i for i in coefs][::-1]
+
+    plt.plot(ordered_coefs)
+    plt.show()
+
+
+x, y = get_test_data()
+degree = 3
+plot_poly(x, y, degree)
 
 
 '''
