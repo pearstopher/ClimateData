@@ -11,7 +11,7 @@ functions to implement
 - Plot per country data (Eventually)
 
 '''
-csv_path = 'ClimateData/ClimateData/data/raw/climdiv-avgtmp.csv'
+csv_path = './data/raw/climdiv-avgtmp.csv'
 headers = ['Codes', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 def get_test_data():
@@ -35,10 +35,18 @@ def get_test_data():
     return [x_data, y_data, x_dates_format]
  
 def plot_poly(x, y, deg):
-    coefs = poly.polyfit(x, y, deg)
-    ordered_coefs = [-i for i in coefs][::-1]
+    #ordered_coefs = [-i for i in coefs][::-1]
 
-    plt.plot(ordered_coefs)
+    d, c, b, a = poly.polyfit(x, y, deg)
+    fiteq = lambda x: a * x ** 3 + b * x ** 2 + c * x + d
+    x_fit = np.linspace(min(x), max(x), 1000)
+    y_fit = fiteq(x_fit)
+
+    fig, ax1 = plt.subplots()
+    ax1.plot(x_fit, y_fit, color='r', alpha=0.5, label='Polynomial fit')
+    ax1.scatter(x, y, s=4, color='b', label='Data points')
+    ax1.set_title('Polynomial fit example')
+    ax1.legend()
     plt.show()
 
 def scatter_plot(x, y):
@@ -56,8 +64,8 @@ def scatter_plot(x, y):
 
 x, y, x_dates = get_test_data()
 degree = 3
-#plot_poly(x, y, degree)
-scatter_plot(x, y)
+plot_poly(x, y, degree)
+#scatter_plot(x, y)
 
 
 # def get_test_data():
