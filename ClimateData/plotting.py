@@ -42,6 +42,8 @@ def plot_poly(x, y, deg):
     x_fit = np.linspace(min(x), max(x), 1000)
     y_fit = fiteq(x_fit)
 
+    # TODO: If you look closely at the graph, 
+    # it appears there's an issue with the position of the scatter plot points
     fig, ax1 = plt.subplots()
     ax1.plot(x_fit, y_fit, color='r', alpha=0.5, label='Polynomial fit')
     ax1.scatter(x, y, s=4, color='b', label='Data points')
