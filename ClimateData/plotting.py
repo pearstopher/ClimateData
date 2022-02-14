@@ -36,10 +36,18 @@ def get_test_data():
 
 def plot(ptype, df, plot_vars_map):
 
-
     x_data, y_data = process_data(df, plot_vars_map['process_type'], plot_vars_map['range'])
-    if ptype == 'scatter_poly':
+    if ptype == 'scatter':
+        pass
+    elif ptype == 'poly':
+        pass
+    elif ptype == 'scatter_poly':
         scatter_poly(x_data, y_data, plot_vars_map['degree'])
+    elif ptype == 'us_heatmap':
+        pass
+    else:
+        return 'Invalid plot type!'
+
 
 def process_data(df, process_type, data_range):
     x_data = []
