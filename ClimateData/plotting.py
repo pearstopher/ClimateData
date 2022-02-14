@@ -48,7 +48,7 @@ def plot(ptype, df, plot_vars_map):
             for j in row[1:]:
                 y_data.append(j)
 
-        scatter_poly(x_data, y_data, 3)
+        scatter_poly(x_data, y_data, plot_vars_map['degree'])
  
 def scatter_poly(x, y, deg):
     #ordered_coefs = [-i for i in coefs][::-1]
