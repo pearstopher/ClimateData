@@ -93,22 +93,8 @@ if __name__ == '__main__':
     x, y, x_dates = get_test_data()
     degree = 30
     scatter_poly(x, y, degree)
-    #scatter_plot(x, y)
 
 
-# def get_test_data():
-    # y_data_temp = np.loadtxt(csv_path, delimiter=',', usecols=range(2,13), max_rows=127)
-    # y_data = []
-    # for i in y_data_temp:
-    #     for j in i:
-    #         y_data.append(j)
-
-
-    # x_data_temp = np.loadtxt(csv_path, delimiter=',', usecols=1, max_rows=127)
-    # x_data = []
-    # for i in x_data_temp:
-    #     for j in range(1, 12):
-    #         x_data.append(i + j)
 '''
 Sample data 
 01001021895,44,38.2,55.5,64.1,70.6,78.3,80.4,80.4,79,61.4,54.4,45.3
