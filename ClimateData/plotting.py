@@ -33,6 +33,7 @@ def get_test_data():
             y_data.append(j)
 
     return [x_data, y_data, x_dates_format]
+ 
 
 def plot(ptype, df, plot_vars_map):
 
