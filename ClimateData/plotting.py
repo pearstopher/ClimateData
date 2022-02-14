@@ -33,12 +33,35 @@ def get_test_data():
             y_data.append(j)
 
     return [x_data, y_data, x_dates_format]
- 
-def plot_poly(x, y, deg):
-    #ordered_coefs = [-i for i in coefs][::-1]
 
-    d, c, b, a = poly.polyfit(x, y, deg)
-    fiteq = lambda x: a * x ** 3 + b * x ** 2 + c * x + d
+def plot(ptype, df, plot_vars_map):
+
+
+    if ptype == 'scatter_poly':
+        x_data = []
+        for i in df.iloc[:,0]:
+            for j in range(0,12):
+                x_data.append(int(str(i)[-4:]) + j / 12)
+
+        y_data = []
+        for i, row in df.iterrows():
+            for j in row[1:]:
+                y_data.append(j)
+
+        scatter_poly(x_data, y_data, 3)
+ 
+def scatter_poly(x, y, deg):
+    #ordered_coefs = [-i for i in coefs][::-1]
+    #d, c, b, a = poly.polyfit(x, y, deg)
+    #fiteq = lambda x: a * x ** 3 + b * x ** 2 + c * x + d
+
+    coeffs = poly.polyfit(x, y, deg)
+    def fiteq(x, idx=0):
+        if idx == deg:
+            return coeffs[idx] * x ** (idx)
+        else:
+            return coeffs[idx] * x ** (idx) + fiteq(x, idx+1)
+
     x_fit = np.linspace(min(x), max(x), 1000)
     y_fit = fiteq(x_fit)
 
@@ -47,7 +70,7 @@ def plot_poly(x, y, deg):
     fig, ax1 = plt.subplots()
     ax1.plot(x_fit, y_fit, color='r', alpha=0.5, label='Polynomial fit')
     ax1.scatter(x, y, s=4, color='b', label='Data points')
-    ax1.set_title('Polynomial fit example')
+    ax1.set_title(f'Polynomial fit example deg={deg}')
     ax1.legend()
     plt.show()
     plt.scatter()
@@ -65,10 +88,12 @@ def scatter_plot(x, y):
     plt.scatter(x_data, y_data)
     plt.show()
 
-x, y, x_dates = get_test_data()
-degree = 3
-plot_poly(x, y, degree)
-#scatter_plot(x, y)
+
+if __name__ == '__main__':
+    x, y, x_dates = get_test_data()
+    degree = 30
+    scatter_poly(x, y, degree)
+    #scatter_plot(x, y)
 
 
 # def get_test_data():
