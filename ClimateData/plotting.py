@@ -25,7 +25,7 @@ def get_test_data():
     for i in df['Codes']:
         for j in range(1,13):
             x_dates_format.append(str(i)[-4:] + '-' + str(j))
-            x_data.append(int(str(i)[-4:]) + j)
+            x_data.append(int(str(i)[-4:]) + (j-1) / 12)
 
     y_data = []
     for i, row in df.head(127).iterrows():
@@ -50,6 +50,7 @@ def plot_poly(x, y, deg):
     ax1.set_title('Polynomial fit example')
     ax1.legend()
     plt.show()
+    plt.scatter()
 
 def scatter_plot(x, y):
     x_data = np.array(x)
