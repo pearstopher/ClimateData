@@ -37,18 +37,23 @@ def get_test_data():
 def plot(ptype, df, plot_vars_map):
 
 
+    x_data, y_data = process_data(df, plot_vars_map['process_type'], plot_vars_map['range'])
     if ptype == 'scatter_poly':
-        x_data = []
+        scatter_poly(x_data, y_data, plot_vars_map['degree'])
+
+def process_data(df, process_type, data_range):
+    x_data = []
+    y_data = []
+
+    if process_type == 'months':
         for i in df.iloc[:,0]:
-            for j in range(0,12):
+            for j in data_range:
                 x_data.append(int(str(i)[-4:]) + j / 12)
 
-        y_data = []
         for i, row in df.iterrows():
             for j in row[1:]:
                 y_data.append(j)
-
-        scatter_poly(x_data, y_data, plot_vars_map['degree'])
+    return x_data, y_data
  
 def scatter_poly(x, y, deg):
     #ordered_coefs = [-i for i in coefs][::-1]
