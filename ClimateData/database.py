@@ -180,9 +180,3 @@ def get_data(tableName, columnList, idList, startYear, endYear):
 
 setup_database()
 
-tableName = "weather"
-columnList = ["id", "tmp_avg_jan"]
-idList = ["0101001", "0101005"]
-startYear = 1990
-endYear = 1995
-#get_data(tableName, columnList, idList, startYear, endYear)
