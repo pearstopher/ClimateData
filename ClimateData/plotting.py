@@ -34,6 +34,11 @@ def get_test_data():
 
     return [x_data, y_data, x_dates_format]
 
+def get_test_data_raw():
+    df = pd.read_csv(csv_path, delimiter=',', nrows=127, header=None)
+    df.columns = headers
+    return df
+
 def plot(ptype, df, plot_vars_map):
 
     x_data, y_data = process_data(df, plot_vars_map['process_type'], plot_vars_map['range'])
@@ -103,9 +108,12 @@ def scatter_plot(x, y):
 
 
 if __name__ == '__main__':
-    x, y, x_dates = get_test_data()
-    degree = 30
-    scatter_poly(x, y, degree)
+
+    plot('scatter_poly', get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 3})
+
+    #x, y, x_dates = get_test_data()
+    #degree = 30
+    #scatter_poly(x, y, degree)
     #scatter_plot(x, y)
 
 
