@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numpy.polynomial.polynomial as poly
 import pandas as pd
+import mplcursors 
 
 '''
 TODO
@@ -67,7 +68,7 @@ def process_data(df, process_type, data_range):
             for j in row[data_range.start+1:data_range.stop+1]:
                 y_data.append(j)
     return x_data, y_data
- 
+
 def scatter_poly(x, y, deg):
     #ordered_coefs = [-i for i in coefs][::-1]
     #d, c, b, a = poly.polyfit(x, y, deg)
@@ -86,12 +87,12 @@ def scatter_poly(x, y, deg):
     # TODO: If you look closely at the graph, 
     # it appears there's an issue with the position of the scatter plot points
     fig, ax1 = plt.subplots()
-    ax1.plot(x_fit, y_fit, color='r', alpha=0.5, label='Polynomial fit')
+    lines = ax1.plot(x_fit, y_fit, color='r', alpha=0.5, label='Polynomial fit')
     ax1.scatter(x, y, s=4, color='b', label='Data points')
     ax1.set_title(f'Polynomial fit example deg={deg}')
     ax1.legend()
+    cursor = mplcursors.cursor()
     plt.show()
-    plt.scatter()
 
 def scatter_plot(x, y):
     x_data = np.array(x)
@@ -109,7 +110,7 @@ def scatter_plot(x, y):
 
 if __name__ == '__main__':
 
-    plot('scatter_poly', get_test_data_raw(), {'process_type': 'months', 'range': range(6,7), 'degree': 3})
+    plot('scatter_poly', get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 3})
 
     #x, y, x_dates = get_test_data()
     #degree = 30
