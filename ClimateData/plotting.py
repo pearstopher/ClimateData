@@ -64,7 +64,7 @@ def process_data(df, process_type, data_range):
                 x_data.append(int(str(i)[-4:]) + j / 12)
 
         for i, row in df.iterrows():
-            for j in row[1:]:
+            for j in row[data_range.start+1:data_range.stop+1]:
                 y_data.append(j)
     return x_data, y_data
  
@@ -109,7 +109,7 @@ def scatter_plot(x, y):
 
 if __name__ == '__main__':
 
-    plot('scatter_poly', get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 3})
+    plot('scatter_poly', get_test_data_raw(), {'process_type': 'months', 'range': range(6,7), 'degree': 3})
 
     #x, y, x_dates = get_test_data()
     #degree = 30
