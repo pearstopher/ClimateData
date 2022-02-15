@@ -1,6 +1,7 @@
 import psycopg2
 import csv
 import os
+import pandas as pd
 from os import listdir
 from psycopg2.extensions import AsIs
 
@@ -170,11 +171,44 @@ def get_data(tableName, columnList, idList, startYear, endYear):
     results = cur.fetchall()
     cur.close()
     conn.close()
+    df = pd.DataFrame(data=results, columns=cols)
+    print(df)
 
-    print(columnString)
-    for row in results:
-        print(row)
-    return results
+    return df
+
+
+def get_data_for_single_county(columnList, county, state, country, startYear, endYear):
+        tableName = "weather"
+        county_id = get_id(county, state, country)
+        idList = []
+        idList.append(county_id)
+        return get_data(tableName, columnList, idList, startYear, endYear)
+
+def get_data_for_state(columnList, state, country, startYear, endYear):
+        tableName = "weather"
+        idList = get_ids_by_state(state, country)
+        return get_data(tableName, columnList, idList, startYear, endYear)
+
+def get_data_for_country(columnList, country, startYear, endYear):
+        tableName = "weather"
+        idList = get_ids_by_country(country)
+        return get_data(tableName, columnList, idList, startYear, endYear)
+
+
+#setup_database()
+
+tableName = "weather"
+columnList = ["id", "tmp_avg_jan"]
+idList = ["0101001", "0101005"]
+startYear = 1990
+endYear = 1995
+county = "Baldwin"
+state = "AL"
+country = "US"
+#get_data_for_single_county(columnList, county, state, country, startYear, endYear)
+#get_data_for_state(columnList, state, country, startYear, endYear)
+get_data_for_country(columnList, country, startYear, endYear)
+
 
 
 
