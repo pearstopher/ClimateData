@@ -107,8 +107,7 @@ def convert_countycodes():
           w.write(f'{id},01{county_code},{name},{state},US\n')
           id += 1
 
-
-if __name__ == '__main__':
+def build_weather_table():
     icols = [i for i in range(len(months) + 1)]
     dtypes = [str] + [str] * len(months)
     d = pd.DataFrame(np.vstack([icols, dtypes])).to_dict(orient='records')[1]
@@ -159,6 +158,13 @@ if __name__ == '__main__':
     dff.to_csv(f'{outputDir}{weatherFileName}', index=False)
     print('Succesful merge!')
 
+
+def processFiles():
     # process county codes and test the output
+    buibuild_weather_table()
     convert_countycodes()
     test_countycodes()
+
+
+if __name__ == '__main__':
+    processFiles()
