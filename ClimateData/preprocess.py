@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 datadir = './data/raw/'
-droughtDir = f'{dataDir}drough/'
+droughtDir = f'{datadir}drought/'
 outputDir = './data/processed/'
 order = ['min', 'avg', 'max', 'precip']
 filesToStrip = ['mintmp', 'avgtmp', 'maxtmp', 'precip']
