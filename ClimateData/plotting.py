@@ -82,7 +82,7 @@ def scatter_poly(x, y, deg):
         else:
             return coeffs[idx] * x ** (idx) + fiteq(x, idx+1)
 
-    x_fit = np.linspace(min(x), max(x), 1000)
+    x_fit = np.array(x)
     y_fit = fiteq(x_fit)
 
     fig, ax1 = plt.subplots()
