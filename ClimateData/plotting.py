@@ -68,7 +68,7 @@ def process_data(df, process_type, data_range):
             for j in row[data_range.start+1:data_range.stop+1]:
                 y_data.append(j)
     return x_data, y_data
-
+from string import ascii_lowercase
 def scatter_poly(x, y, deg):
     #ordered_coefs = [-i for i in coefs][::-1]
     #d, c, b, a = poly.polyfit(x, y, deg)
@@ -91,6 +91,10 @@ def scatter_poly(x, y, deg):
     ax1.scatter(x, y, s=4, color='b', label='Data points')
     ax1.set_title(f'Polynomial fit example deg={deg}')
     ax1.legend()
+    plt.subplots_adjust(right=0.8)
+    plt.table([['{:.10f}'.format(coeffs[x])[:9]] for x in range(len(coeffs)-1, -1, -1)], rowLabels=[ascii_lowercase[x] for x in range(deg+1)], 
+              colLabels=['Poly Coeffs'], loc='right', colWidths = [0.2])
+    #plt.text(15, 3.4, 'Coefficients', size=12)
     cursor = mplcursors.cursor()
     plt.show()
 
