@@ -5,12 +5,11 @@ import pandas as pd
 from os import listdir
 from psycopg2.extensions import AsIs
 
-
 #Put your postgres password here if different
 password = 'PASSWORD'
 outputDir = './data/processed/'
 
-
+#INTERNAL CALLS---------------------------------------------------------------------
 def setup_database():
     filenames = find_csv_filenames(f'{outputDir}')
     for fileName in filenames:
@@ -34,18 +33,16 @@ def setup_database():
         conn.commit()
 
         with open(f'{outputDir}{fileName}', 'r', encoding='utf-8-sig') as f:
-            next(f) # Skip the header row.
+            next(f)
             cur.copy_from(f, f'{tableName}', sep=',')
         conn.commit()
 
         cur.close()
         conn.close()
 
-
 def find_csv_filenames(path_to_dir, suffix=".csv"):
     filenames = listdir(path_to_dir)
     return [ filename for filename in filenames if filename.endswith( suffix ) ]
-
 
 def drop_table(tableName):
     conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
@@ -58,7 +55,6 @@ def drop_table(tableName):
     cur.close()
     conn.close()
     
-
 def drop_all_tables():
     filenames = find_csv_filenames(f'{outputDir}')
     tableNames = []
@@ -78,7 +74,6 @@ def drop_all_tables():
     cur.close()
     conn.close()
 
-
 def get_id(county, state, country):
     conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
     cur = conn.cursor()
@@ -88,15 +83,14 @@ def get_id(county, state, country):
     [AsIs(county), AsIs(state), AsIs(country)])
     conn.commit()
     results = cur.fetchone()
+    
     if results is not None:
         results = str(results[0])
         if len(results)< 7:
             results = f'0{results}'
-        print(results)
     else:
         print("No id was found for given country, state and county") 
         results = ""
-
     cur.close()
     conn.close()
     return results
@@ -118,11 +112,9 @@ def get_ids_by_state(state, country):
     else:
         print("No ids were found for given country and state")
 
-    print(formatted_results)
     cur.close()
     conn.close()
     return formatted_results
-
 
 def get_ids_by_country(country):
     conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
@@ -141,16 +133,18 @@ def get_ids_by_country(country):
     else:
         print("No ids were found for given country")
 
-    print(formatted_results)
     cur.close()
     conn.close()
     return formatted_results
 
-
 #tableName, columnList and idList must be sent in as strings or lists of strings. Years are integers. 
-def get_data(tableName, columnList, idList, startYear, endYear):
-    columnString = ", ".join(columnList)
+def get_data(columnList, idList, startYear, endYear):
+    matchString = "|| '%'"
+    defaultColumns = ", cc.county_name, cc.state, cc.country"
+    columns = ["w." + col for col in columnList]
+    columnString = ", ".join(columns)
     idYearList = []
+    columnString = columnString + defaultColumns
     
     for year in range(startYear, endYear+1):
         for dataId in idList:
@@ -158,59 +152,110 @@ def get_data(tableName, columnList, idList, startYear, endYear):
         
     idString = ", ".join(idYearList)
 
-    print("Fetching ids: ")
-    print(idYearList)
-
     conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
     cur = conn.cursor()
     cur.execute("""
-    SELECT %s FROM %s WHERE id IN (%s);
+    SELECT %s FROM weather as w JOIN county_codes as cc 
+    ON CAST(w.id AS TEXT) like CAST(cc.county_code AS TEXT) || '%%' WHERE w.id IN (%s);
     """,
-    [AsIs(columnString), AsIs(tableName), AsIs(idString)])
+    [AsIs(columnString), AsIs(idString)])
     conn.commit()
     results = cur.fetchall()
+    cols = []
+    for item in cur.description:
+        cols.append(item[0])
     cur.close()
     conn.close()
     df = pd.DataFrame(data=results, columns=cols)
-    print(df)
 
     return df
 
-
 def get_data_for_single_county(columnList, county, state, country, startYear, endYear):
-        tableName = "weather"
-        county_id = get_id(county, state, country)
         idList = []
-        idList.append(county_id)
-        return get_data(tableName, columnList, idList, startYear, endYear)
+        idList.append(get_ids_by_county(county, state, country))
+        return get_data(columnList, idList, startYear, endYear)
 
 def get_data_for_state(columnList, state, country, startYear, endYear):
-        tableName = "weather"
+        idList = []
         idList = get_ids_by_state(state, country)
-        return get_data(tableName, columnList, idList, startYear, endYear)
+        return get_data(columnList, idList, startYear, endYear)
 
 def get_data_for_country(columnList, country, startYear, endYear):
-        tableName = "weather"
+        idList = []
         idList = get_ids_by_country(country)
-        return get_data(tableName, columnList, idList, startYear, endYear)
-
-
-#setup_database()
-
-tableName = "weather"
-columnList = ["id", "tmp_avg_jan"]
-idList = ["0101001", "0101005"]
-startYear = 1990
-endYear = 1995
-county = "Baldwin"
-state = "AL"
-country = "US"
-#get_data_for_single_county(columnList, county, state, country, startYear, endYear)
-#get_data_for_state(columnList, state, country, startYear, endYear)
-get_data_for_country(columnList, country, startYear, endYear)
+        return get_data(columnList, idList, startYear, endYear)
 
 
 
+#EXTERNAL CALLS---------------------------------------------------------------------
+def get_ids_by_county(states, counties, country):
+    idsList = []
+    stateList = []
+    countyList = []
+    countryList = []
+    for index, state in enumerate(states):
+        for county in counties[index]:
+            id_to_add = get_id(county, state, country)
+            idsList.append(id_to_add)
+            stateList.append(state)
+            countyList.append(county)
+            countryList.append(country)
 
-setup_database()
+    results = pd.DataFrame(idsList, columns=["id"])
+    results['County'] = countyList
+    results['State'] = stateList
+    results['Country'] = countryList
+    return results
+
+def get_ids_for_states_list(states, country):
+    idsList = []
+    stateList = []
+    countryList = []
+    for index, state in enumerate(states):
+        ids_to_add = get_ids_by_state(state, country)
+        for index, countyId in enumerate(ids_to_add):
+            idsList.append(ids_to_add[index])
+            stateList.append(state)
+            countryList.append(country)
+
+    results = pd.DataFrame(idsList, columns=["id"])
+    results['State'] = stateList
+    results['Country'] = countryList
+    return results
+
+def get_ids_for_countries_list(countries):
+    idsList = []
+    countryList = []
+    for index, country in enumerate(countries):
+        ids_to_add = get_ids_by_country(country)
+        for index, countyId in enumerate(ids_to_add):
+            idsList.append(ids_to_add[index])
+            countryList.append(country)
+
+    results = pd.DataFrame(idsList, columns=["id"])
+    results['Country'] = countryList
+    return results
+
+def get_data_for_counties_dataset(states, counties, country, columnlist, startyear, endyear):
+    results = []
+    for index, state in enumerate(states):
+        for county in counties[index]:
+            next_set = get_data_for_single_county(columnList, county, state, country, startYear, endYear)
+            results.append(next_set)
+    return results
+
+def get_data_for_states_dataset(states, country, columnList, startYear, endYear):
+    results = []
+    for state in states:
+        next_set = get_data_for_state(columnList, state, country, startYear, endYear)
+        results.append(next_set)
+    return results
+
+def get_data_for_countries_dataset(countries, columnList, startYear, endYear):
+    results = []
+    for country in countries:
+        next_set = get_data_for_country(columnList, country, startYear, endYear)
+        results.append(next_set)
+    return results
+
 
