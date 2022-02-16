@@ -74,7 +74,7 @@ def drop_all_tables():
     cur.close()
     conn.close()
 
-def get_id(county, state, country):
+def get_id_by_county(county, state, country):
     conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
     cur = conn.cursor()
     cur.execute("""
@@ -172,7 +172,7 @@ def get_data(columnList, idList, startYear, endYear):
 
 def get_data_for_single_county(columnList, county, state, country, startYear, endYear):
         idList = []
-        idList.append(get_ids_by_county(county, state, country))
+        idList.append(get_id_by_county(county, state, country))
         return get_data(columnList, idList, startYear, endYear)
 
 def get_data_for_state(columnList, state, country, startYear, endYear):
@@ -188,7 +188,7 @@ def get_data_for_country(columnList, country, startYear, endYear):
 
 
 #EXTERNAL CALLS---------------------------------------------------------------------
-def get_ids_by_county(states, counties, country):
+def get_ids_for_counties_list(states, counties, country):
     idsList = []
     stateList = []
     countyList = []
@@ -257,5 +257,4 @@ def get_data_for_countries_dataset(countries, columnList, startYear, endYear):
         next_set = get_data_for_country(columnList, country, startYear, endYear)
         results.append(next_set)
     return results
-
 
