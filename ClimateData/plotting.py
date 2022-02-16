@@ -71,8 +71,8 @@ def process_data(df, process_type, data_range):
     return x_data, y_data
 
 def scatter_poly(x, y, deg):
-    #ordered_coefs = [-i for i in coefs][::-1]
-    #d, c, b, a = poly.polyfit(x, y, deg)
+    # Example of what coeffs and fiteq do, for a 3rd degree polynomial
+    #d, c, b, a = poly.polyfit(x, y, 3)
     #fiteq = lambda x: a * x ** 3 + b * x ** 2 + c * x + d
 
     coeffs = poly.polyfit(x, y, deg)
@@ -85,8 +85,6 @@ def scatter_poly(x, y, deg):
     x_fit = np.linspace(min(x), max(x), 1000)
     y_fit = fiteq(x_fit)
 
-    # TODO: If you look closely at the graph, 
-    # it appears there's an issue with the position of the scatter plot points
     fig, ax1 = plt.subplots()
     lines = ax1.plot(x_fit, y_fit, color='r', alpha=0.5, label='Polynomial fit')
     ax1.scatter(x, y, s=4, color='b', label='Data points')
