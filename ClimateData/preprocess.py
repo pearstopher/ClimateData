@@ -3,6 +3,7 @@ import sys
 import csv
 import numpy as np
 import pandas as pd
+import urllib.request
 
 datadir = './data/raw/'
 droughtDir = f'{datadir}drought/'
@@ -107,7 +108,67 @@ def convert_countycodes():
           w.write(f'{id},01{county_code},{name},{state},US\n')
           id += 1
 
+def convert_county_coords():
+  # download coordinate data
+  if not os.path.exists(f'{datadir}us-county-boundaries.csv'):
+    print('downloading coordinate data.... (194 MB)')
+    urllib.request.urlretrieve('https://public.opendatasoft.com/explore/dataset/us-county-boundaries/download/?format=csv&timezone=America/Los_Angeles&lang=en&use_labels_for_header=true&csv_separator=%3B', f'{datadir}us-county-boundaries.csv')
+    print('finished')
+
+  state_map = {}
+  with open(f'{datadir}county-state-codes.txt', 'r') as f:
+    lines = f.readlines()
+    for line in lines:
+      line = line.strip()
+      values = line.split(' ')
+      state_map[values[1]] = values[0]
+
+
+  # read in postal fips to ncdc fips from county-to-climdivs.txt
+  county_map = {}
+  with open(f'{datadir}county-to-climdivs.txt', 'r') as f:
+    lines = f.readlines()
+    for line in lines:
+      line = line.strip()
+      if len(line) == 16:
+        values = line.split(' ')
+        county_map[values[0]] = values[1]
+
+  # converts county coords csv to 
+  with open(f'{datadir}us-county-boundaries.csv', 'r') as f:
+    with open(f'{outputDir}county_coords.csv', 'w') as w:
+
+      # header
+      w.write('id INTEGER PRIMARY KEY,county_code INTEGER,geo_point VARCHAR(50),geo_shape VARCHAR(MAX)\n')
+
+      # eat header
+      f.readline()
+
+      # iterate lines
+      lines = f.readlines()
+      id = 1
+      for line in lines:
+        parts = line.split(';')
+
+        geo_point = parts[0]
+        geo_shape = parts[1]
+        state = parts[8]
+        county_code = parts[3]
+        skip = False
+
+        if state in state_map:
+          county_code = f'{state_map[state]}{county_code}'
+        else:
+          skip = True
+          print(f'skipping county coord {parts[2:]}')
+
+        if not skip:
+          # prepend '01' to code, indicating county is from united states
+          w.write(f'{id};01{county_code};{geo_point};{geo_shape}\n')
+          id += 1
+
 def build_weather_table():
+
     icols = [i for i in range(len(months) + 1)]
     dtypes = [str] + [str] * len(months)
     d = pd.DataFrame(np.vstack([icols, dtypes])).to_dict(orient='records')[1]
@@ -161,9 +222,10 @@ def build_weather_table():
 
 def processFiles():
     # process county codes and test the output
-    buibuild_weather_table()
+    build_weather_table()
     convert_countycodes()
     test_countycodes()
+    convert_county_coords()
 
 
 if __name__ == '__main__':

@@ -367,3 +367,5 @@ FodyWeavers.xsd
 /ClimateData/data/processed/complete.csv
 /ClimateData/data/processed/weather.csv
 /ClimateData/data/processed/county_codes.csv
+/ClimateData/data/processed/county_coords.csv
+/ClimateData/data/raw/us-county-boundaries.csv
