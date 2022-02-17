@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numpy.polynomial.polynomial as poly
 import pandas as pd
+import mplcursors
+from string import ascii_lowercase
 
 '''
 TODO
@@ -35,6 +37,11 @@ def get_test_data():
     return [x_data, y_data, x_dates_format]
  
 
+def get_test_data_raw():
+    df = pd.read_csv(csv_path, delimiter=',', nrows=127, header=None)
+    df.columns = headers
+    return df
+
 def plot(ptype, df, plot_vars_map):
 
     x_data, y_data = process_data(df, plot_vars_map['process_type'], plot_vars_map['range'])
@@ -60,13 +67,13 @@ def process_data(df, process_type, data_range):
                 x_data.append(int(str(i)[-4:]) + j / 12)
 
         for i, row in df.iterrows():
-            for j in row[1:]:
+            for j in row[data_range.start+1:data_range.stop+1]:
                 y_data.append(j)
     return x_data, y_data
- 
+
 def scatter_poly(x, y, deg):
-    #ordered_coefs = [-i for i in coefs][::-1]
-    #d, c, b, a = poly.polyfit(x, y, deg)
+    # Example of what coeffs and fiteq do, for a 3rd degree polynomial
+    #d, c, b, a = poly.polyfit(x, y, 3)
     #fiteq = lambda x: a * x ** 3 + b * x ** 2 + c * x + d
 
     coeffs = poly.polyfit(x, y, deg)
@@ -76,18 +83,21 @@ def scatter_poly(x, y, deg):
         else:
             return coeffs[idx] * x ** (idx) + fiteq(x, idx+1)
 
-    x_fit = np.linspace(min(x), max(x), 1000)
+    x_fit = np.array(x)
     y_fit = fiteq(x_fit)
 
-    # TODO: If you look closely at the graph, 
-    # it appears there's an issue with the position of the scatter plot points
     fig, ax1 = plt.subplots()
-    ax1.plot(x_fit, y_fit, color='r', alpha=0.5, label='Polynomial fit')
+    lines = ax1.plot(x_fit, y_fit, color='r', alpha=0.5, label='Polynomial fit')
     ax1.scatter(x, y, s=4, color='b', label='Data points')
     ax1.set_title(f'Polynomial fit example deg={deg}')
     ax1.legend()
+    plt.subplots_adjust(right=0.8)
+    plt.table([['{:.10f}'.format(coeffs[x])[:9]] for x in range(len(coeffs)-1, -1, -1)], 
+              rowLabels=[ascii_lowercase[x] for x in range(deg+1)], 
+              colLabels=['Poly Coeffs'], loc='right', colWidths = [0.2])
+    #plt.text(15, 3.4, 'Coefficients', size=12)
+    cursor = mplcursors.cursor()
     plt.show()
-    plt.scatter()
 
 def scatter_plot(x, y):
     x_data = np.array(x)
@@ -104,9 +114,9 @@ def scatter_plot(x, y):
 
 
 if __name__ == '__main__':
-    x, y, x_dates = get_test_data()
-    degree = 30
-    scatter_poly(x, y, degree)
+
+    # TODO: Add plot color preferences to the input map
+    plot('scatter_poly', get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 3})
 
 
 '''
