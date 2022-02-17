@@ -139,7 +139,7 @@ def convert_county_coords():
     with open(f'{outputDir}county_coords.csv', 'w') as w:
 
       # header
-      w.write('id INTEGER PRIMARY KEY,county_code INTEGER,geo_point VARCHAR(50),geo_shape VARCHAR(MAX)\n')
+      w.write('county_code INTEGER PRIMARY KEY,geo_point VARCHAR(50),geo_shape VARCHAR(MAX)\n')
 
       # eat header
       f.readline()
@@ -164,7 +164,7 @@ def convert_county_coords():
 
         if not skip:
           # prepend '01' to code, indicating county is from united states
-          w.write(f'{id};01{county_code};{geo_point};{geo_shape}\n')
+          w.write(f'01{county_code};{geo_point};{geo_shape}\n')
           id += 1
 
 def build_weather_table():
