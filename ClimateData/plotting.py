@@ -1,10 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
+NavigationToolbar2Tk)
 import numpy.polynomial.polynomial as poly
 import pandas as pd
 import mplcursors 
 from string import ascii_lowercase
+from tkinter import *
 
 
 '''
@@ -52,7 +55,8 @@ def plot(ptype, df, plot_vars_map):
     elif ptype == 'poly':
         pass
     elif ptype == 'scatter_poly':
-        scatter_poly(x_data, y_data, plot_vars_map['degree'])
+        #scatter_poly(x_data, y_data, plot_vars_map['degree'])
+        tkinter_scatter_poly(x_data, y_data, plot_vars_map['degree'])
     elif ptype == 'us_heatmap':
         pass
     else:
@@ -112,7 +116,30 @@ def tkinter_scatter_poly(x, y, deg):
     x_fit = np.array(x)
     y_fit = fiteq(x_fit)
 
+    fig = Figure()
+    ax1 = fig.add_subplot()
+    lines = ax1.plot(x_fit, y_fit, color='r', alpha=0.5, label='Polynomial fit')
+    ax1.scatter(x, y, s=4, color='b', label='Data points')
+    ax1.set_title(f'Polynomial fit example deg={deg}')
+    ax1.legend()
 
+    fig.subplots_adjust(right=0.8)
+
+    # fig.table([['{:.10f}'.format(coeffs[x])[:9]] for x in range(len(coeffs)-1, -1, -1)],
+    #           rowLabels=[ascii_lowercase[x] for x in range(deg+1)],
+    #           colLabels=['Poly Coeffs'], loc='right', colWidths = [0.2])
+    fig.text(15, 3.4, 'Coefficients', size=12)
+
+    canvas = FigureCanvasTkAgg(fig, master=window) # window is main tkinter window
+    canvas.get_tk_widget().pack()
+
+    # creating the Matplotlib toolbar
+    toolbar = NavigationToolbar2Tk(canvas,
+                                   window)
+    toolbar.update()
+
+    # placing the toolbar on the Tkinter window
+    canvas.get_tk_widget().pack()
 
 def scatter_plot(x, y):
     x_data = np.array(x)
@@ -129,7 +156,29 @@ def scatter_plot(x, y):
 
 
 if __name__ == '__main__':
-
     # TODO: Add plot color preferences to the input map
-    plot('scatter_poly', get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 3})
+    #plot('scatter_poly', get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 3})
+
+    # the main Tkinter window
+    window = Tk()
+
+    # setting the title
+    window.title('Plotting in Tkinter')
+
+    # dimensions of the main window
+    window.geometry("500x500")
+
+    # button that displays the plot
+    plot_button = Button(master=window,
+                         command=plot('scatter_poly', get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 3}),
+                         height=2,
+                         width=10,
+                         text="Plot")
+
+    # place the button
+    # in main window
+    plot_button.pack()
+
+    # run the gui
+    window.mainloop()
 
