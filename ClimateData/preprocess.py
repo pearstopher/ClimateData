@@ -3,6 +3,7 @@ import sys
 import csv
 import numpy as np
 import pandas as pd
+import urllib.request
 
 datadir = './data/raw/'
 outputDir = './data/processed/'
@@ -18,7 +19,7 @@ def test_countycodes():
 
   # read in county code mappings
   county_map = {}
-  with open('./data/processed/county_codes.csv', 'r') as f:
+  with open(f'{outputDir}county_codes.csv', 'r') as f:
     # eat header
     f.readline()
 
@@ -31,7 +32,7 @@ def test_countycodes():
       county_map[values[1]] = values[0]
 
   # iterate over data set
-  with open('./data/processed/weather.csv', 'r') as f:
+  with open(f'{outputDir}weather.csv', 'r') as f:
     # eat header
     f.readline()
 
@@ -49,7 +50,7 @@ def test_countycodes():
 
 def convert_countycodes():
   state_map = {}
-  with open('./data/raw/county-state-codes.txt', 'r') as f:
+  with open(f'{datadir}county-state-codes.txt', 'r') as f:
     lines = f.readlines()
     for line in lines:
       line = line.strip()
@@ -59,7 +60,7 @@ def convert_countycodes():
 
   # read in postal fips to ncdc fips from county-to-climdivs.txt
   county_map = {}
-  with open('./data/raw/county-to-climdivs.txt', 'r') as f:
+  with open(f'{datadir}county-to-climdivs.txt', 'r') as f:
     lines = f.readlines()
     for line in lines:
       line = line.strip()
@@ -68,8 +69,8 @@ def convert_countycodes():
         county_map[values[0]] = values[1]
 
   # converts tab-delimited county codes to comma delimited csv
-  with open('./data/raw/us-county-codes.txt', 'r') as f:
-    with open('./data/processed/county_codes.csv', 'w') as w:
+  with open(f'{datadir}us-county-codes.txt', 'r') as f:
+    with open(f'{outputDir}county_codes.csv', 'w') as w:
 
       # header
       w.write('id INTEGER PRIMARY KEY,county_code INTEGER,county_name VARCHAR(50),state VARCHAR(2),country VARCHAR(3)\n')
@@ -100,6 +101,66 @@ def convert_countycodes():
           # prepend '01' to code, indicating county is from united states
           # add 'US' value for country column
           w.write(f'{id},01{county_code},{name},{state},US\n')
+          id += 1
+
+def convert_county_coords():
+  # download coordinate data
+  if not os.path.exists(f'{datadir}us-county-boundaries.csv'):
+    print('downloading coordinate data.... (194 MB)')
+    urllib.request.urlretrieve('https://public.opendatasoft.com/explore/dataset/us-county-boundaries/download/?format=csv&timezone=America/Los_Angeles&lang=en&use_labels_for_header=true&csv_separator=%3B', f'{datadir}us-county-boundaries.csv')
+    print('finished')
+
+  state_map = {}
+  with open(f'{datadir}county-state-codes.txt', 'r') as f:
+    lines = f.readlines()
+    for line in lines:
+      line = line.strip()
+      values = line.split(' ')
+      state_map[values[1]] = values[0]
+
+
+  # read in postal fips to ncdc fips from county-to-climdivs.txt
+  county_map = {}
+  with open(f'{datadir}county-to-climdivs.txt', 'r') as f:
+    lines = f.readlines()
+    for line in lines:
+      line = line.strip()
+      if len(line) == 16:
+        values = line.split(' ')
+        county_map[values[0]] = values[1]
+
+  
+  # converts county coords csv to 
+  with open(f'{datadir}us-county-boundaries.csv', 'r') as f:
+    with open(f'{outputDir}county_coords.csv', 'w') as w:
+
+      # header
+      w.write('id INTEGER PRIMARY KEY,county_code INTEGER,geo_point VARCHAR(50),geo_shape VARCHAR(MAX)\n')
+
+      # eat header
+      f.readline()
+
+      # iterate lines
+      lines = f.readlines()
+      id = 1
+      for line in lines:
+        parts = line.split(';')
+
+        geo_point = parts[0]
+        geo_shape = parts[1]
+        state = parts[8]
+        county_code = parts[3]
+        skip = False
+
+        if state in state_map:
+          county_code = f'{state_map[state]}{county_code}'
+        else:
+          skip = True
+          print(f'skipping county coord {parts[2:]}')
+
+        if not skip:
+          # prepend '01' to code, indicating county is from united states
+          w.write(f'{id};01{county_code};{geo_point};{geo_shape}\n')
           id += 1
 
 
@@ -157,3 +218,4 @@ if __name__ == '__main__':
     # process county codes and test the output
     convert_countycodes()
     test_countycodes()
+    convert_county_coords()
