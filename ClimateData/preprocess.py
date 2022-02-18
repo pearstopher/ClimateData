@@ -180,7 +180,7 @@ def build_drought_table():
             lines = f.readlines()
             for line in lines:
                 parts = line.split()
-                if int(parts[0][0:3]) > 48:
+                if int(parts[0][0:3]) > 48 or int(parts[0][-4:]) < 1897:
                     continue
                 parts[0] = parts[0][1:3] + parts[0][6:]
                 newLines.append(parts)
