@@ -362,8 +362,4 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-/ClimdateData/data/complte.csv
-/ClimateData/data/complete.csv
-/ClimateData/data/processed/complete.csv
-/ClimateData/data/processed/weather.csv
-/ClimateData/data/processed/county_codes.csv
+/ClimateData/data/processed/

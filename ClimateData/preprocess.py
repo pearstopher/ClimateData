@@ -8,8 +8,6 @@ datadir = './data/raw/'
 droughtDir = f'{datadir}drought/'
 outputDir = './data/processed/'
 order = ['min', 'avg', 'max', 'precip']
-filesToStrip = ['mintmp', 'avgtmp', 'maxtmp', 'precip']
-colsPrefix = ['tmp_avg', 'tmp_max', 'tmp_min', 'precip']
 months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 
 weatherFileName = 'weather.csv'
@@ -108,11 +106,13 @@ def convert_countycodes():
           id += 1
 
 def build_weather_table():
+    filesToStrip = ['mintmp', 'avgtmp', 'maxtmp', 'precip']
+    colsPrefix = ['tmp_avg', 'tmp_max', 'tmp_min', 'precip']
+
     icols = [i for i in range(len(months) + 1)]
     dtypes = [str] + [str] * len(months)
     d = pd.DataFrame(np.vstack([icols, dtypes])).to_dict(orient='records')[1]
     dff = pd.DataFrame()
-
 
     for filename, prefix, i in zip(filesToStrip, colsPrefix, range(len(colsPrefix))):
 
@@ -158,11 +158,31 @@ def build_weather_table():
     dff.to_csv(f'{outputDir}{weatherFileName}', index=False)
     print('Succesful merge!')
 
+def build_drought_table():
+    icols = [i for i in range(len(months) + 1)]
+    dtypes = [str] + [str] * len(months)
+    d = pd.DataFrame(np.vstack([icols, dtypes])).to_dict(orient='records')[1]
+    dff = pd.DataFrame()
+
+    for bf in os.listdir(droughtDir):
+        newFileName = bf[8:-4] + '.csv'
+        with open(f'{droughtDir}{bf}', 'r') as f: 
+
+            lines = f.readlines()
+
+
+            for line in lines:
+                parts = line.split()
+                parts[0] = parts[0][1:5] + parts[0][7:]
+                
 
 def processFiles():
     # process county codes and test the output
-    buibuild_weather_table()
+    #build_drought_table()
+    build_weather_table()
     convert_countycodes()
+
+    # TODO: Move this into a test suite
     test_countycodes()
 
 
