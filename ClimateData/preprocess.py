@@ -180,6 +180,11 @@ def build_drought_table():
             lines = f.readlines()
             for line in lines:
                 parts = line.split()
+
+                # TODO: Add the years of 1895 & 1896 back in. It looks like the bad 
+                # data comes from the rolling averages of 12 & 24 months respectively
+                # (which makes sense) - but we'd need to handle this in the ui/db and 
+                # not allow the user to select these two values for that date range
                 if int(parts[0][0:3]) > 48 or int(parts[0][-4:]) < 1897:
                     continue
                 parts[0] = parts[0][1:3] + parts[0][6:]
