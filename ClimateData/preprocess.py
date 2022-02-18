@@ -6,11 +6,16 @@ import pandas as pd
 import urllib.request
 
 datadir = './data/raw/'
+droughtDir = f'{datadir}drought/'
 outputDir = './data/processed/'
 order = ['min', 'avg', 'max', 'precip']
 filesToStrip = ['mintmp', 'avgtmp', 'maxtmp', 'precip']
 colsPrefix = ['tmp_avg', 'tmp_max', 'tmp_min', 'precip']
 months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+
+weatherFileName = 'weather.csv'
+droughtFileName = 'drought.csv'
+countyCodesName = 'county_codes.csv'
 
 
 # ensures that each entry in complete.csv has a corresponding county mapping in county_codes.csv
@@ -19,7 +24,7 @@ def test_countycodes():
 
   # read in county code mappings
   county_map = {}
-  with open(f'{outputDir}county_codes.csv', 'r') as f:
+  with open(f'{outputDir}{countyCodesName}', 'r') as f:
     # eat header
     f.readline()
 
@@ -32,7 +37,7 @@ def test_countycodes():
       county_map[values[1]] = values[0]
 
   # iterate over data set
-  with open(f'{outputDir}weather.csv', 'r') as f:
+  with open(f'{outputDir}{weatherFileName}', 'r') as f:
     # eat header
     f.readline()
 
@@ -70,7 +75,7 @@ def convert_countycodes():
 
   # converts tab-delimited county codes to comma delimited csv
   with open(f'{datadir}us-county-codes.txt', 'r') as f:
-    with open(f'{outputDir}county_codes.csv', 'w') as w:
+    with open(f'{outputDir}{countyCodesName}', 'w') as w:
 
       # header
       w.write('id INTEGER PRIMARY KEY,county_code INTEGER,county_name VARCHAR(50),state VARCHAR(2),country VARCHAR(3)\n')
@@ -164,7 +169,7 @@ def convert_county_coords():
           id += 1
 
 
-if __name__ == '__main__':
+def build_weather_table():
     icols = [i for i in range(len(months) + 1)]
     dtypes = [str] + [str] * len(months)
     d = pd.DataFrame(np.vstack([icols, dtypes])).to_dict(orient='records')[1]
@@ -212,10 +217,17 @@ if __name__ == '__main__':
 
     # WARNING: If you open this file in Excel without specifying the first 
     # column is a string, it will remove all the first zeros in the ID column
-    dff.to_csv(f'{outputDir}weather.csv', index=False)
+    dff.to_csv(f'{outputDir}{weatherFileName}', index=False)
     print('Succesful merge!')
 
+
+def processFiles():
     # process county codes and test the output
+    build_weather_table()
     convert_countycodes()
     test_countycodes()
     convert_county_coords()
+
+
+if __name__ == '__main__':
+    processFiles()
