@@ -4,6 +4,7 @@ import csv
 import numpy as np
 import pandas as pd
 import urllib.request
+import json
 
 datadir = './data/raw/'
 droughtDir = f'{datadir}drought/'
@@ -14,6 +15,7 @@ months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 
 weatherFileName = 'weather.csv'
 droughtFileName = 'drought.csv'
 countyCodesName = 'county_codes.csv'
+countyCoordsName = 'county_coords.csv'
 
 
 # ensures that each entry in complete.csv has a corresponding county mapping in county_codes.csv
@@ -132,37 +134,43 @@ def convert_county_coords():
         values = line.split(' ')
         county_map[values[0]] = values[1]
 
-  # converts county coords csv to 
+  # converts county coords csv
   with open(f'{datadir}us-county-boundaries.csv', 'r') as f:
-    with open(f'{outputDir}county_coords.csv', 'w') as w:
+    with open(f'{outputDir}{countyCoordsName}', 'w') as w:
+      # this csv contains very large fields so
+      # we must increase the field size limit to something larger
+      csv.field_size_limit(0x1000000)
+      reader = csv.reader(f, delimiter=';')
+      columns = next(reader)
 
       # header
       w.write('county_code INTEGER PRIMARY KEY,geo_point VARCHAR(50),geo_shape VARCHAR(MAX)\n')
 
-      # eat header
-      f.readline()
-
       # iterate lines
-      lines = f.readlines()
       id = 1
-      for line in lines:
-        parts = line.split(';')
-
-        geo_point = parts[0]
-        geo_shape = parts[1]
-        state = parts[8]
-        county_code = parts[3]
+      for row in reader:
+        geo_point = row[0]
+        geo_shape = row[1]
+        state = row[8]
+        county_code = row[3]
         skip = False
 
         if state in state_map:
           county_code = f'{state_map[state]}{county_code}'
         else:
           skip = True
-          print(f'skipping county coord {parts[2:]}')
+          print(f'skipping county coord {row[2:]}')
 
         if not skip:
+          # process geo shape into our db format
+          shape_json = json.loads(geo_shape)
+          shape_processed = '"{'
+          for coord in shape_json["coordinates"][0]:
+            shape_processed += f'{{""{coord[0]}"",""{coord[1]}""}},'
+          shape_processed = shape_processed.strip(',') + '}"'
+
           # prepend '01' to code, indicating county is from united states
-          w.write(f'01{county_code};{geo_point};{geo_shape}\n')
+          w.write(f'01{county_code},"{geo_point}",{shape_processed}\n')
           id += 1
 
 def build_weather_table():
