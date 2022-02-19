@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numpy.polynomial.polynomial as poly
 import pandas as pd
-import mplcursors 
+import mplcursors
 from string import ascii_lowercase
 
 '''
@@ -35,6 +35,7 @@ def get_test_data():
             y_data.append(j)
 
     return [x_data, y_data, x_dates_format]
+ 
 
 def get_test_data_raw():
     df = pd.read_csv(csv_path, delimiter=',', nrows=127, header=None)
