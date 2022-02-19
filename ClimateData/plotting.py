@@ -49,6 +49,8 @@ def plot(ptype, df, plot_vars_map):
         pass
     elif ptype == 'poly':
         pass
+    elif ptype == 'poly_deriv':
+        plot_poly_deriv(x_data, y_data, plot_vars_map['degree'], plot_vars_map['deriv_degree'])
     elif ptype == 'scatter_poly':
         scatter_poly(x_data, y_data, plot_vars_map['degree'])
     elif ptype == 'us_heatmap':
@@ -99,6 +101,23 @@ def scatter_poly(x, y, deg):
     cursor = mplcursors.cursor()
     plt.show()
 
+def plot_poly_deriv(x, y, deg, deriv_deg):
+    coeffs = poly.polyfit(x, y, deg)
+    dcoeffs = poly.polyder(coeffs, deriv_deg)
+    def fiteq(x, idx=0):
+        if idx == deg - deriv_deg:
+            return dcoeffs[idx] * x ** (idx)
+        else:
+            return dcoeffs[idx] * x ** (idx) + fiteq(x, idx+1)
+
+    x_fit = np.array(x)
+    y_fit = fiteq(x_fit)
+
+    fig, ax1 = plt.subplots()
+    lines = ax1.plot(x_fit, y_fit, color='r', alpha=0.5, label=f'Polynomial deg={deg}, Derivative d={deriv_deg}')
+    ax1.legend()
+    plt.show()
+
 def scatter_plot(x, y):
     x_data = np.array(x)
     y_data = np.array(y)
@@ -116,7 +135,8 @@ def scatter_plot(x, y):
 if __name__ == '__main__':
 
     # TODO: Add plot color preferences to the input map
-    plot('scatter_poly', get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 3})
+    #plot('scatter_poly', get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 3})
+    plot('poly_deriv', get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 5, 'deriv_degree' : 2})
 
 
 '''
