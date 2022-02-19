@@ -114,7 +114,7 @@ def plot_poly_deriv(x, y, deg, deriv_deg):
     y_fit = fiteq(x_fit)
 
     fig, ax1 = plt.subplots()
-    lines = ax1.plot(x_fit, y_fit, color='r', alpha=0.5, label=f'Polynomial Derivative d={deriv_deg}')
+    lines = ax1.plot(x_fit, y_fit, color='r', alpha=0.5, label=f'Polynomial deg={deg}, Derivative d={deriv_deg}')
     ax1.legend()
     plt.show()
 
@@ -136,7 +136,7 @@ if __name__ == '__main__':
 
     # TODO: Add plot color preferences to the input map
     #plot('scatter_poly', get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 3})
-    plot('poly_deriv', get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 3, 'deriv_degree' : 1})
+    plot('poly_deriv', get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 5, 'deriv_degree' : 2})
 
 
 '''
