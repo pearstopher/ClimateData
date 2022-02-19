@@ -224,20 +224,60 @@ def build_drought_table():
     d = pd.DataFrame(np.vstack([icols, dtypes])).to_dict(orient='records')[1]
     dff = pd.DataFrame()
 
-    for bf in os.listdir(droughtDir):
-        newFileName = bf[8:-4] + '.csv'
+    for i, bf in enumerate(os.listdir(droughtDir)):
+        if bf == 'drought-readme.txt':
+            continue
+
+        datatype = bf[8:-4]
+        cols = ['id INTEGER PRIMARY KEY']
+        for m in months:
+            cols.append(f'{datatype}_{m} FLOAT')
+
         with open(f'{droughtDir}{bf}', 'r') as f: 
 
+
+            newLines = []
             lines = f.readlines()
-
-
             for line in lines:
                 parts = line.split()
-                parts[0] = parts[0][1:5] + parts[0][7:]
-                
+
+                # TODO: Add the years of 1895 & 1896 back in. It looks like the bad 
+                # data comes from the rolling averages of 12 & 24 months respectively
+                # (which makes sense) - but we'd need to handle this in the ui/db and 
+                # not allow the user to select these two values for that date range
+                if int(parts[0][0:3]) > 48 or int(parts[0][-4:]) < 1897:
+                    continue
+                parts[0] = parts[0][1:3] + parts[0][6:]
+                newLines.append(parts)
+
+            df = pd.DataFrame(newLines, columns=cols)
+
+        if i == 0:
+            # Add USA Country code
+            cc = pd.DataFrame(['01']*len(df), dtype=(str))
+            df.iloc[:,0] = cc.iloc[:,0].str[:] + df.iloc[:,0].str[:]
+
+            # Add columns (along with id column this first time)
+            df.columns = cols
+            dff = pd.DataFrame(df, columns=cols)
+        else:
+            # Add columns
+            df.columns = cols
+            # Insure id parity here! 
+            for v1, v2 in zip(dff.iloc[:,0], df.iloc[:,0]):
+                # Don't compare country code as it hasn't been added to anything but the primary id
+                if v1[2:] != v2:
+                    raise RuntimeError('Invalid Data Join')
+
+            df = df.iloc[:,1:]
+            dff = dff.join(df)
+        print(dff)
+    dff.to_csv(f'{outputDir}{droughtFileName}', index=False)
+    print('Succesful merge!')
 
 def processFiles():
     # process county codes and test the output
+    build_drought_table()
     build_weather_table()
     convert_countycodes()
     convert_county_coords()
