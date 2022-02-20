@@ -24,7 +24,11 @@ mapFrame.pack(side=BOTTOM)
 #   map_widget.set_zoom(10)
     
 def SelectState(event = None):
-  state = event.widget.get()
+  if(event == None):
+    state = "Oregon"
+  else:
+    state = event.widget.get()
+  
   marker1 = map_widget.set_address(state, marker=True)
   map_widget.set_zoom(7)
 
@@ -67,5 +71,7 @@ dropdown.pack(pady=10)
 
 map_widget = TKMV(root, width=800, height=600, corner_radius=100)
 map_widget.place(relx=0.5, rely=0.5, anchor=CENTER)
+map_widget.set_address("Colorado")
+map_widget.set_zoom(4)
 
 root.mainloop()
