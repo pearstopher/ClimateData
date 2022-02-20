@@ -1,11 +1,13 @@
 from cgitb import text
 from tkinter import *
 from tkinter import ttk
+from turtle import left
 from tkintermapview import TkinterMapView as TKMV
 import psycopg2
 import database
 conn = psycopg2.connect("host=localhost dbname=postgres user=postgres password=PASSWORD")
 cur = conn.cursor()
+marks = []
 
 root = Tk()
 root.geometry("1500x900")
@@ -14,6 +16,8 @@ buttonFrame = Frame(root)
 buttonFrame.pack()
 mapFrame = Frame(root)
 mapFrame.pack(side=BOTTOM)
+rightFrame = Frame(root)
+rightFrame.pack(side=RIGHT)
 
 states_abb = {
     "Alabama": "AL",
@@ -68,6 +72,10 @@ states_abb = {
     "Wyoming": "WY",
 }
 
+def clearMarks():
+  for mark in marks:
+    mark.delete()
+
 def SelectState(event = None):
   state = event.widget.get()
   
@@ -78,13 +86,9 @@ def SelectState(event = None):
     print(row)
     mark = map_widget.set_address(f"%s, %s" % (row[2], state), marker=True)
     mark.set_text(row[2] + ", " + state)
+    marks.append(mark)
   
   map_widget.set_zoom(8)
-
-# ORButton = Button(buttonFrame, text="Oregon", command=SelectOR)
-# ORButton.pack(side=LEFT)
-# NYButton = Button(buttonFrame, text="New York", command=SelectNY)
-# NYButton.pack(side=LEFT)
 
 #Initialize dropdown Widget *Source Adriana Swantz UI Code
 dropdown = ttk.Combobox(buttonFrame, font="Verdana 15 bold")
@@ -96,6 +100,10 @@ dropdown['values'] = (['Alaska','Alabama','Arkansas','Arizona','California','Col
 'Virgina','Vermont','Washington','Wisconsin','West Virginia','Wyoming'])
 dropdown.bind('<<ComboboxSelected>>', SelectState)
 dropdown.pack(pady=10)
+
+#Right Frame
+clearButton = Button(rightFrame, text="Clear all marks", command=clearMarks)
+clearButton.pack(expand=True)
 
 map_widget = TKMV(root, width=800, height=600, corner_radius=100)
 map_widget.place(relx=0.5, rely=0.5, anchor=CENTER)
