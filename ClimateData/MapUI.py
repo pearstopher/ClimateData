@@ -15,22 +15,71 @@ buttonFrame.pack()
 mapFrame = Frame(root)
 mapFrame.pack(side=BOTTOM)
 
-# def SelectOR():
-#   map_widget.set_address("Multnomah", "Oregon", "United States")
-#   map_widget.set_zoom(6)
+states_abb = {
+    "Alabama": "AL",
+    "Alaska": "AK",
+    "Arizona": "AZ",
+    "Arkansas": "AR",
+    "California": "CA",
+    "Colorado": "CO",
+    "Connecticut": "CT",
+    "Delaware": "DE",
+    "Florida": "FL",
+    "Georgia": "GA",
+    "Hawaii": "HI",
+    "Idaho": "ID",
+    "Illinois": "IL",
+    "Indiana": "IN",
+    "Iowa": "IA",
+    "Kansas": "KS",
+    "Kentucky": "KY",
+    "Louisiana": "LA",
+    "Maine": "ME",
+    "Maryland": "MD",
+    "Massachusetts": "MA",
+    "Michigan": "MI",
+    "Minnesota": "MN",
+    "Mississippi": "MS",
+    "Missouri": "MO",
+    "Montana": "MT",
+    "Nebraska": "NE",
+    "Nevada": "NV",
+    "New Hampshire": "NH",
+    "New Jersey": "NJ",
+    "New Mexico": "NM",
+    "New York": "NY",
+    "North Carolina": "NC",
+    "North Dakota": "ND",
+    "Ohio": "OH",
+    "Oklahoma": "OK",
+    "Oregon": "OR",
+    "Pennsylvania": "PA",
+    "Rhode Island": "RI",
+    "South Carolina": "SC",
+    "South Dakota": "SD",
+    "Tennessee": "TN",
+    "Texas": "TX",
+    "Utah": "UT",
+    "Vermont": "VT",
+    "Virginia": "VA",
+    "Washington": "WA",
+    "West Virginia": "WV",
+    "Wisconsin": "WI",
+    "Wyoming": "WY",
+}
 
-# def SelectNY():
-#   map_widget.set_address("New York", "United")
-#   map_widget.set_zoom(10)
-    
 def SelectState(event = None):
-  if(event == None):
-    state = "Oregon"
-  else:
-    state = event.widget.get()
+  state = event.widget.get()
   
-  marker1 = map_widget.set_address(state, marker=True)
-  map_widget.set_zoom(7)
+  cur.execute("""SELECT * FROM county_codes WHERE state = %s;""", [states_abb[state]])
+  conn.commit()
+  data = cur.fetchall()
+  for row in data:
+    print(row)
+    mark = map_widget.set_address(f"%s, %s" % (row[2], state), marker=True)
+    mark.set_text(row[2] + ", " + state)
+  
+  map_widget.set_zoom(8)
 
 # ORButton = Button(buttonFrame, text="Oregon", command=SelectOR)
 # ORButton.pack(side=LEFT)
@@ -47,27 +96,6 @@ dropdown['values'] = (['Alaska','Alabama','Arkansas','Arizona','California','Col
 'Virgina','Vermont','Washington','Wisconsin','West Virginia','Wyoming'])
 dropdown.bind('<<ComboboxSelected>>', SelectState)
 dropdown.pack(pady=10)
-
-
-
-# #Initialize Data Table Widget *Source Adriana Swantz UI Code
-# data_table = ttk.Treeview(buttonFrame)
-# data_table['columns'] = ('id', 'county_code', 'county_name', 'state', 'country')
-# data_table.column('#0', width=0, stretch=NO)
-# data_table.column('id', width=80)
-# data_table.column('county_code', width=110)
-# data_table.column('county_name', width=110)
-# data_table.column('state', width=80)
-# data_table.column('country', width=80)
-
-# data_table.heading('#0', text="", anchor=CENTER)
-# data_table.heading('id', text="Id")
-# data_table.heading('county_code', text="County Code")
-# data_table.heading('county_name', text="County Name")
-# data_table.heading('state', text="State")
-# data_table.heading('country', text="Country")
-
-# data_table.pack()
 
 map_widget = TKMV(root, width=800, height=600, corner_radius=100)
 map_widget.place(relx=0.5, rely=0.5, anchor=CENTER)
