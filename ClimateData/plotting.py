@@ -1,6 +1,6 @@
+import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
 NavigationToolbar2Tk)
 import numpy.polynomial.polynomial as poly
@@ -10,6 +10,7 @@ from string import ascii_lowercase
 from tkinter import *
 
 
+matplotlib.use("TkAgg")
 '''
 TODO
 functions to implement
@@ -116,19 +117,15 @@ def tkinter_scatter_poly(x, y, deg):
     x_fit = np.array(x)
     y_fit = fiteq(x_fit)
 
-    fig = Figure()
-    ax1 = fig.add_subplot()
+    fig, ax1 = plt.subplots()
     lines = ax1.plot(x_fit, y_fit, color='r', alpha=0.5, label='Polynomial fit')
-    ax1.scatter(x, y, s=4, color='b', label='Data points')
+    scatter = ax1.scatter(x, y, s=4, color='b', label='Data points')
     ax1.set_title(f'Polynomial fit example deg={deg}')
     ax1.legend()
-
-    fig.subplots_adjust(right=0.8)
-
-    # fig.table([['{:.10f}'.format(coeffs[x])[:9]] for x in range(len(coeffs)-1, -1, -1)],
-    #           rowLabels=[ascii_lowercase[x] for x in range(deg+1)],
-    #           colLabels=['Poly Coeffs'], loc='right', colWidths = [0.2])
-    fig.text(15, 3.4, 'Coefficients', size=12)
+    plt.subplots_adjust(right=0.8)
+    plt.table([['{:.10f}'.format(coeffs[x])[:9]] for x in range(len(coeffs)-1, -1, -1)],
+              rowLabels=[ascii_lowercase[x] for x in range(deg+1)],
+              colLabels=['Poly Coeffs'], loc='right', colWidths = [0.2])
 
     canvas = FigureCanvasTkAgg(fig, master=window) # window is main tkinter window
     canvas.get_tk_widget().pack()
@@ -141,25 +138,11 @@ def tkinter_scatter_poly(x, y, deg):
     # placing the toolbar on the Tkinter window
     canvas.get_tk_widget().pack()
 
-def scatter_plot(x, y):
-    x_data = np.array(x)
-    y_data = np.array(y)
-
-    y_axis = np.arange(0, 120, 10)
-    x_axis = np.arange(x_data[0], x_data[-1], 2)
-
-    plt.figure(figsize=(20,5))
-    plt.xticks(x_axis)
-    plt.yticks(y_axis)
-    plt.scatter(x_data, y_data)
-    plt.show()
-
-
 if __name__ == '__main__':
     # TODO: Add plot color preferences to the input map
     #plot('scatter_poly', get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 3})
 
-    # the main Tkinter window
+    #the main Tkinter window
     window = Tk()
 
     # setting the title
