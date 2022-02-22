@@ -144,7 +144,7 @@ def convert_county_coords():
       columns = next(reader)
 
       # header
-      w.write('county_code INTEGER PRIMARY KEY,geo_point VARCHAR(50),geo_shape VARCHAR(MAX)\n')
+      w.write('county_code INTEGER PRIMARY KEY,geo_point VARCHAR(50),geo_shape TEXT[][]\n')
 
       # iterate lines
       id = 1
