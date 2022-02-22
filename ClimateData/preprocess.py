@@ -3,6 +3,8 @@ import sys
 import csv
 import numpy as np
 import pandas as pd
+import urllib.request
+import json
 
 datadir = './data/raw/'
 droughtDir = f'{datadir}drought/'
@@ -13,6 +15,7 @@ months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 
 weatherFileName = 'weather.csv'
 droughtFileName = 'drought.csv'
 countyCodesName = 'county_codes.csv'
+countyCoordsName = 'county_coords.csv'
 
 
 # ensures that each entry in complete.csv has a corresponding county mapping in county_codes.csv
@@ -103,6 +106,71 @@ def convert_countycodes():
           # prepend '01' to code, indicating county is from united states
           # add 'US' value for country column
           w.write(f'{id},01{county_code},{name},{state},US\n')
+          id += 1
+
+def convert_county_coords():
+  # download coordinate data
+  if not os.path.exists(f'{datadir}us-county-boundaries.csv'):
+    print('downloading coordinate data.... (194 MB)')
+    urllib.request.urlretrieve('https://public.opendatasoft.com/explore/dataset/us-county-boundaries/download/?format=csv&timezone=America/Los_Angeles&lang=en&use_labels_for_header=true&csv_separator=%3B', f'{datadir}us-county-boundaries.csv')
+    print('finished')
+
+  state_map = {}
+  with open(f'{datadir}county-state-codes.txt', 'r') as f:
+    lines = f.readlines()
+    for line in lines:
+      line = line.strip()
+      values = line.split(' ')
+      state_map[values[1]] = values[0]
+
+
+  # read in postal fips to ncdc fips from county-to-climdivs.txt
+  county_map = {}
+  with open(f'{datadir}county-to-climdivs.txt', 'r') as f:
+    lines = f.readlines()
+    for line in lines:
+      line = line.strip()
+      if len(line) == 16:
+        values = line.split(' ')
+        county_map[values[0]] = values[1]
+
+  # converts county coords csv
+  with open(f'{datadir}us-county-boundaries.csv', 'r') as f:
+    with open(f'{outputDir}{countyCoordsName}', 'w') as w:
+      # this csv contains very large fields so
+      # we must increase the field size limit to something larger
+      csv.field_size_limit(0x1000000)
+      reader = csv.reader(f, delimiter=';')
+      columns = next(reader)
+
+      # header
+      w.write('county_code INTEGER PRIMARY KEY,geo_point VARCHAR(50),geo_shape TEXT[][]\n')
+
+      # iterate lines
+      id = 1
+      for row in reader:
+        geo_point = row[0]
+        geo_shape = row[1]
+        state = row[8]
+        county_code = row[3]
+        skip = False
+
+        if state in state_map:
+          county_code = f'{state_map[state]}{county_code}'
+        else:
+          skip = True
+          print(f'skipping county coord {row[2:]}')
+
+        if not skip:
+          # process geo shape into our db format
+          shape_json = json.loads(geo_shape)
+          shape_processed = '"{'
+          for coord in shape_json["coordinates"][0]:
+            shape_processed += f'{{""{coord[0]}"",""{coord[1]}""}},'
+          shape_processed = shape_processed.strip(',') + '}"'
+
+          # prepend '01' to code, indicating county is from united states
+          w.write(f'01{county_code},"{geo_point}",{shape_processed}\n')
           id += 1
 
 def build_weather_table():
@@ -220,6 +288,7 @@ def processFiles():
     build_drought_table()
     build_weather_table()
     convert_countycodes()
+    convert_county_coords()
 
     # TODO: Move this into a test suite
     test_countycodes()

@@ -1,5 +1,6 @@
 import psycopg2
 import csv
+import sys
 import os
 import pandas as pd
 from os import listdir
@@ -11,34 +12,61 @@ outputDir = './data/processed/'
 
 #INTERNAL CALLS---------------------------------------------------------------------
 def setup_database():
+    conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+    cur = conn.cursor()
     filenames = find_csv_filenames(f'{outputDir}')
     for fileName in filenames:
-        print(fileName)
-        tableName  = os.path.basename(fileName).split(".")[0]
-        print(tableName)
+        if fileName != "county_coords.csv":
+            tableName  = os.path.basename(fileName).split(".")[0]
+            print(f"Creating table: {tableName}")
+            with open(f'{outputDir}{fileName}', 'r', encoding='utf-8-sig') as f:
+                reader = csv.reader(f)
+                columns = next(reader)
+            columnString = ", ".join(columns)
+            
+            cur.execute("""
+            CREATE TABLE %s(
+            %s)
+            """,
+            [AsIs(tableName), AsIs(columnString),])
+            conn.commit()
 
-        with open(f'{outputDir}{fileName}', 'r', encoding='utf-8-sig') as f:
-            reader = csv.reader(f)
+            with open(f'{outputDir}{fileName}', 'r', encoding='utf-8-sig') as f:
+                next(f)
+                cur.copy_from(f, f'{tableName}', sep=',')
+            conn.commit()
+            print(f"{tableName} successfully created")
+
+
+    cur.close()
+    conn.close()
+    setup_coordinates_table()
+
+def setup_coordinates_table():
+    print("Creating table: county_coords")
+    csv.field_size_limit(sys.maxsize)
+    conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+    cur = conn.cursor()
+    with open(f'{outputDir}county_coords.csv', 'r', encoding='utf-8-sig') as f:
+            reader = csv.reader(f, delimiter=',', quotechar='"')
             columns = next(reader)
-        columnString = ", ".join(columns)
-        print(columnString)
-        
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
-        cur = conn.cursor()
-        cur.execute("""
-        CREATE TABLE %s(
-        %s)
-        """,
-        [AsIs(tableName), AsIs(columnString),])
-        conn.commit()
+            columnString = ", ".join(columns)
+            cur.execute("""
+            CREATE TABLE county_coords(
+            %s)
+            """,
+            [AsIs(columnString),])
+            conn.commit()
+            for row in reader:
+                statement = "INSERT INTO county_coords " + \
+                "(county_code, geo_point, geo_shape) " + \
+                "VALUES ('%s', '%s', '%s')" % (tuple(row[0:3]))
+                cur.execute(statement)
+                conn.commit()
+    cur.close()
+    conn.close()
+    print("county_coords successfully created")
 
-        with open(f'{outputDir}{fileName}', 'r', encoding='utf-8-sig') as f:
-            next(f)
-            cur.copy_from(f, f'{tableName}', sep=',')
-        conn.commit()
-
-        cur.close()
-        conn.close()
 
 def find_csv_filenames(path_to_dir, suffix=".csv"):
     filenames = listdir(path_to_dir)
@@ -184,6 +212,24 @@ def get_data_for_country(columnList, country, startYear, endYear):
         idList = []
         idList = get_ids_by_country(country)
         return get_data(columnList, idList, startYear, endYear)
+
+def get_coordinates(countyId):
+    conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+    cur = conn.cursor()
+    cur.execute("""
+    SELECT * FROM county_coords
+    WHERE county_code = %s;
+    """,
+    [AsIs(countyId)])
+    conn.commit()
+    results = cur.fetchall()
+    cols = []
+    for item in cur.description:
+        cols.append(item[0])
+    cur.close()
+    conn.close()
+    df = pd.DataFrame(data=results, columns=cols)
+    return df
 
 
 
