@@ -22,6 +22,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ClimateData.py" />
+    <Compile Include="plotting.py" />
     <Compile Include="preprocess.py">
       <SubType>Code</SubType>
     </Compile>
@@ -30,6 +31,7 @@
     <Folder Include="data\" />
     <Folder Include="data\processed\" />
     <Folder Include="data\raw\" />
+    <Folder Include="data\raw\drought\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="data\processed\county-to-climdivs.csv" />
@@ -41,6 +43,17 @@
     <Content Include="data\county-readme.txt" />
     <Content Include="data\county-to-climdivs.txt" />
     <Content Include="data\divisional-readme.txt" />
+    <Content Include="data\raw\drought\climdiv-pdsist.txt" />
+    <Content Include="data\raw\drought\climdiv-phdist.txt" />
+    <Content Include="data\raw\drought\climdiv-pmdist.txt" />
+    <Content Include="data\raw\drought\climdiv-sp01st.txt" />
+    <Content Include="data\raw\drought\climdiv-sp02st.txt" />
+    <Content Include="data\raw\drought\climdiv-sp03st.txt" />
+    <Content Include="data\raw\drought\climdiv-sp06st.txt" />
+    <Content Include="data\raw\drought\climdiv-sp09st.txt" />
+    <Content Include="data\raw\drought\climdiv-sp12st.txt" />
+    <Content Include="data\raw\drought\climdiv-sp24st.txt" />
+    <Content Include="data\raw\drought\drought-readme.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
