@@ -115,6 +115,7 @@ def plot_poly_deriv(x, y, deg, deriv_deg):
             return dcoeffs[idx] * x ** (idx)
         else:
             return dcoeffs[idx] * x ** (idx) + fiteq(x, idx+1)
+
 def tkinter_scatter_poly(x, y, deg):
     coeffs = poly.polyfit(x, y, deg)
     def fiteq(x, idx=0):
