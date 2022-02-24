@@ -1,6 +1,8 @@
 import numpy.polynomial.polynomial as poly
 from database import *
 import psycopg2
+import logging
+import os
 
 # Predefined lists
 states = ['AK', 'AL', 'AR', 'AZ', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL', 'GA',
@@ -93,6 +95,7 @@ def build_poly_coeffs_for_county_csv(deg):
     max_data_rows = []
     min_data_rows = []
     precip_data_rows = []
+    missed_counties = []
 
     for state in states:
         print(f"Storing sub-dataframe for state: {state}")
@@ -105,6 +108,8 @@ def build_poly_coeffs_for_county_csv(deg):
             [avg_df, max_df, min_df, precip_df] = get_data_dfs(row)
 
             if avg_df.empty is True and max_df.empty is True and min_df.empty is True and precip_df.empty is True:
+                logging.warning(f'Unable to get weather data for county: {row["county_name"]} state: {row["state"]}')
+                missed_counties.append([row['state'], row['county_name'], row['county_code']])
                 continue
 
             [x_avg, y_avg, x_avg_dates] = get_xy_data(avg_df)
@@ -163,6 +168,14 @@ def build_poly_coeffs_for_county_csv(deg):
     precip_poly_df.to_csv(f"{deg}_precip_poly_test.csv", sep=',', encoding='utf-8', index=False)
     print(f'Successfully wrote polynomial coeffs to csv!')
 
+    if not os.path.exists('missed_counties.txt'):
+        print(f'Writing missed counties to text file!')
+        with open(f'missed_counties.txt', 'w') as text_file:
+            for line in missed_counties:
+                text_file.write('state: ' + str(line[0]) + ', county: ' + str(line[1]) + ', county_code: ' + str(line[2]) + '\n')
+        print(f'Successfully wrote missed counties to text file!')
 
 if __name__ == '__main__':
     build_poly_coeffs_for_county_csv(3)
+    build_poly_coeffs_for_county_csv(2)
+    build_poly_coeffs_for_county_csv(1)
