@@ -63,14 +63,16 @@ def get_xy_data(df):
     x_data = []
     start_year = int(str(df['id'].iloc[0])[6:])
     end_year = int(str(df['id'].iloc[-1])[6:])
-    # for i in df['id']:
+
+    # range(start_year, end_year) == df.shape[0] (num of rows)
+    # Append date formatted
     for i in range(start_year, end_year + 1):
         for j in range(1, 13):
             x_dates_format.append(str(i)[-4:] + '-' + str(j))
             x_data.append(int(str(i)[-4:]) + (j - 1) / 12)
 
+    # Append temp/precip values
     y_data = []
-    # for i, row in df.head(127).iterrows():
     for i, row in df.iterrows():
         for j in row[1:13]:
             y_data.append(j)
