@@ -293,6 +293,10 @@ def processFiles():
     # TODO: Move this into a test suite
     test_countycodes()
 
+def create_working_directory():
+    if not os.path.exists(outputDir):
+        os.makedirs(outputDir)
 
 if __name__ == '__main__':
+    create_working_directory()
     processFiles()
