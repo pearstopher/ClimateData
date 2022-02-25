@@ -26,6 +26,8 @@ precip_cols = ['id', 'precip_jan', 'precip_feb', 'precip_mar', 'precip_apr', 'pr
 coeff_cols = list(string.ascii_lowercase)
 
 ''' Query to get list of ids, county codes, county names, states, and countries from DB'''
+
+
 def get_county_codes_as_df():
     cols = ['id', 'county_code', 'county_name', 'state', 'country']
     conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password=PASSWORD")
@@ -39,6 +41,8 @@ def get_county_codes_as_df():
 
 
 ''' Wrapper to get weather data split into their respective df (avg, max, min, precip) '''
+
+
 def get_data_dfs(row):
     # Could use state from for loop...
     # However, want to stay consistent with state recorded in db record
@@ -58,6 +62,8 @@ def get_data_dfs(row):
 
 
 ''' Get data in x & y format per df '''
+
+
 def get_xy_data(df):
     x_dates_format = []
     x_data = []
@@ -81,7 +87,9 @@ def get_xy_data(df):
 
 
 ''' Builds csv for county polynomial coefficents '''
-def build_poly_coeffs_for_county_csv(deg, der=0):
+
+
+def build_poly_coeffs_for_county_csv(deg, deriv=0):
     print(f'Degree {deg} Polynomial')
 
     if deg < 1:
@@ -89,7 +97,11 @@ def build_poly_coeffs_for_county_csv(deg, der=0):
         quit(1)
 
     # Dynamically create column headers from 'a' ... deg
-    cols = np.hstack(['State', 'County', coeff_cols[:deg+1]])
+    cols = None
+    if deriv > 0:
+        cols = np.hstack(['State', 'County', coeff_cols[:deg + 1], [letter + "'" for letter in coeff_cols[:deg]]])
+    else:
+        cols = np.hstack(['State', 'County', coeff_cols[:deg + 1]])
 
     # Always init
     avg_data_rows = []
@@ -131,25 +143,22 @@ def build_poly_coeffs_for_county_csv(deg, der=0):
             precip_coeffs = poly.polyfit(x_precip, y_precip, deg)
 
             # Dynamically add coefficients (any size)
-            avg_data_rows.append(np.hstack([row['state'], row['county_name'], avg_coeffs]))
-            max_data_rows.append(np.hstack([row['state'], row['county_name'], max_coeffs]))
-            min_data_rows.append(np.hstack([row['state'], row['county_name'], min_coeffs]))
-            precip_data_rows.append(np.hstack([row['state'], row['county_name'], precip_coeffs]))
+            if deriv > 0:
+                assert cols.size > deg + 3
+                avg_deriv = np.polyder(avg_coeffs, deriv)
+                max_deriv = np.polyder(max_coeffs, deriv)
+                min_deriv = np.polyder(min_coeffs, deriv)
+                precip_deriv = np.polyder(precip_coeffs, deriv)
 
-            # Check if derivative order has been passed
-            if der > 0:
-                # Get derivative coeffs of current degree poly coeffs
-                print(f'Calculate and storing the {der} order derivative for county {row["county_name"]}')
-                avg_deriv = np.polyder(avg_coeffs, der)
-                max_deriv = np.polyder(max_coeffs, der)
-                min_deriv = np.polyder(min_coeffs, der)
-                precip_deriv = np.polyder(precip_coeffs, der)
-
-                # Append to existing data
-                avg_data_rows.append(np.hstack([row['state'], row['county_name'], avg_deriv]))
-                max_data_rows.append(np.hstack([row['state'], row['county_name'], max_deriv]))
-                min_data_rows.append(np.hstack([row['state'], row['county_name'], min_deriv]))
-                precip_data_rows.append(np.hstack([row['state'], row['county_name'], precip_deriv]))
+                avg_data_rows.append(np.hstack([row['state'], row['county_name'], avg_coeffs, avg_deriv]))
+                max_data_rows.append(np.hstack([row['state'], row['county_name'], max_coeffs, max_deriv]))
+                min_data_rows.append(np.hstack([row['state'], row['county_name'], min_coeffs, min_deriv]))
+                precip_data_rows.append(np.hstack([row['state'], row['county_name'], precip_coeffs, precip_deriv]))
+            else:
+                avg_data_rows.append(np.hstack([row['state'], row['county_name'], avg_coeffs]))
+                max_data_rows.append(np.hstack([row['state'], row['county_name'], max_coeffs]))
+                min_data_rows.append(np.hstack([row['state'], row['county_name'], min_coeffs]))
+                precip_data_rows.append(np.hstack([row['state'], row['county_name'], precip_coeffs]))
 
     # After data has been looped and appended to, create new dfs to write to csv
     avg_poly_df = pd.DataFrame(avg_data_rows, columns=cols)
@@ -169,8 +178,10 @@ def build_poly_coeffs_for_county_csv(deg, der=0):
         print(f'Writing missed counties to text file!')
         with open(f'missed_counties.txt', 'w') as text_file:
             for line in missed_counties:
-                text_file.write('state: ' + str(line[0]) + ', county: ' + str(line[1]) + ', county_code: ' + str(line[2]) + '\n')
+                text_file.write(
+                    'state: ' + str(line[0]) + ', county: ' + str(line[1]) + ', county_code: ' + str(line[2]) + '\n')
         print(f'Successfully wrote missed counties to text file!')
+
 
 if __name__ == '__main__':
     # Ex) build_poly_coeffs_for_county_csv(degree, derivative order (optional))
