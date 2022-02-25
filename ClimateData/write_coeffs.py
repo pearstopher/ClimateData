@@ -173,4 +173,5 @@ def build_poly_coeffs_for_county_csv(deg, der=0):
         print(f'Successfully wrote missed counties to text file!')
 
 if __name__ == '__main__':
+    # Ex) build_poly_coeffs_for_county_csv(degree, derivative order (optional))
     build_poly_coeffs_for_county_csv(3, 1)
