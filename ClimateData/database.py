@@ -464,4 +464,29 @@ def get_data_for_countries_dataset(countries, columns, startMonth, endMonth, sta
 
 
 
-
+startMonth = 'jan'
+#convertedStartMonth = Months[startMonth.upper()].value
+#print(convertedStartMonth)
+endMonth = 'jun'
+#for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
+#    print(Months(i).name.lower())
+columns = ["tmp_avg", "tmp_min"]
+idList = ["0101001", "0101005"]
+startYear = 1990
+endYear = 1995
+county = "Baldwin"
+state = "AL"
+country = "US"
+countries = ["US"]
+states = ["AL", "OR", "WA"]
+counties = []
+alabama = ["Baldwin", "Bibb", "Calhoun"]
+oregon = ["Linn", "Lane", "Multnomah"]
+washington = ["Clark", "Cowlitz", "Grant"]
+counties.append(alabama)
+counties.append(oregon)
+counties.append(washington)
+results = get_data_for_counties_dataset(states, counties, country, columns, startMonth, endMonth, startYear, endYear)
+#results =get_data_for_states_dataset(states, country, columns, startMonth, endMonth, startYear, endYear)
+#results = get_data_for_countries_dataset(countries, columns, startMonth, endMonth, startYear, endYear)
+print(results)
