@@ -8,6 +8,8 @@ from psycopg2.extensions import AsIs
 from psycopg2 import connect
 from psycopg2 import OperationalError, errorcodes, errors
 from psycopg2 import __version__ as psycopg2_version
+from enum import Enum
+
 
 #Put your postgres password here if different
 password = 'PASSWORD'
@@ -267,11 +269,11 @@ def get_data(columnList, idList, startYear, endYear):
     results = None
     cols = []
     matchString = "|| '%'"
-    defaultColumns = ", cc.county_name, cc.state, cc.country"
+    defaultColumns = "w.id, cc.county_name, cc.state, cc.country, "
     columns = ["w." + col for col in columnList]
     columnString = ", ".join(columns)
     idYearList = []
-    columnString = columnString + defaultColumns
+    columnString = defaultColumns + columnString
     
     for year in range(startYear, endYear+1):
         for dataId in idList:
@@ -462,31 +464,3 @@ def get_data_for_countries_dataset(countries, columns, startMonth, endMonth, sta
     return results
 
 
-
-
-startMonth = 'jan'
-#convertedStartMonth = Months[startMonth.upper()].value
-#print(convertedStartMonth)
-endMonth = 'jun'
-#for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
-#    print(Months(i).name.lower())
-columns = ["tmp_avg", "tmp_min"]
-idList = ["0101001", "0101005"]
-startYear = 1990
-endYear = 1995
-county = "Baldwin"
-state = "AL"
-country = "US"
-countries = ["US"]
-states = ["AL", "OR", "WA"]
-counties = []
-alabama = ["Baldwin", "Bibb", "Calhoun"]
-oregon = ["Linn", "Lane", "Multnomah"]
-washington = ["Clark", "Cowlitz", "Grant"]
-counties.append(alabama)
-counties.append(oregon)
-counties.append(washington)
-results = get_data_for_counties_dataset(states, counties, country, columns, startMonth, endMonth, startYear, endYear)
-#results =get_data_for_states_dataset(states, country, columns, startMonth, endMonth, startYear, endYear)
-#results = get_data_for_countries_dataset(countries, columns, startMonth, endMonth, startYear, endYear)
-print(results)
