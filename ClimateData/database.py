@@ -418,26 +418,50 @@ def get_ids_for_countries_list(countries):
     results['Country'] = countryList
     return results
 
-def get_data_for_counties_dataset(states, counties, country, columnList, startYear, endYear):
+def get_data_for_counties_dataset(states, counties, country, columns, startMonth, endMonth, startYear, endYear):
     results = []
+    columnList = []
+
+    for column in columns:
+        for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
+            to_add = column + '_' + Months(i).name.lower()
+            columnList.append(to_add)
+
     for index, state in enumerate(states):
         for county in counties[index]:
             next_set = get_data_for_single_county(columnList, county, state, country, startYear, endYear)
             results.append(next_set)
     return results
 
-def get_data_for_states_dataset(states, country, columnList, startYear, endYear):
+def get_data_for_states_dataset(states, country, columns, startMonth, endMonth, startYear, endYear):
     results = []
+    columnList = []
+
+    for column in columns:
+        for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
+            to_add = column + '_' + Months(i).name.lower()
+            columnList.append(to_add)
+
     for state in states:
         next_set = get_data_for_state(columnList, state, country, startYear, endYear)
         results.append(next_set)
     return results
 
-def get_data_for_countries_dataset(countries, columnList, startYear, endYear):
+def get_data_for_countries_dataset(countries, columns, startMonth, endMonth, startYear, endYear):
     results = []
+    columnList = []
+
+    for column in columns:
+        for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
+            to_add = column + '_' + Months(i).name.lower()
+            columnList.append(to_add)
+
     for country in countries:
         next_set = get_data_for_country(columnList, country, startYear, endYear)
         results.append(next_set)
     return results
+
+
+
 
 
