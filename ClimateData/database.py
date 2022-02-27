@@ -8,10 +8,26 @@ from psycopg2.extensions import AsIs
 from psycopg2 import connect
 from psycopg2 import OperationalError, errorcodes, errors
 from psycopg2 import __version__ as psycopg2_version
+from enum import Enum
+
 
 #Put your postgres password here if different
 password = 'PASSWORD'
 outputDir = './data/processed/'
+
+class Months(Enum):
+    JAN = 1
+    FEB = 2
+    MAR = 3
+    APR = 4
+    MAY = 5
+    JUN = 6
+    JUL = 7
+    AUG = 8
+    SEP = 9
+    OCT = 10
+    NOV = 11
+    DEC = 12
 
 #INTERNAL CALLS---------------------------------------------------------------------
 def setup_database():
@@ -253,11 +269,11 @@ def get_data(columnList, idList, startYear, endYear):
     results = None
     cols = []
     matchString = "|| '%'"
-    defaultColumns = ", cc.county_name, cc.state, cc.country"
+    defaultColumns = "w.id, cc.county_name, cc.state, cc.country, "
     columns = ["w." + col for col in columnList]
     columnString = ", ".join(columns)
     idYearList = []
-    columnString = columnString + defaultColumns
+    columnString = defaultColumns + columnString
     
     for year in range(startYear, endYear+1):
         for dataId in idList:
@@ -404,23 +420,44 @@ def get_ids_for_countries_list(countries):
     results['Country'] = countryList
     return results
 
-def get_data_for_counties_dataset(states, counties, country, columnList, startYear, endYear):
+def get_data_for_counties_dataset(states, counties, country, columns, startMonth, endMonth, startYear, endYear):
     results = []
+    columnList = []
+
+    for column in columns:
+        for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
+            to_add = column + '_' + Months(i).name.lower()
+            columnList.append(to_add)
+
     for index, state in enumerate(states):
         for county in counties[index]:
             next_set = get_data_for_single_county(columnList, county, state, country, startYear, endYear)
             results.append(next_set)
     return results
 
-def get_data_for_states_dataset(states, country, columnList, startYear, endYear):
+def get_data_for_states_dataset(states, country, columns, startMonth, endMonth, startYear, endYear):
     results = []
+    columnList = []
+
+    for column in columns:
+        for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
+            to_add = column + '_' + Months(i).name.lower()
+            columnList.append(to_add)
+
     for state in states:
         next_set = get_data_for_state(columnList, state, country, startYear, endYear)
         results.append(next_set)
     return results
 
-def get_data_for_countries_dataset(countries, columnList, startYear, endYear):
+def get_data_for_countries_dataset(countries, columns, startMonth, endMonth, startYear, endYear):
     results = []
+    columnList = []
+
+    for column in columns:
+        for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
+            to_add = column + '_' + Months(i).name.lower()
+            columnList.append(to_add)
+
     for country in countries:
         next_set = get_data_for_country(columnList, country, startYear, endYear)
         results.append(next_set)
