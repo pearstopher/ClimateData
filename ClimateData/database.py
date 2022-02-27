@@ -464,5 +464,3 @@ def get_data_for_countries_dataset(countries, columns, startMonth, endMonth, sta
     return results
 
 
-drop_table("county_coords")
-setup_coordinates_table()
