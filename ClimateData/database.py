@@ -77,7 +77,7 @@ def setup_database():
 
 def setup_coordinates_table():
     print("Creating table: county_coords")
-    csv.field_size_limit(sys.maxsize)
+    csv.field_size_limit(2147483647)
     try:
         conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
     except OperationalError as error:
@@ -464,3 +464,5 @@ def get_data_for_countries_dataset(countries, columns, startMonth, endMonth, sta
     return results
 
 
+drop_table("county_coords")
+setup_coordinates_table()
