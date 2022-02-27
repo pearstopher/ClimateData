@@ -6,6 +6,17 @@ from ttkbootstrap import font as tkfont
 from ttkbootstrap.constants import *
 import psycopg2
 import database
+import re
+
+# Helper Functions
+
+def validate_dates(start, end):
+    if bool(re.match("\d+\/\d+", start)) == False or bool(re.match("\d+\/\d+", end)) == False: 
+        return False
+    return True
+
+
+
 
 # Setup database connection
 
@@ -67,8 +78,25 @@ class graphPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        def on_submit(self):
-            raise ValueError('Method not yet implemented.')
+        begin_date = tkboot.StringVar(value="")
+        end_date = tkboot.StringVar(value="")
+
+        #called when submit button for date entry is used
+        def on_submit():
+            #user input is invalid, call validate_dates function
+            if validate_dates(begin_date.get(), end_date.get()) == False:    
+                tkboot.dialogs.Messagebox.show_error("Invalid date entry. Entry must be in form: 'month/year'. Example: '06/93'", title='Invalid date entry')
+            else: 
+                #user input is valid, parse it into two months and two years
+                print("User entered this begin date: " + begin_date.get())
+                print("User entered this ending date: " + end_date.get())
+                print("parsing data into months/ years.....")
+                [begin_month, begin_year] = begin_date.get().split('/')
+                [end_month, end_year] = end_date.get().split('/')
+                print("Begin month in correct format: " + begin_month)
+                print("Begin year in correct format: " + begin_year)
+                print("End month in correct format: " + end_month)
+                print("End year in correct format: " + end_year)
        
         frame = tk.Frame(self)
         frame.grid(row=0, sticky="nw")
@@ -94,13 +122,10 @@ class graphPage(tk.Frame):
         notebook_label.grid(row=1, column=0, padx=(10, 710), pady=(0,10))
 
         #Date range widgets
-        self.begin = tk.StringVar(value="")
-        self.end = tk.StringVar(value="")
-
-        ent = tkboot.Entry(frame_right)
+        ent = tkboot.Entry(frame_right, textvariable=begin_date)
         ent.grid(row=4, column=1, padx=(100,0), pady=(0,0))
 
-        ent = tkboot.Entry(frame_right)
+        ent = tkboot.Entry(frame_right, textvariable=end_date)
         ent.grid(row=5, column=1, padx=(100, 0), pady=(0,0))
 
         begin_date_label = tk.Label(frame_right, font="10", text="Date range begin: ")
@@ -128,7 +153,6 @@ class graphPage(tk.Frame):
         self.data_table.column('county_name', width=110)
         self.data_table.column('county_code', width=110)
         self.data_table.column('country', width=80)
-
         self.data_table.heading('#0', text="", anchor=tk.CENTER)
         self.data_table.heading('state', text="State")
         self.data_table.heading('county_name', text="County Name")
@@ -165,70 +189,31 @@ class graphPage(tk.Frame):
         dropdown_graphs = TTK.Combobox(frame_right, font="Helvetica 12")
         dropdown_graphs.set('Select equation...')
         dropdown_graphs['state'] = 'readonly'
-        dropdown_graphs['values'] = (['Linear', 'Quadratic', 'Cubic', 'n-degree..'])
+        dropdown_graphs['values'] = ['Linear', 'Quadratic', 'Cubic', 'n-degree..']
         #dropdown_graphs.bind('<<ComboboxSelected>>', self.gen_graph)
         dropdown_graphs.grid(row=6, column=1,  padx=(0, 190), pady=(30, 0))
 
-        #Dropdown Widget for data type selection
-        data_type_dict = {
-            "tmp_avg_jan": "January average temperature",
-            "tmp_avg_feb": "February average temperature",
-            "tmp_avg_mar": "March average temperature",
-            "tmp_avg_apr": "April average temperature",
-            "tmp_avg_may": "May average temperature",
-            "tmp_avg_jun": "June average temperature",
-            "tmp_avg_jul": "July average temperature",
-            "tmp_avg_aug": "August average temperature",
-            "tmp_avg_sep": "September average temperature",
-            "tmp_avg_oct": "October average temperature",
-            "tmp_avg_nov": "November average temperature",
-            "tmp_avg_dec": "December average temperature",
-            "tmp_max_jan": "January maximum temperature",
-            "tmp_max_feb": "February maximum temperature",
-            "tmp_max_mar": "March maximum temperature",
-            "tmp_max_apr": "April maximum temperature",
-            "tmp_max_may": "May maximum temperature",
-            "tmp_max_jun": "June maximum temperature",
-            "tmp_max_jul": "July maximum temperature",
-            "tmp_max_aug": "August maximum temperature",
-            "tmp_max_sep": "September maximum temperature",
-            "tmp_max_oct": "October maximum temperature",
-            "tmp_max_nov": "November maximum temperature",
-            "tmp_max_dec": "December maximum temperature",
-            "tmp_min_jan": "January minimum temperature",
-            "tmp_min_feb": "February minimum temperature",
-            "tmp_min_mar": "March minimum temperature",
-            "tmp_min_apr": "April minimum temperature",
-            "tmp_min_may": "May minimum temperature",
-            "tmp_min_jun": "June minimum temperature",
-            "tmp_min_jul": "July minimum temperature",
-            "tmp_min_aug": "August minimum temperature",
-            "tmp_min_sep": "September minimum temperature",
-            "tmp_min_oct": "October minimum temperature",
-            "tmp_min_nov": "November minimum temperature",
-            "tmp_min_dec": "December minimum temperature",
-            "precip_jan": "January precipitation",
-            "precip_feb": "Feburary precipitation",
-            "precip_mar": "March precipitation",
-            "precip_apr": "April precipitation",
-            "precip_may": "May precipitation",
-            "precip_jun": "June precipitation",
-            "precip_jul": "July precipitation",
-            "precip_aug": "August precipitation",
-            "precip_sep": "September precipitation",
-            "precip_oct": "October precipitation",
-            "precip_nov": "November precipitation",
-            "precip_dec": "December precipitation",
-        }
 
-        def gen_graph():
-            raise ValueError('Method not yet implemented.')
+        #Dropdown for datatype selection
+        def gen_datatype_columns(event):
+            print("User selected this data type: " + event.widget.get())
+            print("parsing data type into correct format.... ")
+            datatype_dict = {
+                "Maximum temperature" : "tmp_max",
+                "Minimum temperature" : "tmp_min",
+                "Average temperature" : "tmp_avg",
+                "Precipitation"       : "precip"
+            } 
+            
+            columns = event.widget.get()
+            #Data type 'columns' for database function 'get_data_for_counties_dataset'
+            print("Data type in correct format is: " + datatype_dict[columns])
 
         dropdown_graphs = TTK.Combobox(frame_right, font="Helvetica 12")
-        dropdown_graphs.set('Select data to plot...')
+        dropdown_graphs.set('Select data type...')
         dropdown_graphs['state'] = 'readonly'
-        dropdown_graphs['values'] = [data_type_dict[x] for x in data_type_dict.keys()]
-        #dropdown_graphs.bind('<<ComboboxSelected>>', self.gen_datatype)
+        dropdown_graphs['values'] = ["Minimum temperature", "Maximum temperature", "Average temperature", "Precipitation"]
+        dropdown_graphs.bind('<<ComboboxSelected>>', gen_datatype_columns)
         dropdown_graphs.grid(row=7, column=1,  padx=(0, 190), pady=(30, 0))
 
         # Generate Table Rows
@@ -238,7 +223,6 @@ class graphPage(tk.Frame):
         if event == None:
             county_name = 'no clue what to put here'
         else:
-            print("test2")
             county_name = event.widget.get()
         cur.execute("""
         SELECT county_name FROM county_codes WHERE state = %s;
@@ -246,6 +230,7 @@ class graphPage(tk.Frame):
         [county_name])
         conn.commit()
         data = cur.fetchall()
+        print("Your query returned this data: ")
         print(data)
         self.dropdown_county['values'] = data
         self.dropdown_county.grid(row=1, column=1, padx=(290, 0), pady=(0, 0))
@@ -257,7 +242,6 @@ class graphPage(tk.Frame):
         else:
             county_name = event.widget.get()
             state = event.widget.get()
-        print('I GOT CALLED')
         #for child in self.data_table.get_children():
             #self.data_table.delete(child)
         cur.execute("""
@@ -266,6 +250,7 @@ class graphPage(tk.Frame):
         [county_name])
         conn.commit()
         data = cur.fetchall()
+        print("Your query returned this data: ")
         print(data)
         for row in data:
             self.data_table.insert(parent='', index='end', values=row)
