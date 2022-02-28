@@ -8,18 +8,28 @@ import psycopg2
 import database
 import re
 
-# Helper Functions
+# Dictionaries
+degree_dict = {
+    "Linear"     : 1,
+    "Quadratic"  : 2,
+    "Cubic"      : 3
+}
 
+datatype_dict = {
+    "Maximum temperature" : "tmp_max",
+    "Minimum temperature" : "tmp_min",
+    "Average temperature" : "tmp_avg",
+    "Precipitation"       : "precip"
+} 
+
+# Helper Functions
 def validate_dates(start, end):
     if bool(re.match("\d+\/\d+", start)) == False or bool(re.match("\d+\/\d+", end)) == False: 
         return False
     return True
 
 
-
-
 # Setup database connection
-
 conn = psycopg2.connect("host=localhost dbname=postgres user=postgres password=PASSWORD")
 cur = conn.cursor()
 
@@ -70,17 +80,15 @@ class StartPage(tk.Frame):
 
  
 class graphPage(tk.Frame):
-
-    dropdown_county = None
-    data_table = None
-
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
         begin_date = tkboot.StringVar(value="")
         end_date = tkboot.StringVar(value="")
+        n_degree = tkboot.StringVar(value="")
 
+# FUNCTIONS -----------------------------------------------------------------
         #called when submit button for date entry is used
         def on_submit():
             #user input is invalid, call validate_dates function
@@ -97,7 +105,46 @@ class graphPage(tk.Frame):
                 print("Begin year in correct format: " + begin_year)
                 print("End month in correct format: " + end_month)
                 print("End year in correct format: " + end_year)
-       
+
+        def on_submit_degree():
+            
+            print("Degree is: ")
+            print(self.ent.get())
+
+        def gen_equation(event=None):
+            if event == None:
+                degree = ''
+            else:
+                if (event.widget.get() == "n-degree.."):
+                    self.ent = tkboot.Entry(self.frame_right, width="6", textvariable=event.widget.get())
+                    self.ent.grid(row=6, column=1, padx=(240,0), pady=(30,0))
+                    degree_label = tk.Label(self.frame_right, font="10", text="Degree: ")
+                    degree_label.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+                    sub_btn = tkboot.Button(
+                        self.frame_right,
+                        text="Submit degree",
+                        command=on_submit_degree,
+                        bootstyle=SUCCESS,
+                        width=12
+                    )
+                    sub_btn.grid(row=6, column=1, padx=(450, 0), pady=(30,0))
+                    sub_btn.focus_set()
+                else:
+                    degree = event.widget.get()
+                    print("Degree of equation is: ")
+                    print(degree_dict[degree])
+
+        def gen_datatype_columns(event):
+            print("User selected this data type: " + event.widget.get())
+            print("parsing data type into correct format.... ")
+            
+            columns = event.widget.get()
+            #Data type 'columns' for database function 'get_data_for_counties_dataset'
+            print("Data type in correct format is: " + datatype_dict[columns])
+
+# WIDGETS ----------------------------------------------------------------------------       
+
+        # Frame
         frame = tk.Frame(self)
         frame.grid(row=0, sticky="nw")
         frame.grid_rowconfigure(0, weight=1)
@@ -105,11 +152,13 @@ class graphPage(tk.Frame):
         frame.grid_columnconfigure(2, weight=1)
         frame.grid_columnconfigure(3, weight=1)
 
+        # Left Frame
         frame_left = tk.Frame(frame)
-        frame_right = tk.Frame(frame)
-       
         frame_left.grid(row=0, column=0, sticky="nw")
-        frame_right.grid(row=0, column=1, sticky="ne") 
+
+        # Right Frame
+        self.frame_right = tk.Frame(frame)
+        self.frame_right.grid(row=0, column=1, sticky="ne") 
 
         # Initialize Photo widget
         img = tk.PhotoImage(file='images/cubic_graph.png')
@@ -122,31 +171,31 @@ class graphPage(tk.Frame):
         notebook_label.grid(row=1, column=0, padx=(10, 710), pady=(0,10))
 
         #Date range widgets
-        ent = tkboot.Entry(frame_right, textvariable=begin_date)
+        ent = tkboot.Entry(self.frame_right, textvariable=begin_date)
         ent.grid(row=4, column=1, padx=(100,0), pady=(0,0))
 
-        ent = tkboot.Entry(frame_right, textvariable=end_date)
+        ent = tkboot.Entry(self.frame_right, textvariable=end_date)
         ent.grid(row=5, column=1, padx=(100, 0), pady=(0,0))
 
-        begin_date_label = tk.Label(frame_right, font="10", text="Date range begin: ")
+        begin_date_label = tk.Label(self.frame_right, font="10", text="Date range begin: ")
         begin_date_label.grid(row=4, column=1, padx=(0, 250), pady=(0,0))        
 
-        end_date_label = tk.Label(frame_right, font="10", text="Date range end: ")
+        end_date_label = tk.Label(self.frame_right, font="10", text="Date range end: ")
         end_date_label.grid(row=5, column=1, padx=(0, 265), pady=(0,0))
 
         sub_btn = tkboot.Button(
-            frame_right,
+            self.frame_right,
             text="Submit dates",
             command=on_submit,
             bootstyle=SUCCESS,
             width=12,
         )
-        sub_btn.grid(row=5, column=1, padx=(430, 0), pady=(0,0))
+        sub_btn.grid(row=5, column=1, padx=(450, 0), pady=(0,0))
         sub_btn.focus_set()
         
 
         # Initialize Table Widget
-        self.data_table = TTK.Treeview(frame_right)
+        self.data_table = TTK.Treeview(self.frame_right)
         self.data_table['columns'] = ('state', 'county_name', 'county_code', 'country')
         self.data_table.column('#0', width=0, stretch=tk.NO)
         self.data_table.column('state', width=110)
@@ -160,56 +209,39 @@ class graphPage(tk.Frame):
         self.data_table.heading('country', text="Country")
 
         # Initialize State Dropdown Widget
-        dropdown_state = TTK.Combobox(frame_right, font="Helvetica 12")
-        dropdown_state.set('Select state...')
-        dropdown_state['state'] = 'readonly'
-        dropdown_state['values'] = (['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
-        dropdown_state.bind('<<ComboboxSelected>>', self.gen_counties)
-        dropdown_state.grid(row=1, column=1, padx=(0, 190), pady=(20, 20))
+        self.dropdown_state = TTK.Combobox(self.frame_right, font="Helvetica 12")
+        self.dropdown_state.set('Select state...')
+        self.dropdown_state['state'] = 'readonly'
+        self.dropdown_state['values'] = (['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
+        self.dropdown_state.bind('<<ComboboxSelected>>', self.gen_counties)
+        self.dropdown_state.grid(row=1, column=1, padx=(0, 190), pady=(20, 20))
 
         # Initialize Counties Dropdown Widget
-        self.dropdown_county = TTK.Combobox(frame_right, font="Helvetica 12")
+        self.dropdown_county = TTK.Combobox(self.frame_right, font="Helvetica 12")
         self.dropdown_county.set('Select county...')
         self.dropdown_county['state'] = 'readonly'
         self.dropdown_county.bind('<<ComboboxSelected>>', self.gen_table)
         self.dropdown_county.grid(row=1, column=1, padx=(290, 0), pady=(20, 20))
 
         #Home button
-        button_back = TTK.Button(frame_right, width="15", text="Back to home", bootstyle="blue", command=lambda: controller.show_frame("StartPage"))
+        button_back = TTK.Button(self.frame_right, width="15", text="Back to home", bootstyle="blue", command=lambda: controller.show_frame("StartPage"))
         button_back.grid(row=0, column=1, padx=(0,250), pady=(100, 10))
 
         #Add instance to notebook button
         button_notebook_add = TTK.Button(frame_left, width="25", text="Add instance to notebook", bootstyle="blue")
         button_notebook_add.grid(row=0, column=0, padx=(10,580), pady=(50, 20))
 
-        #Dropdown Widget for graph selection
-        def gen_graph():
-            raise ValueError('Method not yet implemented.')
-
-        dropdown_graphs = TTK.Combobox(frame_right, font="Helvetica 12")
+        #Dropdown Widget for equation selection
+        dropdown_graphs = TTK.Combobox(self.frame_right, font="Helvetica 12")
         dropdown_graphs.set('Select equation...')
         dropdown_graphs['state'] = 'readonly'
         dropdown_graphs['values'] = ['Linear', 'Quadratic', 'Cubic', 'n-degree..']
-        #dropdown_graphs.bind('<<ComboboxSelected>>', self.gen_graph)
+        dropdown_graphs.bind('<<ComboboxSelected>>', gen_equation)
         dropdown_graphs.grid(row=6, column=1,  padx=(0, 190), pady=(30, 0))
 
 
         #Dropdown for datatype selection
-        def gen_datatype_columns(event):
-            print("User selected this data type: " + event.widget.get())
-            print("parsing data type into correct format.... ")
-            datatype_dict = {
-                "Maximum temperature" : "tmp_max",
-                "Minimum temperature" : "tmp_min",
-                "Average temperature" : "tmp_avg",
-                "Precipitation"       : "precip"
-            } 
-            
-            columns = event.widget.get()
-            #Data type 'columns' for database function 'get_data_for_counties_dataset'
-            print("Data type in correct format is: " + datatype_dict[columns])
-
-        dropdown_graphs = TTK.Combobox(frame_right, font="Helvetica 12")
+        dropdown_graphs = TTK.Combobox(self.frame_right, font="Helvetica 12")
         dropdown_graphs.set('Select data type...')
         dropdown_graphs['state'] = 'readonly'
         dropdown_graphs['values'] = ["Minimum temperature", "Maximum temperature", "Average temperature", "Precipitation"]
@@ -221,7 +253,7 @@ class graphPage(tk.Frame):
 
     def gen_counties(self, event=None):
         if event == None:
-            county_name = 'no clue what to put here'
+            county_name = ''
         else:
             county_name = event.widget.get()
         cur.execute("""
@@ -241,13 +273,13 @@ class graphPage(tk.Frame):
             state = ''
         else:
             county_name = event.widget.get()
-            state = event.widget.get()
+            state = self.dropdown_state.get()
         #for child in self.data_table.get_children():
             #self.data_table.delete(child)
         cur.execute("""
-        SELECT state, county_name, county_code, country FROM county_codes WHERE county_name = %s ;
+        SELECT state, county_name, county_code, country FROM county_codes WHERE county_name = %s AND state = %s;
         """,
-        [county_name])
+        [county_name, state])
         conn.commit()
         data = cur.fetchall()
         print("Your query returned this data: ")
@@ -255,7 +287,6 @@ class graphPage(tk.Frame):
         for row in data:
             self.data_table.insert(parent='', index='end', values=row)
         self.data_table.grid(row=2, column=1, pady=(0,40), padx=(250, 235))
-
 
 if __name__ == "__main__":
     app = App()
