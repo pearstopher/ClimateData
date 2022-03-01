@@ -5,7 +5,7 @@ from ttkbootstrap import ttk as TTK
 from ttkbootstrap import font as tkfont
 from ttkbootstrap.constants import *
 import psycopg2
-import database
+from database import *
 import re
 
 # Dictionaries
@@ -37,10 +37,34 @@ month_dict = {
     "12" : "dec"
 }
 
-# Helper Functions
+# Helper Functions --------------------------------------------------
+
 def validate_dates(start, end):
+
+    #check that date is in correct format (month/year)
     if bool(re.match("\d+\/\d+", start)) == False or bool(re.match("\d+\/\d+", end)) == False: 
         return False
+   
+    [begin_month, begin_year] = start.split('/')
+    [end_month, end_year] = end.split('/')
+
+    #check that years are four digits 
+    if len(begin_year) != 4 or len(end_year) != 4:
+        return False
+
+    #check that first year occurs before second year
+    if bool(begin_year < end_year) == False:
+        return False
+
+    return True
+
+
+def validate_degree(degree):
+   
+    #check that the degree is a number 
+    if bool(degree.isnumeric()) == False:
+        return False
+
     return True
 
 
@@ -108,7 +132,8 @@ class graphPage(tk.Frame):
         def on_submit():
             #user input is invalid, call validate_dates function
             if validate_dates(self.begin_date.get(), self.end_date.get()) == False:    
-                tkboot.dialogs.Messagebox.show_error("Invalid date entry. Entry must be in form: 'month/year'. Example: '06/93'", title='Invalid date entry')
+                tkboot.dialogs.Messagebox.show_error("Invalid date entry. \nEntry rules: \n- Entry must be in form: 'month/year' \n- Years must be in chronological order \n- Years must be four digits \n- Entry example: '06/1993'", title='Invalid date entry')
+
             else: 
                 #user input is valid, parse it into two months and two years
                 print("User entered this begin date: " + self.begin_date.get())
@@ -122,9 +147,12 @@ class graphPage(tk.Frame):
                 print("End year in correct format: " + end_year)
                 
         def on_submit_degree():
-            
-            print("Degree is: ")
-            print(self.ent.get())
+           
+            if validate_degree(self.ent.get()) == False:
+                tkboot.dialogs.Messagebox.show_error("Invalid degree entry. \nDegree must be a number.", title='Invalid degree entry')
+            else:
+                print("Degree is: ")
+                print(self.ent.get())
 
         #The data has been entered/ selected by the user. Here is it:
         def on_enter_data():
@@ -137,16 +165,32 @@ class graphPage(tk.Frame):
             data_type =  datatype_dict[self.dropdown_graphs.get()]
             # Intermediate Steps
             rows = self.data_table.get_children()
-            counties = []
             states = []
             county_codes = []
             countries = []
+            temp_dict = {}
             for line in rows:
                 values = self.data_table.item(line)['values']
-                counties.append(values[1])
                 states.append(values[0])
                 county_codes.append(values[2])
                 countries.append(values[3])
+
+                print("printing states:")
+                print(values[0])
+                #make counties list of lists:
+                if values[0] in temp_dict:
+                    temp_dict[values[0]].append(values[1])
+                    print("in if")
+                    print(temp_dict[values[0]])
+                else:
+                    print("in else")
+                    temp_dict[values[0]] = [values[1]]
+                    print(temp_dict[values[0]])
+
+            counties = []
+            for key in temp_dict.keys():
+                counties.append(temp_dict[key])
+                
             print("\nHere is the data that the user entered: ")
             print("Begin date month: ")
             print(begin_month)
