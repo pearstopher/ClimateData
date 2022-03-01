@@ -50,7 +50,7 @@ class PlottingFrame():
         self.frame = tk.Frame(self.master)
         self.df = get_test_data_raw()
         self.plot_type = args[0]
-        self.button = Button(master=window,
+        self.button = Button(master=master,
                          command=self.plot('scatter_poly', get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 3}),
                          height=2,
                          width=10,

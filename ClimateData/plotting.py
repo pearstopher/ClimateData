@@ -58,7 +58,7 @@ def plot(ptype, df, plot_vars_map):
     elif ptype == 'poly_deriv':
         plot_poly_deriv(x_data, y_data, plot_vars_map['degree'], plot_vars_map['deriv_degree'])
     elif ptype == 'scatter_poly':
-        scatter_poly(x_data, y_data, plot_vars_map['degree'])
+        return scatter_poly(x_data, y_data, plot_vars_map['degree'])
     elif ptype == 'us_heatmap':
         pass
     else:
@@ -105,7 +105,8 @@ def scatter_poly(x, y, deg):
               colLabels=['Poly Coeffs'], loc='right', colWidths = [0.2])
     #plt.text(15, 3.4, 'Coefficients', size=12)
     cursor = mplcursors.cursor()
-    plt.show()
+    #plt.show()
+    return fig
 
 def plot_poly_deriv(x, y, deg, deriv_deg):
     coeffs = poly.polyfit(x, y, deg)

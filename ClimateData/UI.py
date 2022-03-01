@@ -7,6 +7,7 @@ from ttkbootstrap.constants import *
 import psycopg2
 from database import *
 import re
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 # Dictionaries
 degree_dict = {
@@ -75,7 +76,6 @@ cur = conn.cursor()
 class App(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
-        
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
 
         container = tk.Frame(self)
@@ -90,7 +90,7 @@ class App(tk.Tk):
         self.frames = {}
         for F in (StartPage, graphPage):
             page_name = F.__name__
-            frame = F(parent=container, controller=self)
+            frame = F(parent=container, controller=self, master=self)
             self.frames[page_name] = frame
             frame.grid(row=0, column=0, sticky="nsew")
 
@@ -102,7 +102,7 @@ class App(tk.Tk):
 
     
 class StartPage(tk.Frame):
-    def __init__(self, parent, controller):
+    def __init__(self, parent, controller, master):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
@@ -119,7 +119,7 @@ class StartPage(tk.Frame):
 
  
 class graphPage(tk.Frame):
-    def __init__(self, parent, controller):
+    def __init__(self, parent, controller, master):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
@@ -156,62 +156,76 @@ class graphPage(tk.Frame):
 
         #The data has been entered/ selected by the user. Here is it:
         def on_enter_data():
-            [begin_month, begin_year] = self.begin_date.get().split('/')
-            [end_month, end_year] = self.end_date.get().split('/')
-            begin_month = month_dict[begin_month]
-            end_month = month_dict[end_month]
-
-            polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else self.ent.get()
-            data_type =  datatype_dict[self.dropdown_graphs.get()]
-            # Intermediate Steps
-            rows = self.data_table.get_children()
-            states = []
-            county_codes = []
-            countries = []
-            temp_dict = {}
-            for line in rows:
-                values = self.data_table.item(line)['values']
-                states.append(values[0])
-                county_codes.append(values[2])
-                countries.append(values[3])
-
-                print("printing states:")
-                print(values[0])
-                #make counties list of lists:
-                if values[0] in temp_dict:
-                    temp_dict[values[0]].append(values[1])
-                    print("in if")
-                    print(temp_dict[values[0]])
-                else:
-                    print("in else")
-                    temp_dict[values[0]] = [values[1]]
-                    print(temp_dict[values[0]])
-
-            counties = []
-            for key in temp_dict.keys():
-                counties.append(temp_dict[key])
+            #[begin_month, begin_year] = self.begin_date.get().split('/')
+            #[end_month, end_year] = self.end_date.get().split('/')
+            #begin_month = month_dict[begin_month]
+            #end_month = month_dict[end_month]
+            #
+            #polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else self.ent.get()
+            #data_type =  datatype_dict[self.dropdown_graphs.get()]
+            ## Intermediate Steps
+            #rows = self.data_table.get_children()
+            #states = []
+            #county_codes = []
+            #countries = []
+            #temp_dict = {}
+            #for line in rows:
+            #    values = self.data_table.item(line)['values']
+            #    states.append(values[0])
+            #    county_codes.append(values[2])
+            #    countries.append(values[3])
+            #
+            #    print("printing states:")
+            #    print(values[0])
+            #    #make counties list of lists:
+            #    if values[0] in temp_dict:
+            #        temp_dict[values[0]].append(values[1])
+            #        print("in if")
+            #        print(temp_dict[values[0]])
+            #    else:
+            #        print("in else")
+            #        temp_dict[values[0]] = [values[1]]
+            #        print(temp_dict[values[0]])
+            #
+            #counties = []
+            #for key in temp_dict.keys():
+            #    counties.append(temp_dict[key])
+            import plotting
+            fig = plotting.plot('scatter_poly', plotting.get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 3})
+            canvas = FigureCanvasTkAgg(fig,
+                               master = master)  
+            canvas.draw()
+            canvas.get_tk_widget().grid(row=0, column=0, pady=(0, 0), padx=(10, 600))
+                # creating the Matplotlib toolbar
+            #toolbar = NavigationToolbar2Tk(canvas,
+            #                                master)
+            #toolbar.update()
+            
+            #label = tk.Label(self.frame_left, image=fig)
+            #label.image = fig
+            #label.grid(row=2, column=0, pady=(0, 0), padx=(80, 0))
                 
-            print("\nHere is the data that the user entered: ")
-            print("Begin date month: ")
-            print(begin_month)
-            print("Begin date year: ")
-            print(begin_year)
-            print("End date month: ")
-            print(end_month)
-            print("End date year: ")
-            print(end_year)
-            print("Polynomial degree: ")
-            print(polynomial_degree)
-            print("Data type to plot: ")
-            print(data_type)
-            print("Counties: ")
-            print(counties)
-            print("States: ")
-            print(states)
-            print("County codes: ")
-            print(county_codes)
-            print("Countries: ")
-            print(countries)
+            #print("\nHere is the data that the user entered: ")
+            #print("Begin date month: ")
+            #print(begin_month)
+            #print("Begin date year: ")
+            #print(begin_year)
+            #print("End date month: ")
+            #print(end_month)
+            #print("End date year: ")
+            #print(end_year)
+            #print("Polynomial degree: ")
+            #print(polynomial_degree)
+            #print("Data type to plot: ")
+            #print(data_type)
+            #print("Counties: ")
+            #print(counties)
+            #print("States: ")
+            #print(states)
+            #print("County codes: ")
+            #print(county_codes)
+            #print("Countries: ")
+            #print(countries)
             
         def gen_equation(event=None):
             if event == None:
@@ -294,28 +308,21 @@ class graphPage(tk.Frame):
         frame.grid_columnconfigure(3, weight=1)
 
         # Left Frame
-        frame_left = tk.Frame(frame)
-        frame_left.grid(row=0, column=0, sticky="nw")
+        self.frame_left = tk.Frame(frame)
+        self.frame_left.grid(row=0, column=0, sticky="nw")
 
         # Right Frame
         self.frame_right = tk.Frame(frame)
         self.frame_right.grid(row=0, column=1, sticky="ne") 
 
         # Initialize Photo widget
-        img = tk.PhotoImage(file='images/cubic_graph.png')
-        label = tk.Label(frame_left, image=img)
-        label.image = img
-        label.grid(row=2, column=0, pady=(0, 0), padx=(80, 0))
-
-        import plotting
-        tk.Button(master=window,
-            command=plot('scatter_poly', get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 3}),
-            height=2,
-            width=10,
-            text="Plot")
+        #img = tk.PhotoImage(file='images/cubic_graph.png')
+        #label = tk.Label(frame_left, image=img)
+        #label.image = img
+        #label.grid(row=2, column=0, pady=(0, 0), padx=(80, 0))
 
         #Notebook   
-        self.notebook_label = tk.Label(frame_left, font="12", text="Notebook: ")
+        self.notebook_label = tk.Label(self.frame_left, font="12", text="Notebook: ")
         self.notebook_label.grid(row=1, column=0, padx=(10, 710), pady=(0,10))
 
         #Date range widgets
@@ -376,7 +383,7 @@ class graphPage(tk.Frame):
         self.button_back.grid(row=0, column=1, padx=(0,250), pady=(100, 10))
 
         #Add instance to notebook button
-        self.button_notebook_add = TTK.Button(frame_left, width="25", text="Add instance to notebook", bootstyle="blue")
+        self.button_notebook_add = TTK.Button(self.frame_left, width="25", text="Add instance to notebook", bootstyle="blue")
         self.button_notebook_add.grid(row=0, column=0, padx=(10,580), pady=(50, 20))
 
         #Dropdown Widget for equation selection
