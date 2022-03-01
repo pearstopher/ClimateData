@@ -4,7 +4,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>c84b9c10-2896-466a-85f1-3bda33812170</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>preprocess.py</StartupFile>
+    <StartupFile>database.py</StartupFile>
     <SearchPath>
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
@@ -22,7 +22,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="ClimateData.py" />
+    <Compile Include="database.py" />
     <Compile Include="plotting.py" />
+    <Compile Include="plotting_test.py" />
     <Compile Include="preprocess.py">
       <SubType>Code</SubType>
     </Compile>

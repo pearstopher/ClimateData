@@ -307,6 +307,13 @@ class graphPage(tk.Frame):
         label.image = img
         label.grid(row=2, column=0, pady=(0, 0), padx=(80, 0))
 
+        import plotting
+        tk.Button(master=window,
+            command=plot('scatter_poly', get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 3}),
+            height=2,
+            width=10,
+            text="Plot")
+
         #Notebook   
         self.notebook_label = tk.Label(frame_left, font="12", text="Notebook: ")
         self.notebook_label.grid(row=1, column=0, padx=(10, 710), pady=(0,10))
