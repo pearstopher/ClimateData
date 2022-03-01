@@ -6,7 +6,7 @@ import json
 from urllib.request import urlopen
 from cefpython3 import cefpython as cef
 
-df = pd.read_csv('data/CT_Data.csv')
+df = pd.read_csv('data/TX_Data.csv')
 f1 = open('data/tx-us-county-codes.txt', 'r')
 f = f1.read()
 f1.close()
@@ -23,7 +23,7 @@ def pull_data():
   # data = cur.fetchall() 
   return
 
-cli_map = px.choropleth(df, geojson=counties, locations=fipslist, color='testVar',color_continuous_scale='rdylgn',range_color=(-10,10), scope='usa')
+cli_map = px.choropleth(df, geojson=counties, locations=fipslist, color='Temperature',color_continuous_scale='jet',range_color=(10,130), scope='usa')
 # cli_map.update_geos(fitbounds='locations', visible=False)
 cli_map.update_layout(title='Texas')
 cli_map.update_geos(fitbounds='locations', visible=False)
