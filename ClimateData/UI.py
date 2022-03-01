@@ -196,7 +196,7 @@ class graphPage(tk.Frame):
 
             df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], begin_month, end_month, int(begin_year), int(end_year))
 
-            fig = plotting.plot('scatter_poly', plotting.get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 3})
+            fig = plotting.plot('scatter_poly', df_list, {'process_type': 'months', 'range': range(0,1), 'degree': polynomial_degree, 'plots_per_graph' : len(df_list)})
             canvas = FigureCanvasTkAgg(fig,
                                master = master)  
             canvas.draw()

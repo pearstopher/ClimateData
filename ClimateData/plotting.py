@@ -48,17 +48,23 @@ def get_test_data_raw():
     df.columns = headers
     return df
 
-def plot(ptype, df, plot_vars_map):
+def plot(ptype, df_list, plot_vars_map):
 
-    x_data, y_data = process_data(df, plot_vars_map['process_type'], plot_vars_map['range'])
+    x_data_list = []
+    y_data_list = []
+    for df in df_list:
+        x_data, y_data = process_data(df, plot_vars_map['process_type'], plot_vars_map['range'])
+        x_data_list.append(x_data)
+        y_data_list.append(y_data)
+
     if ptype == 'scatter':
         pass
     elif ptype == 'poly':
         pass
     elif ptype == 'poly_deriv':
-        plot_poly_deriv(x_data, y_data, plot_vars_map['degree'], plot_vars_map['deriv_degree'])
+        return plot_poly_deriv(x_data, y_data, plot_vars_map['degree'], plot_vars_map['deriv_degree'])
     elif ptype == 'scatter_poly':
-        return scatter_poly(x_data, y_data, plot_vars_map['degree'])
+        return scatter_poly(x_data_list, y_data_list, plot_vars_map['degree'], plot_vars_map['plots_per_graph'])
     elif ptype == 'us_heatmap':
         pass
     else:
@@ -79,24 +85,26 @@ def process_data(df, process_type, data_range):
                 y_data.append(j)
     return x_data, y_data
 
-def scatter_poly(x, y, deg):
+def scatter_poly(x, y, deg, plots_per_graph):
     # Example of what coeffs and fiteq do, for a 3rd degree polynomial
     #d, c, b, a = poly.polyfit(x, y, 3)
     #fiteq = lambda x: a * x ** 3 + b * x ** 2 + c * x + d
-
-    coeffs = poly.polyfit(x, y, deg)
-    def fiteq(x, idx=0):
-        if idx == deg:
-            return coeffs[idx] * x ** (idx)
-        else:
-            return coeffs[idx] * x ** (idx) + fiteq(x, idx+1)
-
-    x_fit = np.array(x)
-    y_fit = fiteq(x_fit)
-
     fig, ax1 = plt.subplots()
-    lines = ax1.plot(x_fit, y_fit, color='r', alpha=0.5, label='Polynomial fit')
-    ax1.scatter(x, y, s=4, color='b', label='Data points')
+
+    for x, y in zip(x, y):
+        coeffs = poly.polyfit(x, y, deg)
+        def fiteq(x, idx=0):
+            if idx == deg:
+                return coeffs[idx] * x ** (idx)
+            else:
+                return coeffs[idx] * x ** (idx) + fiteq(x, idx+1)
+
+        x_fit = np.array(x)
+        y_fit = fiteq(x_fit)
+
+        lines = ax1.plot(x_fit, y_fit, color='r', alpha=0.5, label='Polynomial fit')
+        ax1.scatter(x, y, s=4, color='b', label='Data points')
+
     ax1.set_title(f'Polynomial fit example deg={deg}')
     ax1.legend()
     plt.subplots_adjust(right=0.8)
