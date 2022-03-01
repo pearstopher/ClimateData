@@ -464,3 +464,5 @@ def get_data_for_countries_dataset(countries, columns, startMonth, endMonth, sta
     return results
 
 
+drop_all_tables()
+setup_database()
