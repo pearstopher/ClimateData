@@ -172,7 +172,9 @@ class graphPage(tk.Frame):
             temp_dict = {}
             for line in rows:
                 values = self.data_table.item(line)['values']
-                states.append(values[0])
+
+                if values[0] not in states:
+                    states.append(values[0])
                 county_codes.append(values[2])
                 countries.append(values[3])
             
@@ -191,6 +193,8 @@ class graphPage(tk.Frame):
             counties = []
             for key in temp_dict.keys():
                 counties.append(temp_dict[key])
+
+            df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], begin_month, end_month, int(begin_year), int(end_year))
 
             fig = plotting.plot('scatter_poly', plotting.get_test_data_raw(), {'process_type': 'months', 'range': range(0,12), 'degree': 3})
             canvas = FigureCanvasTkAgg(fig,
