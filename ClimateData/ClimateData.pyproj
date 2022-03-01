@@ -26,6 +26,7 @@
     <Compile Include="preprocess.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="UI.py" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="data\" />
