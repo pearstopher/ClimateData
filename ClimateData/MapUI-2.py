@@ -1,13 +1,12 @@
-import pandas
-import plotly.express as px
-import pandas as pd
-import psycopg2
+import pandas as pd                             #pip install pandas
+import plotly.express as px                     #pip install plotly   
+import psycopg2                                 #pip install psycopg2-binary
 import json
 from urllib.request import urlopen
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import *                   #pip install PyQt5
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
-from PyQt5.QtWebEngineWidgets import *
+from PyQt5.QtWebEngineWidgets import *          #pip install PyQtWebEngine
 
 class MapWindow(QMainWindow):
 
@@ -28,7 +27,7 @@ class MapWindow(QMainWindow):
 
     self.window.setWindowTitle("Climate Data")
     self.browser = QWebEngineView()
-    self.browser.setUrl(QUrl('http://127.0.0.1:5500/HTML/map_fig.html'))
+    self.browser.setUrl(QUrl('http://127.0.0.1:5500/ClimateData/HTML/map_fig.html'))
 
     self.layout.addLayout(self.navbar)
     self.layout.addWidget(self.browser)
