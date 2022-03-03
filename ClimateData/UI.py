@@ -114,6 +114,11 @@ class StartPage(tk.Frame):
         button2.grid(row=0, column=2, padx=(10,0), pady=(100,500))
 
         # Photo Widget for Start Page
+        '''
+         # TODO remove picture and add either:
+         # Empty canvas
+         # Pre-populated canvas
+        '''
         img = tk.PhotoImage(file='images/cubic_graph.png')
         label = tk.Label(self, image=img)
         label.image = img
@@ -212,7 +217,7 @@ class graphPage(tk.Frame):
             canvas.draw()
             canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
 
-            toolbar = NavigationToolbar2Tk(canvas, self.frame_left).update()
+            toolbar = NavigationToolbar2Tk(canvas, master).update()
 
             #print("\nHere is the data that the user entered: ")
             #print("Begin date month: ")
