@@ -11,7 +11,10 @@ from PyQt5.QtWebEngineWidgets import *          #pip install PyQtWebEngine
 class MapWindow(QMainWindow):
 
   def __init__(self, *args, **kwargs):
+    
+        
     super(MapWindow, self).__init__(*args, **kwargs)
+    self.lines = []
     self.window = QWidget()
     self.layout = QVBoxLayout()
     self.navbar = QHBoxLayout()
@@ -29,13 +32,36 @@ class MapWindow(QMainWindow):
     self.browser = QWebEngineView()
     self.browser.setUrl(QUrl('http://127.0.0.1:5500/ClimateData/HTML/map_fig.html'))
 
-    self.layout.addLayout(self.navbar)
     self.layout.addWidget(self.browser)
+    self.layout.addLayout(self.navbar)
+    
 
     self.window.setLayout(self.layout)
     self.window.show()
 
+  def addLine(self):
+      self.addNavbar = QHBoxLayout()
+      self.state_list = QComboBox()
+      self.state_list.addItems([str(self.layout.count())])
+      self.state_list.setMinimumHeight(30)
+      self.county_list = QComboBox()
+      self.county_list.addItems(["Multnomah","Etc."])
+      self.county_list.setMinimumHeight(30)
+      self.addNavbar.addWidget(self.state_list)
+      self.addNavbar.addWidget(self.county_list)
+      self.layout.addLayout(self.addNavbar)
+      self.lines.append(self.addNavbar)
+ 
+  def removeLine(self):
+      toDelete = self.lines[-1]
+      self.deleteLayoutItems(toDelete)
+      self.layout.removeItem(toDelete)
+      return
 
+  def deleteLayoutItems(self, layout):
+    for i in reversed(range(layout.count())): 
+      layout.itemAt(i).widget().deleteLater()
+      
 
 df = pd.read_csv('data/TX_Data.csv')
 f1 = open('data/tx-us-county-codes.txt', 'r')
@@ -61,4 +87,5 @@ cli_map.write_html('HTML/map_fig.html')
 
 app = QApplication([])
 window = MapWindow()
+
 app.exec_()
