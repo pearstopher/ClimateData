@@ -3,12 +3,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg,
 NavigationToolbar2Tk)
+import matplotlib.dates as mdates
 import numpy.polynomial.polynomial as poly
 import pandas as pd
 import mplcursors
 from string import ascii_lowercase
 from tkinter import *
 from matplotlib.pyplot import cm
+import math
+import datetime as dt
 
 matplotlib.use("TkAgg")
 '''
@@ -47,6 +50,21 @@ def get_test_data_raw():
     df = pd.read_csv(csv_path, delimiter=',', nrows=127, header=None)
     df.columns = headers
     return df
+
+def to_date(x_data):
+    x_data_formatted = []
+    decimal_map = {'0': 1, '083': 2, '166': 3, '25': 4, '333': 5, '416': 6, '5': 7, '583': 8, '666': 9, '75': 10, '833': 11, '916': 12}
+    for i in x_data:
+        remainder, year = math.modf(i)
+        if len(str(remainder)[2:]) <= 2:
+            month = decimal_map[str(remainder)[2:]]
+            x_data_formatted.append(dt.datetime(year=int(year), month=month, day=1))
+        else:
+            month = decimal_map[str(remainder)[2:5]]
+            x_data_formatted.append(dt.datetime(year=int(year), month=month, day=1))
+
+    return mdates.num2date(x_data_formatted)
+
 
 def plot(ptype, df_list, plot_vars_map):
 
@@ -90,6 +108,7 @@ def scatter_poly(x, y, deg, plots_per_graph, counties):
     #d, c, b, a = poly.polyfit(x, y, 3)
     #fiteq = lambda x: a * x ** 3 + b * x ** 2 + c * x + d
     fig, ax1 = plt.subplots()
+    fig.set_size_inches(12.5, 8, forward=True)
 
     colors = cm.rainbow(np.linspace(0, 1, len(counties)))
     for x, y, county, color in zip(x, y, counties, colors):

@@ -210,8 +210,10 @@ class graphPage(tk.Frame):
                                                           'degree': polynomial_degree, 'plots_per_graph' : len(df_list), 'counties' : counties})
             canvas = FigureCanvasTkAgg(fig, master = master)  
             canvas.draw()
-            canvas.get_tk_widget().grid(row=0, column=0, pady=(0, 0), padx=(10, 600))
-                
+            canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
+
+            toolbar = NavigationToolbar2Tk(canvas, self.frame_left).update()
+
             #print("\nHere is the data that the user entered: ")
             #print("Begin date month: ")
             #print(begin_month)
