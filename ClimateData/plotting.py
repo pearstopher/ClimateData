@@ -53,7 +53,7 @@ def plot(ptype, df_list, plot_vars_map):
     x_data_list = []
     y_data_list = []
     for df in df_list:
-        x_data, y_data = process_data(df, plot_vars_map['process_type'], plot_vars_map['range'])
+        x_data, y_data = process_data(df, plot_vars_map['process_type'], plot_vars_map['begin_month'])
         x_data_list.append(x_data)
         y_data_list.append(y_data)
 
@@ -62,7 +62,7 @@ def plot(ptype, df_list, plot_vars_map):
     elif ptype == 'poly':
         pass
     elif ptype == 'poly_deriv':
-        return plot_poly_deriv(x_data, y_data, plot_vars_map['degree'], plot_vars_map['deriv_degree'])
+        return plot_poly_deriv(x_data, y_data, plot_vars_map['degree'], plot_vars_map['deriv_degree'], plot_vars_map['begin_month'])
     elif ptype == 'scatter_poly':
         return scatter_poly(x_data_list, y_data_list, plot_vars_map['degree'], plot_vars_map['plots_per_graph'], plot_vars_map['counties'])
     elif ptype == 'us_heatmap':
@@ -71,17 +71,17 @@ def plot(ptype, df_list, plot_vars_map):
         return 'Invalid plot type!'
 
 
-def process_data(df, process_type, data_range):
+def process_data(df, process_type, beginMonth):
     x_data = []
     y_data = []
 
     if process_type == 'months':
         for i in df.iloc[:,0]:
-            for j in data_range:
-                x_data.append(int(str(i)[-4:]) + j / 12)
+            for j in range(df.shape[1]-1):
+                x_data.append(int(str(i)[-4:]) + (j + beginMonth) / 12)
 
         for i, row in df.iterrows():
-            for j in row[data_range.start+1:data_range.stop+1]:
+            for j in row[1:]:
                 y_data.append(j)
     return x_data, y_data
 
@@ -103,10 +103,10 @@ def scatter_poly(x, y, deg, plots_per_graph, counties):
         x_fit = np.array(x)
         y_fit = fiteq(x_fit)
 
-        lines = ax1.plot(x_fit, y_fit, color=color, alpha=0.5, label='Polynomial fit')
-        ax1.scatter(x, y, s=4, color=color, label=county)
+        lines = ax1.plot(x_fit, y_fit, color=color, alpha=0.5, label=county)
+        ax1.scatter(x, y, s=4, color=color)
 
-    ax1.set_title(f'Polynomial fit example deg={deg}')
+    ax1.set_title(f'Polynomial fit deg={deg}')
     ax1.legend()
     plt.subplots_adjust(right=0.8)
     plt.table([['{:.10f}'.format(coeffs[x])[:9]] for x in range(len(coeffs)-1, -1, -1)], 

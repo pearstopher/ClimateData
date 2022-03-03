@@ -8,6 +8,7 @@ import psycopg2
 from database import *
 import plotting
 import re
+from itertools import chain
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 # Dictionaries
@@ -194,17 +195,18 @@ class graphPage(tk.Frame):
             for key in temp_dict.keys():
                 counties.append(temp_dict[key])
 
+            monthsIdx = {'jan' : 0, 'feb' : 1, 'mar' : 2, 'apr': 3, 'may': 4, 'jun': 5, 
+                         'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11}
+
             df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], begin_month, end_month, int(begin_year), int(end_year))
 
-            #print(df_list[0])
+            # We only need the ID and the data here - Remove everything else
+            # TODO: Make the function only return this data
             for i, df in enumerate(df_list):
                 df_list[i] = pd.concat([df_list[i].iloc[:, 0], df_list[i].iloc[:, 4:]], axis=1)
-            #print(df_list[0])
 
-            from itertools import chain
             counties = list(chain(*counties))
-
-            fig = plotting.plot('scatter_poly', df_list, {'process_type': 'months', 'range': range(0,1), 
+            fig = plotting.plot('scatter_poly', df_list, {'process_type': 'months', 'begin_month': monthsIdx[begin_month],
                                                           'degree': polynomial_degree, 'plots_per_graph' : len(df_list), 'counties' : counties})
             canvas = FigureCanvasTkAgg(fig, master = master)  
             canvas.draw()
