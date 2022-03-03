@@ -108,7 +108,6 @@ def scatter_poly(x, y, deg, plots_per_graph, counties):
     #d, c, b, a = poly.polyfit(x, y, 3)
     #fiteq = lambda x: a * x ** 3 + b * x ** 2 + c * x + d
     fig, ax1 = plt.subplots()
-    fig.set_size_inches(12.5, 8, forward=True)
 
     colors = cm.rainbow(np.linspace(0, 1, len(counties)))
     for x, y, county, color in zip(x, y, counties, colors):
