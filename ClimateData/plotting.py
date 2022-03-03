@@ -8,7 +8,7 @@ import pandas as pd
 import mplcursors
 from string import ascii_lowercase
 from tkinter import *
-
+from matplotlib.pyplot import cm
 
 matplotlib.use("TkAgg")
 '''
@@ -64,7 +64,7 @@ def plot(ptype, df_list, plot_vars_map):
     elif ptype == 'poly_deriv':
         return plot_poly_deriv(x_data, y_data, plot_vars_map['degree'], plot_vars_map['deriv_degree'])
     elif ptype == 'scatter_poly':
-        return scatter_poly(x_data_list, y_data_list, plot_vars_map['degree'], plot_vars_map['plots_per_graph'])
+        return scatter_poly(x_data_list, y_data_list, plot_vars_map['degree'], plot_vars_map['plots_per_graph'], plot_vars_map['counties'])
     elif ptype == 'us_heatmap':
         pass
     else:
@@ -85,13 +85,14 @@ def process_data(df, process_type, data_range):
                 y_data.append(j)
     return x_data, y_data
 
-def scatter_poly(x, y, deg, plots_per_graph):
+def scatter_poly(x, y, deg, plots_per_graph, counties):
     # Example of what coeffs and fiteq do, for a 3rd degree polynomial
     #d, c, b, a = poly.polyfit(x, y, 3)
     #fiteq = lambda x: a * x ** 3 + b * x ** 2 + c * x + d
     fig, ax1 = plt.subplots()
 
-    for x, y in zip(x, y):
+    colors = cm.rainbow(np.linspace(0, 1, len(counties)))
+    for x, y, county, color in zip(x, y, counties, colors):
         coeffs = poly.polyfit(x, y, deg)
         def fiteq(x, idx=0):
             if idx == deg:
@@ -102,8 +103,8 @@ def scatter_poly(x, y, deg, plots_per_graph):
         x_fit = np.array(x)
         y_fit = fiteq(x_fit)
 
-        lines = ax1.plot(x_fit, y_fit, color='r', alpha=0.5, label='Polynomial fit')
-        ax1.scatter(x, y, s=4, color='b', label='Data points')
+        lines = ax1.plot(x_fit, y_fit, color=color, alpha=0.5, label='Polynomial fit')
+        ax1.scatter(x, y, s=4, color=color, label=county)
 
     ax1.set_title(f'Polynomial fit example deg={deg}')
     ax1.legend()

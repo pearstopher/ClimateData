@@ -196,13 +196,16 @@ class graphPage(tk.Frame):
 
             df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], begin_month, end_month, int(begin_year), int(end_year))
 
-            print(df_list[0])
+            #print(df_list[0])
             for i, df in enumerate(df_list):
                 df_list[i] = pd.concat([df_list[i].iloc[:, 0], df_list[i].iloc[:, 4:]], axis=1)
-            print(df_list[0])
+            #print(df_list[0])
+
+            from itertools import chain
+            counties = list(chain(*counties))
 
             fig = plotting.plot('scatter_poly', df_list, {'process_type': 'months', 'range': range(0,1), 
-                                                          'degree': polynomial_degree, 'plots_per_graph' : len(df_list)})
+                                                          'degree': polynomial_degree, 'plots_per_graph' : len(df_list), 'counties' : counties})
             canvas = FigureCanvasTkAgg(fig, master = master)  
             canvas.draw()
             canvas.get_tk_widget().grid(row=0, column=0, pady=(0, 0), padx=(10, 600))
