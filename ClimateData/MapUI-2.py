@@ -7,6 +7,8 @@ from PyQt5.QtWidgets import *                   #pip install PyQt5
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWebEngineWidgets import *          #pip install PyQtWebEngine
+import sys
+import os
 
 class MapWindow(QMainWindow):
 
@@ -14,11 +16,14 @@ class MapWindow(QMainWindow):
     
         
     super(MapWindow, self).__init__(*args, **kwargs)
+    path = QDir.current().filePath('HTML/map_fig.html')
     self.lines = []
     self.window = QWidget()
     self.layout = QVBoxLayout()
     self.navbar = QHBoxLayout()
-
+###
+    
+###
     self.state_list = QComboBox()
     self.state_list.addItems(["OR","TX","ETC"])
     self.state_list.setMinimumHeight(30)
@@ -30,19 +35,32 @@ class MapWindow(QMainWindow):
 
     self.window.setWindowTitle("Climate Data")
     self.browser = QWebEngineView()
-    self.browser.setUrl(QUrl('http://127.0.0.1:5500/ClimateData/HTML/map_fig.html'))
-
+    self.openMap()
     self.layout.addWidget(self.browser)
     self.layout.addLayout(self.navbar)
     
 
     self.window.setLayout(self.layout)
     self.window.show()
+  def openMap(self):
+    df = pd.read_csv('data/TX_Data.csv')
+    f1 = open('data/tx-us-county-codes.txt', 'r')
+    f = f1.read()
+    f1.close()
+    fipslist = f.splitlines()
+    with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
+      counties = json.load(response)
+
+    cli_map = px.choropleth(df, geojson=counties, locations=fipslist, color='Temperature',color_continuous_scale='jet',range_color=(10,130), scope='usa')
+    cli_map.update_layout(title='Texas')
+    cli_map.update_geos(fitbounds='locations', visible=False)
+    cli_map.write_html('HTML/map_fig.html')
+    self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/map_fig.html')))
 
   def addLine(self):
       self.addNavbar = QHBoxLayout()
       self.state_list = QComboBox()
-      self.state_list.addItems([str(self.layout.count())])
+      self.state_list.addItems([" "])
       self.state_list.setMinimumHeight(30)
       self.county_list = QComboBox()
       self.county_list.addItems(["Multnomah","Etc."])
@@ -62,30 +80,8 @@ class MapWindow(QMainWindow):
     for i in reversed(range(layout.count())): 
       layout.itemAt(i).widget().deleteLater()
       
-
-df = pd.read_csv('data/TX_Data.csv')
-f1 = open('data/tx-us-county-codes.txt', 'r')
-f = f1.read()
-f1.close()
-fipslist = f.splitlines()
-with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
-  counties = json.load(response)
-
-# def pull_data():
-#   password = 'PASSWORD'
-#   conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
-#   cur = conn.cursor()
-#   cur.execute("""SELECT * FROM county_codes WHERE state = %s;""", [states_abb[state]])
-#   conn.commit()
-#   data = cur.fetchall() 
-#   return
-
-cli_map = px.choropleth(df, geojson=counties, locations=fipslist, color='Temperature',color_continuous_scale='jet',range_color=(10,130), scope='usa')
-cli_map.update_layout(title='Texas')
-cli_map.update_geos(fitbounds='locations', visible=False)
-cli_map.write_html('HTML/map_fig.html')
-
-app = QApplication([])
+sys.argv.append("--disable-web-security")
+app = QApplication([sys.argv])
 window = MapWindow()
-
+window.addLine()
 app.exec_()
