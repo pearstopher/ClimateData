@@ -463,4 +463,5 @@ def get_data_for_countries_dataset(countries, columns, startMonth, endMonth, sta
         results.append(next_set)
     return results
 
-
+if __name__ == "__main__":
+    setup_database()
