@@ -126,10 +126,10 @@ def scatter_poly(x, y, deg, plots_per_graph, counties):
 
     ax1.set_title(f'Polynomial fit deg={deg}')
     ax1.legend()
-    plt.subplots_adjust(right=0.8)
-    plt.table([['{:.10f}'.format(coeffs[x])[:9]] for x in range(len(coeffs)-1, -1, -1)], 
-              rowLabels=[ascii_lowercase[x] for x in range(deg+1)], 
-              colLabels=['Poly Coeffs'], loc='right', colWidths = [0.2])
+    #plt.subplots_adjust(right=0.8)
+    #plt.table([['{:.10f}'.format(coeffs[x])[:9]] for x in range(len(coeffs)-1, -1, -1)], 
+    #          rowLabels=[ascii_lowercase[x] for x in range(deg+1)], 
+    #          colLabels=['Poly Coeffs'], loc='right', colWidths = [0.2])
     #plt.text(15, 3.4, 'Coefficients', size=12)
     cursor = mplcursors.cursor()
     #plt.show()
