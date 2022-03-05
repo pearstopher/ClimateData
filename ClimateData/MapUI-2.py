@@ -7,7 +7,6 @@ from PyQt5.QtWidgets import *                   #pip install PyQt5
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWebEngineWidgets import *          #pip install PyQtWebEngine
-import sys
 import os
 
 class MapWindow(QMainWindow):
@@ -21,9 +20,24 @@ class MapWindow(QMainWindow):
     self.window = QWidget()
     self.layout = QVBoxLayout()
     self.navbar = QHBoxLayout()
-###
-    
-###
+    self.controls = QHBoxLayout()
+
+    self.addButton = QPushButton('+', self)
+    self.addButton.setMinimumHeight(30)
+    self.addButton.setMinimumWidth(30)
+    self.addButton.clicked.connect(self.addLine)
+    self.deleteButton = QPushButton('-')
+    self.deleteButton.setMinimumHeight(30)
+    self.deleteButton.setMinimumWidth(30)
+    self.deleteButton.clicked.connect(self.removeLine)
+    self.mapItButton = QPushButton('Map it!', self)
+    self.mapItButton.setMinimumHeight(30)
+    self.mapItButton.clicked.connect(self.genMap)
+    self.controls.addWidget(self.addButton)
+    self.controls.addWidget(self.deleteButton)
+    self.controls.addWidget(self.mapItButton)
+   
+
     self.state_list = QComboBox()
     self.state_list.addItems(["OR","TX","ETC"])
     self.state_list.setMinimumHeight(30)
@@ -37,12 +51,14 @@ class MapWindow(QMainWindow):
     self.browser = QWebEngineView()
     self.openMap()
     self.layout.addWidget(self.browser)
+    self.layout.addLayout(self.controls)
     self.layout.addLayout(self.navbar)
     
 
     self.window.setLayout(self.layout)
     self.window.show()
-  def openMap(self):
+
+  def genMap(self):
     df = pd.read_csv('data/TX_Data.csv')
     f1 = open('data/tx-us-county-codes.txt', 'r')
     f = f1.read()
@@ -56,6 +72,9 @@ class MapWindow(QMainWindow):
     cli_map.update_geos(fitbounds='locations', visible=False)
     cli_map.write_html('HTML/map_fig.html')
     self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/map_fig.html')))
+
+  def openMap(self): 
+    self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/default_fig.html')))
 
   def addLine(self):
       self.addNavbar = QHBoxLayout()
@@ -71,17 +90,18 @@ class MapWindow(QMainWindow):
       self.lines.append(self.addNavbar)
  
   def removeLine(self):
-      toDelete = self.lines[-1]
+      try:
+        toDelete = self.lines.pop()
+      except:
+        return
       self.deleteLayoutItems(toDelete)
       self.layout.removeItem(toDelete)
       return
 
   def deleteLayoutItems(self, layout):
     for i in reversed(range(layout.count())): 
-      layout.itemAt(i).widget().deleteLater()
+      layout.itemAt(i).widget().clear()
       
-sys.argv.append("--disable-web-security")
-app = QApplication([sys.argv])
+app = QApplication([])
 window = MapWindow()
-window.addLine()
 app.exec_()
