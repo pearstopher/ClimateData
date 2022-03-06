@@ -17,6 +17,8 @@ class MapWindow(QMainWindow):
     super(MapWindow, self).__init__(*args, **kwargs)
     path = QDir.current().filePath('HTML/map_fig.html')
     self.lines = []
+    self.state_boxes = []
+    self.date_boxes = []
     self.window = QWidget()
     self.layout = QVBoxLayout()
     self.navbar = QHBoxLayout()
@@ -33,20 +35,22 @@ class MapWindow(QMainWindow):
     self.mapItButton = QPushButton('Map it!', self)
     self.mapItButton.setMinimumHeight(30)
     self.mapItButton.setMaximumWidth(150)
-    self.mapItButton.clicked.connect(self.genMap)
+    self.mapItButton.clicked.connect(self.getDates)
     self.controls.addWidget(self.addButton)
     self.controls.addWidget(self.deleteButton)
     self.controls.addWidget(self.mapItButton)
    
 
     self.state_list = QComboBox()
-    self.state_list.addItems(["OR","TX","ETC"])
+    self.state_list.addItems(['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
     self.state_list.setMinimumHeight(30)
-    self.county_list = QComboBox()
-    self.county_list.addItems(["Multnomah","Etc."])
-    self.county_list.setMinimumHeight(30)
+    self.state_boxes.append(self.state_list)
+    self.date = QLineEdit()
+    self.date_boxes.append(self.date)
+    self.date.setMinimumHeight(30)
+    self.date.setMaximumWidth(250)
     self.navbar.addWidget(self.state_list)
-    self.navbar.addWidget(self.county_list)
+    self.navbar.addWidget(self.date)
 
     self.window.setWindowTitle("Climate Data")
     self.browser = QWebEngineView()
@@ -80,15 +84,17 @@ class MapWindow(QMainWindow):
   def addLine(self):
       self.addNavbar = QHBoxLayout()
       self.state_list = QComboBox()
-      self.state_list.addItems([" "])
+      self.state_list.addItems(['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
       self.state_list.setMinimumHeight(30)
-      self.county_list = QComboBox()
-      self.county_list.addItems(["Multnomah","Etc."])
-      self.county_list.setMinimumHeight(30)
+      self.state_boxes.append(self.state_list)
+      self.date = QLineEdit()
+      self.date.setMinimumHeight(30)
+      self.date.setMaximumWidth(250)
       self.addNavbar.addWidget(self.state_list)
-      self.addNavbar.addWidget(self.county_list)
+      self.addNavbar.addWidget(self.date)
       self.layout.addLayout(self.addNavbar)
       self.lines.append(self.addNavbar)
+      self.date_boxes.append(self.date)
  
   def removeLine(self):
       try:
@@ -97,11 +103,25 @@ class MapWindow(QMainWindow):
         return
       self.deleteLayoutItems(toDelete)
       self.layout.removeItem(toDelete)
+      self.state_boxes.pop()
+      self.date_boxes.pop()
       return
 
   def deleteLayoutItems(self, layout):
     for i in reversed(range(layout.count())): 
       layout.itemAt(i).widget().clear()
+
+  def getStates(self):
+    states = []
+    for boxes in self.state_boxes:
+      states.append(boxes.currentText())
+    print(states)
+
+  def getDates(self):
+    dates = []
+    for boxes in self.date_boxes:
+      dates.append(boxes.text())
+    print(dates) 
       
 app = QApplication([])
 window = MapWindow()
