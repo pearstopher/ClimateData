@@ -8,6 +8,24 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWebEngineWidgets import *          #pip install PyQtWebEngine
 import os
+import re
+
+def validate_dates(date):
+
+      #check that date is in correct format (month/year)
+      if bool(re.match("\d+\/\d+", date)) == False: 
+         return False
+      
+      [month, year] = date.split('/')
+
+      #check that years are four digits 
+      if len(year) != 4:
+        return False
+
+      return True
+
+def dateError():
+    print("Date Error you Slut")
 
 class MapWindow(QMainWindow):
 
@@ -120,9 +138,14 @@ class MapWindow(QMainWindow):
   def getDates(self):
     dates = []
     for boxes in self.date_boxes:
+      if not validate_dates(boxes.text()):
+        dateError()
+        return
       dates.append(boxes.text())
     print(dates) 
-      
+  
+  
+ 
 app = QApplication([])
 window = MapWindow()
 app.exec_()
