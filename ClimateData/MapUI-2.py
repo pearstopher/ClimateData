@@ -25,7 +25,7 @@ def validate_dates(date):
       return True
 
 def dateError():
-    print("Date Error you Slut")
+    print("Date Error")
 
 class MapWindow(QMainWindow):
 
@@ -53,7 +53,7 @@ class MapWindow(QMainWindow):
     self.mapItButton = QPushButton('Map it!', self)
     self.mapItButton.setMinimumHeight(30)
     self.mapItButton.setMaximumWidth(150)
-    self.mapItButton.clicked.connect(self.getDates)
+    self.mapItButton.clicked.connect(self.genMap)
     self.controls.addWidget(self.addButton)
     self.controls.addWidget(self.deleteButton)
     self.controls.addWidget(self.mapItButton)
@@ -92,7 +92,7 @@ class MapWindow(QMainWindow):
 
     cli_map = px.choropleth(df, geojson=counties, locations=fipslist, color='Temperature',color_continuous_scale='jet',range_color=(10,130), scope='usa')
     cli_map.update_layout(title='Texas')
-    cli_map.update_geos(fitbounds='locations', visible=False)
+    cli_map.update_geos(fitbounds='locations', visible=True)
     cli_map.write_html('HTML/map_fig.html')
     self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/map_fig.html')))
 
