@@ -78,7 +78,7 @@ def convert_countycodes():
     with open(f'{outputDir}{countyCodesName}', 'w') as w:
 
       # header
-      w.write('id INTEGER PRIMARY KEY,county_code INTEGER,county_name VARCHAR(50),state VARCHAR(2),country VARCHAR(3)\n')
+      w.write('id INTEGER PRIMARY KEY,county_code INTEGER,fips_code INTEGER,county_name VARCHAR(50),state VARCHAR(2),country VARCHAR(3)\n')
 
       # eat header
       f.readline()
@@ -89,15 +89,15 @@ def convert_countycodes():
       for line in lines:
         parts = line.split('\t')
 
-        county_code = parts[0]
-        county_state_code = int(county_code[:2])
+        fips_code = parts[0]
+        fips_state_code = int(fips_code[:2])
         state = parts[2].strip()
         name = parts[1]
         skip = False
         #if county_code in county_map:
         #  county_code = county_map[county_code]
         if state in state_map:
-          county_code = f'{state_map[state]}{county_code[2:]}'
+          county_code = f'{state_map[state]}{fips_code[2:]}'
         else:
           skip = True
           print(f'skipping {line.strip()}')
@@ -105,7 +105,7 @@ def convert_countycodes():
         if not skip:
           # prepend '01' to code, indicating county is from united states
           # add 'US' value for country column
-          w.write(f'{id},01{county_code},{name},{state},US\n')
+          w.write(f'{id},01{county_code},{fips_code},{name},{state},US\n')
           id += 1
 
 def convert_county_coords():
