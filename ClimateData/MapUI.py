@@ -1,129 +1,151 @@
-from cgitb import text
-from tkinter import *
-from tkinter import ttk
-from tkinter.tix import ButtonBox
-from turtle import left
-from tkintermapview import TkinterMapView as TKMV
-import psycopg2
-import database
-conn = psycopg2.connect("host=localhost dbname=postgres user=postgres password=PASSWORD")
-cur = conn.cursor()
-marks = []
+import pandas as pd                             #pip install pandas
+import plotly.express as px                     #pip install plotly   
+import psycopg2                                 #pip install psycopg2-binary
+import json
+from urllib.request import urlopen
+from PyQt5.QtWidgets import *                   #pip install PyQt5
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtWebEngineWidgets import *          #pip install PyQtWebEngine
+import os
+import re
 
-root = Tk()
-root.geometry("1500x900")
-root.title("Climate Data Map")
-buttonFrame = Frame(root)
-buttonFrame.pack()
-mapFrame = Frame(root)
-mapFrame.pack(side=BOTTOM)
-rightFrame = Frame(root)
-rightFrame.pack(side=BOTTOM)
+def validate_dates(date):
 
-states_abb = {
-    "Alabama": "AL",
-    "Alaska": "AK",
-    "Arizona": "AZ",
-    "Arkansas": "AR",
-    "California": "CA",
-    "Colorado": "CO",
-    "Connecticut": "CT",
-    "Delaware": "DE",
-    "Florida": "FL",
-    "Georgia": "GA",
-    "Hawaii": "HI",
-    "Idaho": "ID",
-    "Illinois": "IL",
-    "Indiana": "IN",
-    "Iowa": "IA",
-    "Kansas": "KS",
-    "Kentucky": "KY",
-    "Louisiana": "LA",
-    "Maine": "ME",
-    "Maryland": "MD",
-    "Massachusetts": "MA",
-    "Michigan": "MI",
-    "Minnesota": "MN",
-    "Mississippi": "MS",
-    "Missouri": "MO",
-    "Montana": "MT",
-    "Nebraska": "NE",
-    "Nevada": "NV",
-    "New Hampshire": "NH",
-    "New Jersey": "NJ",
-    "New Mexico": "NM",
-    "New York": "NY",
-    "North Carolina": "NC",
-    "North Dakota": "ND",
-    "Ohio": "OH",
-    "Oklahoma": "OK",
-    "Oregon": "OR",
-    "Pennsylvania": "PA",
-    "Rhode Island": "RI",
-    "South Carolina": "SC",
-    "South Dakota": "SD",
-    "Tennessee": "TN",
-    "Texas": "TX",
-    "Utah": "UT",
-    "Vermont": "VT",
-    "Virginia": "VA",
-    "Washington": "WA",
-    "West Virginia": "WV",
-    "Wisconsin": "WI",
-    "Wyoming": "WY",
-}
+      #check that date is in correct format (month/year)
+      if bool(re.match("\d+\/\d+", date)) == False: 
+         return False
+      
+      [month, year] = date.split('/')
 
-def clearMarks():
-  for mark in marks:
-    mark.delete()
+      #check that years are four digits 
+      if len(year) != 4:
+        return False
 
-def SelectState(event = None):
-  state = event.widget.get()
+      return True
+
+def dateError():
+    print("Date Error")
+
+class MapWindow(QMainWindow):
+
+  def __init__(self, *args, **kwargs):
+    
+        
+    super(MapWindow, self).__init__(*args, **kwargs)
+    path = QDir.current().filePath('HTML/map_fig.html')
+    self.lines = []
+    self.state_boxes = []
+    self.date_boxes = []
+    self.window = QWidget()
+    self.layout = QVBoxLayout()
+    self.navbar = QHBoxLayout()
+    self.controls = QHBoxLayout()
+
+    self.addButton = QPushButton('+', self)
+    self.addButton.setMinimumHeight(30)
+    self.addButton.setMaximumWidth(40)
+    self.addButton.clicked.connect(self.addLine)
+    self.deleteButton = QPushButton('-')
+    self.deleteButton.setMinimumHeight(30)
+    self.deleteButton.setMaximumWidth(40)
+    self.deleteButton.clicked.connect(self.removeLine)
+    self.mapItButton = QPushButton('Map it!', self)
+    self.mapItButton.setMinimumHeight(30)
+    self.mapItButton.setMaximumWidth(150)
+    self.mapItButton.clicked.connect(self.genMap)
+    self.controls.addWidget(self.addButton)
+    self.controls.addWidget(self.deleteButton)
+    self.controls.addWidget(self.mapItButton)
+   
+
+    self.state_list = QComboBox()
+    self.state_list.addItems(['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
+    self.state_list.setMinimumHeight(30)
+    self.state_boxes.append(self.state_list)
+    self.date = QLineEdit()
+    self.date_boxes.append(self.date)
+    self.date.setMinimumHeight(30)
+    self.date.setMaximumWidth(250)
+    self.navbar.addWidget(self.state_list)
+    self.navbar.addWidget(self.date)
+
+    self.window.setWindowTitle("Climate Data")
+    self.browser = QWebEngineView()
+    self.openMap()
+    self.layout.addWidget(self.browser)
+    self.layout.addLayout(self.controls)
+    self.layout.addLayout(self.navbar)
+    
+
+    self.window.setLayout(self.layout)
+    self.window.show()
+
+  def genMap(self):
+    df = pd.read_csv('data/TX_Data.csv')
+    f1 = open('data/tx-us-county-codes.txt', 'r')
+    f = f1.read()
+    f1.close()
+    fipslist = f.splitlines()
+    with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
+      counties = json.load(response)
+
+    cli_map = px.choropleth(df, geojson=counties, locations=fipslist, color='Temperature',color_continuous_scale='jet',range_color=(10,130), scope='usa')
+    cli_map.update_layout(title='Texas')
+    cli_map.update_geos(fitbounds='locations', visible=True)
+    cli_map.write_html('HTML/map_fig.html')
+    self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/map_fig.html')))
+
+  def openMap(self): 
+    self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/default_fig.html')))
+
+  def addLine(self):
+      self.addNavbar = QHBoxLayout()
+      self.state_list = QComboBox()
+      self.state_list.addItems(['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
+      self.state_list.setMinimumHeight(30)
+      self.state_boxes.append(self.state_list)
+      self.date = QLineEdit()
+      self.date.setMinimumHeight(30)
+      self.date.setMaximumWidth(250)
+      self.addNavbar.addWidget(self.state_list)
+      self.addNavbar.addWidget(self.date)
+      self.layout.addLayout(self.addNavbar)
+      self.lines.append(self.addNavbar)
+      self.date_boxes.append(self.date)
+ 
+  def removeLine(self):
+      try:
+        toDelete = self.lines.pop()
+      except:
+        return
+      self.deleteLayoutItems(toDelete)
+      self.layout.removeItem(toDelete)
+      self.state_boxes.pop()
+      self.date_boxes.pop()
+      return
+
+  def deleteLayoutItems(self, layout):
+    for i in reversed(range(layout.count())): 
+      layout.itemAt(i).widget().clear()
+
+  def getStates(self):
+    states = []
+    for boxes in self.state_boxes:
+      states.append(boxes.currentText())
+    print(states)
+
+  def getDates(self):
+    dates = []
+    for boxes in self.date_boxes:
+      if not validate_dates(boxes.text()):
+        dateError()
+        return
+      dates.append(boxes.text())
+    print(dates) 
   
-  cur.execute("""SELECT * FROM county_codes WHERE state = %s;""", [states_abb[state]])
-  conn.commit()
-  data = cur.fetchall()
-  for row in data:
-    print(row)
-    mark = map_widget.set_address(f"%s, %s" % (row[2], state), marker=True)
-    mark.set_text(row[2] + ", " + state)
-    marks.append(mark)
   
-  map_widget.set_zoom(8)
-
-#Initialize dropdown Widget *Source Adriana Swantz UI Code
-dropdown = ttk.Combobox(buttonFrame, font="Verdana 15 bold")
-dropdown['state'] = 'readonly'
-dropdown['values'] = (['Alaska','Alabama','Arkansas','Arizona','California','Colorado','Connecticut','Delaware','Florida',
-'Georgia','Iowa','Idaho','Illinois','Indiana','Kansas','Kentucky','Louisiana','Massachusetts','Maryland','Maine','Michigan',
-'Minnesota','Missouri','Mississippi','Montana','North Carolina','Nevada','Nebraska','New Hampshire','New Jersey','New Mexico',
-'New York','Ohio','Oklahoma','Oregon','Pennsylvania','Rhode Island','South Carolina','South Dakota','Tennessee','Texas','Utah',
-'Virgina','Vermont','Washington','Wisconsin','West Virginia','Wyoming'])
-dropdown.bind('<<ComboboxSelected>>', SelectState)
-dropdown.pack(pady=10)
-
-#Month + Year Drop down
-start_date = Label(buttonFrame, text="Start Date")
-start_date.pack()
-start_month = ttk.Combobox(buttonFrame)
-start_month.pack(side=LEFT)
-# month_dropdown['month'] = 'readonly'
-start_month['values'] = (['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'])
-
-start_year = ttk.Combobox(buttonFrame)
-start_year.pack(side=LEFT)
-
-#Right Frame
-clearButton = Button(rightFrame, text="Clear all marks", command=clearMarks)
-clearButton.pack(expand=True)
-
-map_widget = TKMV(root, width=800, height=600, corner_radius=100)
-map_widget.place(relx=0.5, rely=0.5, anchor=CENTER)
-map_widget.set_address("Colorado")
-map_widget.set_zoom(4)
-map_widget.set_tile_server("https://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}&s=Ga", max_zoom=22)  # google normal
-#map_widget.set_tile_server("https://mt0.google.com/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}&s=Ga", max_zoom=22)  # google satellite
-#map_widget.set_tile_server("http://c.tile.stamen.com/watercolor/{z}/{x}/{y}.png")  # painting style
-#map_widget.set_tile_server("http://a.tile.stamen.com/toner/{z}/{x}/{y}.png")  # black and white
-
-root.mainloop()
+if __name__ == "__main__":
+  app = QApplication([])
+  window = MapWindow()
+  app.exec_()
