@@ -10,6 +10,8 @@ import plotting
 import re
 from itertools import chain
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
+import MapUI
+from PyQt5.QtWidgets import *                   #pip install PyQt5
 
 # Dictionaries
 degree_dict = {
@@ -101,7 +103,11 @@ class App(tk.Tk):
     def show_frame(self, page_name):
         frame = self.frames[page_name]
         frame.tkraise()
-
+    def open_map(self, df):
+      app = QApplication([])
+      window = MapUI.MapWindow()
+      app.exec_()
+        
     
 class StartPage(tk.Frame):
     def __init__(self, parent, controller, master):
@@ -109,7 +115,7 @@ class StartPage(tk.Frame):
         self.controller = controller
 
         button1 = TTK.Button(self, text = "Graph", width="15", bootstyle="secondary", command=lambda: controller.show_frame("graphPage"))
-        button2 = TTK.Button(self, text = "Map", width="15", bootstyle="secondary", command=lambda: controller.show_frame("mapPage"))
+        button2 = TTK.Button(self, text = "Map", width="15", bootstyle="secondary", command=lambda: controller.open_map("dataframe_placeholder"))
         button1.grid(row=0, column=1, padx=(450,0), pady=(100,500))
         button2.grid(row=0, column=2, padx=(10,0), pady=(100,500))
 
