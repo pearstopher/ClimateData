@@ -269,9 +269,8 @@ def get_data(columnList, idList, startYear, endYear):
     results = None
     cols = []
     matchString = "|| '%'"
-    defaultColumns = "w.id, cc.county_name, cc.state, cc.country, "
-    columns = ["w." + col for col in columnList]
-    columnString = ", ".join(columns)
+    defaultColumns = "id, "
+    columnString = ", ".join(columnList)
     idYearList = []
     columnString = defaultColumns + columnString
     
@@ -292,8 +291,7 @@ def get_data(columnList, idList, startYear, endYear):
         
         try:
             cur.execute("""
-            SELECT %s FROM weather as w JOIN county_codes as cc 
-            ON CAST(w.id AS TEXT) like CAST(cc.county_code AS TEXT) || '%%' WHERE w.id IN (%s);
+            SELECT %s FROM weather WHERE id in (%s);
             """,
             [AsIs(columnString), AsIs(idString)])
             conn.commit()
@@ -465,3 +463,5 @@ def get_data_for_countries_dataset(countries, columns, startMonth, endMonth, sta
 
 if __name__ == "__main__":
     setup_database()
+
+
