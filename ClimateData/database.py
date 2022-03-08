@@ -291,7 +291,7 @@ def get_data(columnList, idList, startYear, endYear):
         
         try:
             cur.execute("""
-            SELECT %s FROM weather WHERE id in (%s);
+            SELECT %s FROM weather WHERE id in (%s) ORDER BY id ASC;
             """,
             [AsIs(columnString), AsIs(idString)])
             conn.commit()
