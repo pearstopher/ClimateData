@@ -265,7 +265,7 @@ def get_ids_by_country(country):
     return formatted_results
 
 #tableName, columnList and idList must be sent in as strings or lists of strings. Years are integers. 
-def get_data(columnList, idList, startYear, endYear):
+def get_weather_data(columnList, idList, startYear, endYear):
     results = None
     cols = []
     matchString = "|| '%'"
@@ -313,17 +313,17 @@ def get_data(columnList, idList, startYear, endYear):
 def get_data_for_single_county(columnList, county, state, country, startYear, endYear):
         idList = []
         idList.append(get_id_by_county(county, state, country))
-        return get_data(columnList, idList, startYear, endYear)
+        return get_weather_data(columnList, idList, startYear, endYear)
 
 def get_data_for_state(columnList, state, country, startYear, endYear):
         idList = []
         idList = get_ids_by_state(state, country)
-        return get_data(columnList, idList, startYear, endYear)
+        return get_weather_data(columnList, idList, startYear, endYear)
 
 def get_data_for_country(columnList, country, startYear, endYear):
         idList = []
         idList = get_ids_by_country(country)
-        return get_data(columnList, idList, startYear, endYear)
+        return get_weather_data(columnList, idList, startYear, endYear)
 
 def get_coordinates(countyId):
     cols = []
@@ -463,5 +463,3 @@ def get_data_for_countries_dataset(countries, columns, startMonth, endMonth, sta
 
 if __name__ == "__main__":
     setup_database()
-
-
