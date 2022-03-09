@@ -269,7 +269,7 @@ def get_data(columnList, idList, startYear, endYear):
     results = None
     cols = []
     matchString = "|| '%'"
-    defaultColumns = "w.id, cc.county_name, cc.state, cc.country, "
+    defaultColumns = "w.id, cc.county_name, cc.state, cc.country, cc.fips_code, "
     columns = ["w." + col for col in columnList]
     columnString = ", ".join(columns)
     idYearList = []
