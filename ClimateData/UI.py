@@ -40,6 +40,25 @@ month_dict = {
     "12" : "dec"
 }
 
+#This dictionary makes months abbreviations look nicer in the UI
+month_abbrev_to_whole = {
+
+    "01" : "January",
+    "02" : "February",
+    "03" : "March",
+    "04" : "April",
+    "05" : "May",
+    "06" : "June",
+    "07" : "July",
+    "08" : "August",
+    "09" : "September",
+    "10" : "October",
+    "11" : "November",
+    "12" : "December"
+
+
+}
+
 # Helper Functions --------------------------------------------------
 
 def validate_dates(start, end):
@@ -61,18 +80,6 @@ def validate_dates(start, end):
 
     return True
 
-def on_specific_search():
-  
-    """ 
-     # Initialize detailed year and month search dropdown
-    self.dropdown_county = TTK.Combobox(self.frame_right, font="Helvetica 12")
-    self.dropdown_county.set('Select year')
-    self.dropdown_county['state'] = 'readonly'
-    self.dropdown_county.bind('<<ComboboxSelected>>', gen_table)
-    self.dropdown_county.grid(row=1, column=1, padx=(290, 0), pady=(20, 20))
-    """
-    return null
- 
 
 def validate_degree(degree):
    
@@ -146,7 +153,67 @@ class graphPage(tk.Frame):
         self.end_date = tkboot.StringVar(value="")
         self.n_degree = tkboot.StringVar(value="")
 
+
 # FUNCTIONS -----------------------------------------------------------------
+        
+        def on_specific_search():
+            #Forget the date entry widgets that had been there along with the button, these CAN be retrieved though!
+            self.begin_date_label.grid_forget()
+            self.end_date_label.grid_forget()
+            self.begin_date_ent.grid_forget()
+            self.end_date_ent.grid_forget()
+            self.sub_btn.grid_forget()
+            self.dropdown_equations.grid_forget()
+            self.dropdown_graphs.grid_forget()
+            self.scatter_checkbox.grid_forget()
+            
+            #Parse the date range just recieved from user, this is needed for generating
+            #drop downs with applicable years and months
+            [begin_month, begin_year] = self.begin_date.get().split('/')
+            [end_month, end_year] = self.end_date.get().split('/')
+            begin_month = month_abbrev_to_whole[begin_month]
+            end_month = month_abbrev_to_whole[end_month]
+
+            print("Date range to go off of for detailed search is: ", begin_month, begin_year, end_month, end_year)
+            
+            self.date_range_label = tk.Label(self.frame_right, font="10", text="Chosen date range:")
+            self.date_range_label.grid(row=4, column=1, padx=(0, 240), pady=(20,0))
+
+            self.date_range = tkboot.StringVar(value="")
+            self.date_range.set(begin_month + " " + begin_year + " to " + end_month + " " +  end_year)
+            self.show_date_range = tk.Label(self.frame_right, font="10", textvariable=self.date_range)
+            self.show_date_range.grid(row=4, column=1, padx=(220, 0), pady=(20,0))
+
+            """
+            self.info_label = tk.Label(self.frame_right, font="10", text="Select specific years and months: ")
+            self.info_label.grid(row=5, column=1, padx=(0,130), pady=(10,10))
+            """
+              
+            #Initialize detailed year and month search entries
+            self.specific_years = TTK.Combobox(self.frame_right, width=14, font="Helvetica 10")
+            self.specific_years.set('Select years')
+            self.specific_years['state'] = 'readonly'
+            self.specific_years.bind('<<ComboboxSelected>>', gen_months)
+            self.specific_years.grid(row=6, column=1, padx=(0, 270), pady=(10, 0))
+
+            self.specific_months = TTK.Combobox(self.frame_right, width=14, font="Helvetica 10")
+            self.specific_months.set('Select months')
+            self.specific_months['state'] = 'readonly'
+            self.specific_months.bind('<<ComboboxSelected>>', gen_specific_date_table)
+            self.specific_months.grid(row=6, column=1, padx=(30, 0), pady=(10, 0))
+        
+            #Table widget for specific dates
+            self.date_table = TTK.Treeview(self.frame_right)
+            self.date_table['columns'] = ('Year', 'Month')
+            self.date_table.column('#0', width=0, stretch=tk.NO)
+            self.date_table.column('Year', width=110)
+            self.date_table.column('Month', width=110)
+            self.date_table.heading('#0', text="", anchor=tk.CENTER)
+            self.date_table.heading('Year', text="Year")
+            self.date_table.heading('Month', text="Month")
+            self.date_table.grid(row=7, column=1, pady=(10,0), padx=(0,170))
+
+
         #called when submit button for date entry is used
         def on_submit():
             #user input is invalid, call validate_dates function
@@ -315,6 +382,32 @@ class graphPage(tk.Frame):
             self.dropdown_county['values'] = data
             self.dropdown_county.grid(row=1, column=1, padx=(290, 0), pady=(0, 0))
 
+        #Fill the months dropdown menu
+        def gen_months(event=None):
+            if event == None:
+                months = ''
+            else:
+                months = event.widget.get()
+            data = [('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December')]
+            self.specific_months['values'] = data
+            self.specific_months.grid(row=6, column=1, padx=(60, 0), pady=(10, 60))
+            
+
+        #Fill the specific dates table
+        def gen_specific_date_table(event=None):
+            if event == None:
+                year = ''
+                month = ''
+            else:
+                month = event.widget.get()
+                year = self.specific_years.get()
+            print(self.begin_month) 
+            data = [year, month]
+            for row in data:
+                self.date_table.insert(parent='', index='end', values=row)
+            self.date_table.grid(row=6, column=1, pady=(0,20), padx=(250, 235))
+    
+
         def gen_table(event=None):
             if event == None:
                 county_name = ''
@@ -338,7 +431,10 @@ class graphPage(tk.Frame):
             print(data)
             for row in data:
                 self.data_table.insert(parent='', index='end', values=row)
-            self.data_table.grid(row=2, column=1, pady=(0,40), padx=(250, 235))
+            self.data_table.grid(row=2, column=1, pady=(0,20), padx=(250, 235))
+
+
+        
 
 # WIDGETS ----------------------------------------------------------------------------       
 
