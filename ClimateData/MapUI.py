@@ -111,10 +111,7 @@ class MapWindow(QWindow):
     self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/map_fig.html')))
 
   def openMap(self): 
-    try:
       self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/default_fig.html')))
-    except:
-      print("Some shit went wrong???")
 
   def addLine(self):
       self.addNavbar = QHBoxLayout()
