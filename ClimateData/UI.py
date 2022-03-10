@@ -80,6 +80,7 @@ cur = conn.cursor()
 class App(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
+        self.app = QApplication([])
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
 
         container = tk.Frame(self)
@@ -103,12 +104,10 @@ class App(tk.Tk):
     def show_frame(self, page_name):
         frame = self.frames[page_name]
         frame.tkraise()
+
     def open_map(self, df):
-      app = QApplication([])
-      window = MapUI.MapWindow()
-      app.exec_()
-        
-    
+      window = MapUI.MapWindow(df)
+      self.app.exec_()
 class StartPage(tk.Frame):
     def __init__(self, parent, controller, master):
         tk.Frame.__init__(self, parent)

@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import *                   #pip install PyQt5
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWebEngineWidgets import *          #pip install PyQtWebEngine
+import database
 import os
 import re
 
@@ -27,13 +28,14 @@ def validate_dates(date):
 def dateError():
     print("Date Error")
 
-class MapWindow(QMainWindow):
+class MapWindow(QWindow):
 
-  def __init__(self, *args, **kwargs):
+  def __init__(self, pdDF, *args, **kwargs):
     
         
     super(MapWindow, self).__init__(*args, **kwargs)
     path = QDir.current().filePath('HTML/map_fig.html')
+    self.pdDF = pdDF
     self.lines = []
     self.state_boxes = []
     self.date_boxes = []
@@ -42,33 +44,41 @@ class MapWindow(QMainWindow):
     self.navbar = QHBoxLayout()
     self.controls = QHBoxLayout()
 
-    self.addButton = QPushButton('+', self)
-    self.addButton.setMinimumHeight(30)
-    self.addButton.setMaximumWidth(40)
-    self.addButton.clicked.connect(self.addLine)
-    self.deleteButton = QPushButton('-')
-    self.deleteButton.setMinimumHeight(30)
-    self.deleteButton.setMaximumWidth(40)
-    self.deleteButton.clicked.connect(self.removeLine)
-    self.mapItButton = QPushButton('Map it!', self)
-    self.mapItButton.setMinimumHeight(30)
-    self.mapItButton.setMaximumWidth(150)
-    self.mapItButton.clicked.connect(self.genMap)
-    self.controls.addWidget(self.addButton)
-    self.controls.addWidget(self.deleteButton)
-    self.controls.addWidget(self.mapItButton)
+    self.yearSlider = QSlider(Qt.Horizontal)
+    self.sliderBox = QLineEdit()
+    self.yearSlider.setMinimum(1800)
+    self.yearSlider.setMaximum(2022)
+    self.yearSlider.valueChanged.connect(self.slideValChange)
+    self.sliderBox.returnPressed.connect(self.slideBoxChange)
+    # self.addButton = QPushButton('+', self)
+    # self.addButton.setMinimumHeight(30)
+    # self.addButton.setMaximumWidth(40)
+    # self.addButton.clicked.connect(self.addLine)
+    # self.deleteButton = QPushButton('-')
+    # self.deleteButton.setMinimumHeight(30)
+    # self.deleteButton.setMaximumWidth(40)
+    # self.deleteButton.clicked.connect(self.removeLine)
+    # self.mapItButton = QPushButton('Map it!', self)
+    # self.mapItButton.setMinimumHeight(30)
+    # self.mapItButton.setMaximumWidth(150)
+    # self.mapItButton.clicked.connect(self.genMap)
+    # self.controls.addWidget(self.addButton)
+    # self.controls.addWidget(self.deleteButton)
+    # self.controls.addWidget(self.mapItButton)
+    self.controls.addWidget(self.yearSlider)
+    self.controls.addWidget(self.sliderBox)
    
 
-    self.state_list = QComboBox()
-    self.state_list.addItems(['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
-    self.state_list.setMinimumHeight(30)
-    self.state_boxes.append(self.state_list)
-    self.date = QLineEdit()
-    self.date_boxes.append(self.date)
-    self.date.setMinimumHeight(30)
-    self.date.setMaximumWidth(250)
-    self.navbar.addWidget(self.state_list)
-    self.navbar.addWidget(self.date)
+    # self.state_list = QComboBox()
+    # self.state_list.addItems(['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
+    # self.state_list.setMinimumHeight(30)
+    # self.state_boxes.append(self.state_list)
+    # self.date = QLineEdit()
+    # self.date_boxes.append(self.date)
+    # self.date.setMinimumHeight(30)
+    # self.date.setMaximumWidth(250)
+    # self.navbar.addWidget(self.state_list)
+    # self.navbar.addWidget(self.date)
 
     self.window.setWindowTitle("Climate Data")
     self.browser = QWebEngineView()
@@ -80,13 +90,17 @@ class MapWindow(QMainWindow):
 
     self.window.setLayout(self.layout)
     self.window.show()
-
+  def slideBoxChange(self):
+    self.yearSlider.setValue(int(self.sliderBox.text()))
+  def slideValChange(self):
+    self.sliderBox.setText(str(self.yearSlider.value()))
   def genMap(self):
-    df = pd.read_csv('data/TX_Data.csv')
-    f1 = open('data/tx-us-county-codes.txt', 'r')
-    f = f1.read()
-    f1.close()
-    fipslist = f.splitlines()
+    df_list = database.get_data_for_counties_dataset(self.state_list,)
+    # df = pd.read_csv('data/TX_Data.csv')
+    # f1 = open('data/tx-us-county-codes.txt', 'r')
+    # f = f1.read()
+    # f1.close()
+    # fipslist = f.splitlines()
     with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
       counties = json.load(response)
 
@@ -97,7 +111,10 @@ class MapWindow(QMainWindow):
     self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/map_fig.html')))
 
   def openMap(self): 
-    self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/default_fig.html')))
+    try:
+      self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/default_fig.html')))
+    except:
+      print("Some shit went wrong???")
 
   def addLine(self):
       self.addNavbar = QHBoxLayout()
@@ -144,7 +161,8 @@ class MapWindow(QMainWindow):
       dates.append(boxes.text())
     print(dates) 
   
-  
+
+
 if __name__ == "__main__":
   app = QApplication([])
   window = MapWindow()
