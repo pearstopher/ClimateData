@@ -173,7 +173,7 @@ class graphPage(tk.Frame):
             begin_month = month_dict[begin_month]
             end_month = month_dict[end_month]
             
-            polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else self.ent.get()
+            polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
             data_type =  datatype_dict[self.dropdown_graphs.get()]
             # Intermediate Steps
             rows = self.data_table.get_children()
@@ -215,10 +215,11 @@ class graphPage(tk.Frame):
             for i, df in enumerate(df_list):
                 df_list[i] = pd.concat([df_list[i].iloc[:, 0], df_list[i].iloc[:, 4:]], axis=1)
 
+            # Flatten the list of counties
             counties = list(chain(*counties))
             fig = plotting.plot('scatter_poly', df_list, {'process_type': 'months', 'begin_month': monthsIdx[begin_month],
                                                           'degree': polynomial_degree, 'plots_per_graph' : len(df_list), 'counties' : counties})
-            canvas = FigureCanvasTkAgg(fig, master = master)  
+            canvas = FigureCanvasTkAgg(fig, master=master)  
             canvas.draw()
             canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
 
@@ -384,7 +385,10 @@ class graphPage(tk.Frame):
         self.dropdown_state = TTK.Combobox(self.frame_right, font="Helvetica 12")
         self.dropdown_state.set('Select state...')
         self.dropdown_state['state'] = 'readonly'
-        self.dropdown_state['values'] = (['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
+        self.dropdown_state['values'] = (['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN',
+                                          'KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE',
+                                          'NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX',
+                                          'UT','VA','VT','WA','WI','WV','WY'])
         self.dropdown_state.bind('<<ComboboxSelected>>', gen_counties)
         self.dropdown_state.grid(row=1, column=1, padx=(0, 190), pady=(20, 20))
 
