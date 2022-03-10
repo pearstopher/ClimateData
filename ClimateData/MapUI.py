@@ -82,7 +82,7 @@ class MapWindow(QWindow):
 
     self.window.setWindowTitle("Climate Data")
     self.browser = QWebEngineView()
-    self.openMap()
+    self.genMap()
     self.layout.addWidget(self.browser)
     self.layout.addLayout(self.controls)
     self.layout.addLayout(self.navbar)
@@ -95,12 +95,12 @@ class MapWindow(QWindow):
   def slideValChange(self):
     self.sliderBox.setText(str(self.yearSlider.value()))
   def genMap(self):
-    df_list = database.get_data_for_counties_dataset(self.state_list,)
-    # df = pd.read_csv('data/TX_Data.csv')
-    # f1 = open('data/tx-us-county-codes.txt', 'r')
-    # f = f1.read()
-    # f1.close()
-    # fipslist = f.splitlines()
+    # df_list = database.get_data_for_counties_dataset(self.state_list)
+    df = pd.read_csv('data/TX_Data.csv')
+    f1 = open('data/tx-us-county-codes.txt', 'r')
+    f = f1.read()
+    f1.close()
+    fipslist = f.splitlines()
     with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
       counties = json.load(response)
 
