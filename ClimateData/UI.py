@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+from ast import Lambda
 import tkinter as tk
+from tkinter import BOTTOM, HORIZONTAL, ttk
 import ttkbootstrap as tkboot
 from ttkbootstrap import ttk as TTK
 from ttkbootstrap import font as tkfont
@@ -98,8 +100,23 @@ class App(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
-
+        self.title('Climate Data')
+        self.geometry('1920x1080')
+        tkboot.Style('darkly')
+        #################################
         container = tk.Frame(self)
+        container.pack(fill=BOTH, expand=1)
+        my_canvas = tk.Canvas(container)
+        my_canvas.pack(side=LEFT, fill=BOTH, expand=1)
+        my_scrollbar = tk.Scrollbar(container, orient=HORIZONTAL, command=my_canvas.xview)
+        my_scrollbar.pack(side=BOTTOM, fill=X)
+        my_canvas.configure(xscrollcommand=my_scrollbar.set)
+        my_canvas.bind('<Configure>', lambda e: my_canvas.configure(scrollregion = my_canvas.bbox("all")))
+
+        second_frame = tk.Frame(my_canvas)
+        my_canvas.create_window((0,0), window=second_frame, anchor="center")
+
+        """
         container.grid(row=0, column=0)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
@@ -107,11 +124,11 @@ class App(tk.Tk):
         self.title('Climate Data')
         self.geometry('1920x1080')
         tkboot.Style('darkly')
-    
+        """
         self.frames = {}
         for F in (StartPage, graphPage):
             page_name = F.__name__
-            frame = F(parent=container, controller=self, master=self)
+            frame = F(parent=second_frame, controller=self, master=self)
             self.frames[page_name] = frame
             frame.grid(row=0, column=0, sticky="nsew")
 
