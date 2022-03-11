@@ -65,6 +65,7 @@ def get_data_dfs(row):
 
 ''' Get data in x & y format per df '''
 
+
 def get_xy_data(df, month=12):
     x_dates_format = []
     x_data = []
@@ -74,14 +75,14 @@ def get_xy_data(df, month=12):
     # range(start_year, end_year) == df.shape[0] (num of rows)
     # Append date formatted
     for i in range(start_year, end_year + 1):
-        for j in range(1, month+1):
+        for j in range(1, month + 1):
             x_dates_format.append(str(i)[-4:] + '-' + str(j))
             x_data.append(int(str(i)[-4:]) + (j - 1) / 12)
 
     # Append temp/precip values
     y_data = []
     for i, row in df.iterrows():
-        for j in row[1:month+1]:
+        for j in row[1:month + 1]:
             y_data.append(j)
 
     return [x_data, y_data, x_dates_format]
@@ -146,15 +147,16 @@ def build_poly_coeffs_for_county_csv(deg, deriv=0):
             # Dynamically add coefficients (any size)
             if deriv > 0:
                 assert cols.size > deg + 3
-                avg_deriv = np.polyder(avg_coeffs, deriv)
-                max_deriv = np.polyder(max_coeffs, deriv)
-                min_deriv = np.polyder(min_coeffs, deriv)
-                precip_deriv = np.polyder(precip_coeffs, deriv)
+                avg_deriv = np.polyder(avg_coeffs[::-1], deriv)
+                max_deriv = np.polyder(max_coeffs[::-1], deriv)
+                min_deriv = np.polyder(min_coeffs[::-1], deriv)
+                precip_deriv = np.polyder(precip_coeffs[::-1], deriv)
 
-                avg_data_rows.append(np.hstack([row['state'], row['county_name'], avg_coeffs[::-1], avg_deriv[::-1]]))
-                max_data_rows.append(np.hstack([row['state'], row['county_name'], max_coeffs[::-1], max_deriv[::-1]]))
-                min_data_rows.append(np.hstack([row['state'], row['county_name'], min_coeffs[::-1], min_deriv[::-1]]))
-                precip_data_rows.append(np.hstack([row['state'], row['county_name'], precip_coeffs[::-1], precip_deriv[::-1]]))
+                avg_data_rows.append(np.hstack([row['state'], row['county_name'], avg_coeffs[::-1], avg_deriv]))
+                max_data_rows.append(np.hstack([row['state'], row['county_name'], max_coeffs[::-1], max_deriv]))
+                min_data_rows.append(np.hstack([row['state'], row['county_name'], min_coeffs[::-1], min_deriv]))
+                precip_data_rows.append(
+                    np.hstack([row['state'], row['county_name'], precip_coeffs[::-1], precip_deriv]))
             else:
                 avg_data_rows.append(np.hstack([row['state'], row['county_name'], avg_coeffs[::-1]]))
                 max_data_rows.append(np.hstack([row['state'], row['county_name'], max_coeffs[::-1]]))
@@ -169,9 +171,9 @@ def build_poly_coeffs_for_county_csv(deg, deriv=0):
 
     # Write to csv
     avg_poly_df.to_csv(f"{deg}_avg_county_coeffs.csv", sep=',', encoding='utf-8', index=False)
-    max_poly_df.to_csv(f"{deg}_max_poly_test.csv", sep=',', encoding='utf-8', index=False)
-    min_poly_df.to_csv(f"{deg}_min_poly_test.csv", sep=',', encoding='utf-8', index=False)
-    precip_poly_df.to_csv(f"{deg}_precip_poly_test.csv", sep=',', encoding='utf-8', index=False)
+    max_poly_df.to_csv(f"{deg}_max_poly_coeffs.csv", sep=',', encoding='utf-8', index=False)
+    min_poly_df.to_csv(f"{deg}_min_poly_coeffs.csv", sep=',', encoding='utf-8', index=False)
+    precip_poly_df.to_csv(f"{deg}_precip_poly_coeffs.csv", sep=',', encoding='utf-8', index=False)
     print(f'Successfully wrote polynomial coeffs to csv!')
 
     # Write all counties missed from line 114-117 check
@@ -182,6 +184,7 @@ def build_poly_coeffs_for_county_csv(deg, deriv=0):
                 text_file.write(
                     'state: ' + str(line[0]) + ', county: ' + str(line[1]) + ', county_code: ' + str(line[2]) + '\n')
         print(f'Successfully wrote missed counties to text file!')
+
 
 def build_poly_coeffs_for_county_by_months_csv(deg, deriv=0, months=None):
     # Default
@@ -244,15 +247,19 @@ def build_poly_coeffs_for_county_by_months_csv(deg, deriv=0, months=None):
                 # Dynamically add coefficients (any size)
                 if deriv > 0:
                     assert cols.size > deg + 3
-                    avg_deriv = np.polyder(avg_coeffs, deriv)
-                    max_deriv = np.polyder(max_coeffs, deriv)
-                    min_deriv = np.polyder(min_coeffs, deriv)
-                    precip_deriv = np.polyder(precip_coeffs, deriv)
+                    avg_deriv = np.polyder(avg_coeffs[::-1], deriv)
+                    max_deriv = np.polyder(max_coeffs[::-1], deriv)
+                    min_deriv = np.polyder(min_coeffs[::-1], deriv)
+                    precip_deriv = np.polyder(precip_coeffs[::-1], deriv)
 
-                    avg_data_rows.append(np.hstack([row['state'], row['county_name'], avg_coeffs[::-1], avg_deriv[::-1]]))
-                    max_data_rows.append(np.hstack([row['state'], row['county_name'], max_coeffs[::-1], max_deriv[::-1]]))
-                    min_data_rows.append(np.hstack([row['state'], row['county_name'], min_coeffs[::-1], min_deriv[::-1]]))
-                    precip_data_rows.append(np.hstack([row['state'], row['county_name'], precip_coeffs[::-1], precip_deriv[::-1]]))
+                    avg_data_rows.append(
+                        np.hstack([row['state'], row['county_name'], avg_coeffs[::-1], avg_deriv]))
+                    max_data_rows.append(
+                        np.hstack([row['state'], row['county_name'], max_coeffs[::-1], max_deriv]))
+                    min_data_rows.append(
+                        np.hstack([row['state'], row['county_name'], min_coeffs[::-1], min_deriv]))
+                    precip_data_rows.append(
+                        np.hstack([row['state'], row['county_name'], precip_coeffs[::-1], precip_deriv]))
                 else:
                     avg_data_rows.append(np.hstack([row['state'], row['county_name'], avg_coeffs[::-1]]))
                     max_data_rows.append(np.hstack([row['state'], row['county_name'], max_coeffs[::-1]]))
@@ -271,9 +278,29 @@ def build_poly_coeffs_for_county_by_months_csv(deg, deriv=0, months=None):
         precip_poly_df.to_csv(f"{month}_{deg}_precip_poly_test.csv", sep=',', encoding='utf-8', index=False)
         print(f'Successfully wrote polynomial coeffs to csv!')
 
+import database as db
+def get_oregon_year_data():
+    df = pd.DataFrame()
+    state = 'OR'
+    country = 'US'
+    start_year = 1895
+    end_year = 2021
+    cols = ['tmp_avg_jan', 'tmp_avg_feb', 'tmp_avg_mar', 'tmp_avg_apr', 'tmp_avg_may', 'tmp_avg_jun',
+                     'tmp_avg_jul',
+                     'tmp_avg_aug', 'tmp_avg_sep', 'tmp_avg_oct', 'tmp_avg_nov', 'tmp_avg_dec']
 
+    state_df = db.get_data_for_state(temp_avg_cols, state, country, start_year, end_year)
+    county_dict = state_df['county_name'].unique()
+    for county in county_dict:
+        county_df = db.get_data_for_single_county(temp_avg_cols, county, state, country, start_year, end_year)
+        county_df['year_avg'] = county_df[cols].mean(axis=1)
+        df[county] = county_df['year_avg']
+
+    df.to_csv('oregon_counties_year_avg.csv', sep=',', encoding='utf-8', index=False)
 if __name__ == '__main__':
+    #build_poly_coeffs_for_county_csv(3,1)
+    get_oregon_year_data()
     pass
     # Ex) build_poly_coeffs_for_county_csv(degree, derivative order (optional))
-    #build_poly_coeffs_for_county_csv(3, 1)
-    #build_poly_coeffs_for_county_by_months_csv(3, 1)
+    # build_poly_coeffs_for_county_csv(3, 1)
+    # build_poly_coeffs_for_county_by_months_csv(3, 1)
