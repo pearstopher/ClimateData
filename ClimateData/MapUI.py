@@ -11,6 +11,8 @@ import database
 import os
 import re
 
+testDF1 = {'fips' : ['01001', '08105','22127', '12121'], 'county':['Autauga', 'Rio Grande', 'Winn', 'Taylor'], 'state':['AL', 'CO', 'LA', 'FL'], 'data':['60', '70', '80', '20']}
+testdf1 = pd.DataFrame(data=testDF1)
 def validate_dates(date):
 
       #check that date is in correct format (month/year)
@@ -96,15 +98,15 @@ class MapWindow(QWindow):
     self.sliderBox.setText(str(self.yearSlider.value()))
   def genMap(self):
     # df_list = database.get_data_for_counties_dataset(self.state_list)
-    df = pd.read_csv('data/TX_Data.csv')
-    f1 = open('data/tx-us-county-codes.txt', 'r')
-    f = f1.read()
-    f1.close()
-    fipslist = f.splitlines()
+    # df = pd.read_csv('data/TX_Data.csv')
+    # f1 = open('data/tx-us-county-codes.txt', 'r')
+    # f = f1.read()
+    # f1.close()
+    # fipslist = f.splitlines()
     with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
       counties = json.load(response)
 
-    cli_map = px.choropleth(df, geojson=counties, locations=fipslist, color='Temperature',color_continuous_scale='jet',range_color=(10,130), scope='usa')
+    cli_map = px.choropleth(testdf1, geojson=counties, locations='fips', color='data',color_continuous_scale='jet',range_color=(10,130), scope='usa', hover_name='county', hover_data=['state'])
     cli_map.update_layout(title='Texas')
     cli_map.update_geos(fitbounds='locations', visible=True)
     cli_map.write_html('HTML/map_fig.html')
@@ -162,5 +164,6 @@ class MapWindow(QWindow):
 
 if __name__ == "__main__":
   app = QApplication([])
-  window = MapWindow()
+  window = MapWindow('yo')
+  print(testdf1)
   app.exec_()
