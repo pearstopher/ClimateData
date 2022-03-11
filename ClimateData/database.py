@@ -147,11 +147,8 @@ def drop_all_tables():
         conn = None
 
     if conn != None:
-        filenames = find_csv_filenames(f'{outputDir}')
-        tableNames = []
-        for fileName in filenames:
-            tableNames.append(os.path.basename(fileName).split(".")[0])
-        tableString = ", ".join(tableNames)
+        tableString = "weather, drought"
+
         print("Dropping tables: " + tableString)
 
         cur = conn.cursor()
