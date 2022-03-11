@@ -1,0 +1,31 @@
+name: Package Windows Application with Pyinstaller
+
+on:
+  push:
+    branches: [ feature/pyinstaller ]
+  pull_request:
+    branches: [ feature/pyinstaller ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Package Application
+      uses: Dnawrkshp/pyinstaller-action@windows
+      with:
+        path: ClimateData
+        spec: ClimateData.spec
+        tkinter: true
+
+    - name: Copy raw data
+      run: |
+        mkdir -p ClimateData/dist/windows/data && cp -R ClimateData/data/raw ClimateData/dist/windows/data
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ClimateData
+        path: ClimateData/dist/windows
