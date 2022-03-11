@@ -430,7 +430,10 @@ class graphPage(tk.Frame):
         # Generate Table Rows
         gen_table()
 
-if __name__ == "__main__":
+
+def start_ui():
     app = App()
     app.mainloop()
 
+if __name__ == "__main__":
+    start_ui()
