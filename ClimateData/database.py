@@ -147,11 +147,8 @@ def drop_all_tables():
         conn = None
 
     if conn != None:
-        filenames = find_csv_filenames(f'{outputDir}')
-        tableNames = []
-        for fileName in filenames:
-            tableNames.append(os.path.basename(fileName).split(".")[0])
-        tableString = ", ".join(tableNames)
+        tableString = "weather, drought"
+
         print("Dropping tables: " + tableString)
 
         cur = conn.cursor()
@@ -265,13 +262,12 @@ def get_ids_by_country(country):
     return formatted_results
 
 #tableName, columnList and idList must be sent in as strings or lists of strings. Years are integers. 
-def get_data(columnList, idList, startYear, endYear):
+def get_weather_data(columnList, idList, startYear, endYear):
     results = None
     cols = []
     matchString = "|| '%'"
-    defaultColumns = "w.id, cc.county_name, cc.state, cc.country, "
-    columns = ["w." + col for col in columnList]
-    columnString = ", ".join(columns)
+    defaultColumns = "id, "
+    columnString = ", ".join(columnList)
     idYearList = []
     columnString = defaultColumns + columnString
     
@@ -292,8 +288,7 @@ def get_data(columnList, idList, startYear, endYear):
         
         try:
             cur.execute("""
-            SELECT %s FROM weather as w JOIN county_codes as cc 
-            ON CAST(w.id AS TEXT) like CAST(cc.county_code AS TEXT) || '%%' WHERE w.id IN (%s);
+            SELECT %s FROM weather WHERE id in (%s) ORDER BY id ASC;
             """,
             [AsIs(columnString), AsIs(idString)])
             conn.commit()
@@ -315,17 +310,17 @@ def get_data(columnList, idList, startYear, endYear):
 def get_data_for_single_county(columnList, county, state, country, startYear, endYear):
         idList = []
         idList.append(get_id_by_county(county, state, country))
-        return get_data(columnList, idList, startYear, endYear)
+        return get_weather_data(columnList, idList, startYear, endYear)
 
 def get_data_for_state(columnList, state, country, startYear, endYear):
         idList = []
         idList = get_ids_by_state(state, country)
-        return get_data(columnList, idList, startYear, endYear)
+        return get_weather_data(columnList, idList, startYear, endYear)
 
 def get_data_for_country(columnList, country, startYear, endYear):
         idList = []
         idList = get_ids_by_country(country)
-        return get_data(columnList, idList, startYear, endYear)
+        return get_weather_data(columnList, idList, startYear, endYear)
 
 def get_coordinates(countyId):
     cols = []
