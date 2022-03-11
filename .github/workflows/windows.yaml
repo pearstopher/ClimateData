@@ -2,9 +2,9 @@ name: Package Windows Application with Pyinstaller
 
 on:
   push:
-    branches: [ feature/pyinstaller ]
+    branches: [ feature/ci-builder ]
   pull_request:
-    branches: [ feature/pyinstaller ]
+    branches: [ feature/ci-builder ]
 
 jobs:
   build:
