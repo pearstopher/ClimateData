@@ -36,6 +36,8 @@ def setup_database():
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
+
+    drop_all_tables()
     
     if conn != None:
         cur = conn.cursor()
@@ -147,7 +149,7 @@ def drop_all_tables():
         conn = None
 
     if conn != None:
-        tableString = "weather, drought"
+        tableString = "weather, drought, county_coords, county_codes"
 
         print("Dropping tables: " + tableString)
 
