@@ -14,6 +14,8 @@ from enum import Enum
 #Put your postgres password here if different
 password = 'PASSWORD'
 outputDir = './data/processed/'
+debug = False
+
 
 class Months(Enum):
     JAN = 1
@@ -58,7 +60,8 @@ def setup_database():
                     [AsIs(tableName), AsIs(columnString),])
                     conn.commit()
                 except Exception as error:
-                    print_psycopg2_exception(error)
+                    if debug == True:
+                        print_psycopg2_exception(error)
                     conn.rollback()
                 
 
@@ -69,7 +72,8 @@ def setup_database():
                         conn.commit()
                         print(f"{tableName} successfully created")
                     except Exception as error:
-                        print_psycopg2_exception(error)
+                        if debug == True:
+                            print_psycopg2_exception(error)
                         conn.rollback()
 
 
@@ -100,7 +104,8 @@ def setup_coordinates_table():
                     [AsIs(columnString),])
                     conn.commit()
                 except Exception as error:
-                    print_psycopg2_exception(error)
+                    if debug == True:
+                        print_psycopg2_exception(error)
                     conn.rollback()
                 try:
                     for row in reader:
@@ -111,7 +116,8 @@ def setup_coordinates_table():
                         conn.commit()
                     print("county_coords successfully created")
                 except Exception as error:
-                    print_psycopg2_exception(error)
+                    if debug == True:
+                        print_psycopg2_exception(error)
                     conn.rollback()
         cur.close()
         conn.close()
@@ -136,7 +142,8 @@ def drop_table(tableName):
             [AsIs(tableName),])
             conn.commit()
         except Exception as error:
-            print_psycopg2_exception(error)
+            if debug == True:
+                print_psycopg2_exception(error)
             conn.rollback()
         cur.close()
         conn.close()
@@ -149,7 +156,7 @@ def drop_all_tables():
         conn = None
 
     if conn != None:
-        tableString = "weather, drought, county_coords, county_codes"
+        tableString = "weather, drought"
 
         print("Dropping tables: " + tableString)
 
@@ -161,10 +168,43 @@ def drop_all_tables():
             [AsIs(tableString),])
             conn.commit()
         except Exception as error:
-            print_psycopg2_exception(error)
+            if debug == True:
+                print_psycopg2_exception(error)
             conn.rollback()
         cur.close()
         conn.close()
+
+def get_postal_fips(county, state, country):
+    results = None
+    try:
+        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+    except OperationalError as error:
+        print_psycopg2_exception(error)
+        conn = None
+
+    if conn != None:
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+            SELECT fips_code FROM county_codes WHERE county_name = '%s' AND state = '%s' AND country = '%s';
+            """,
+            [AsIs(county), AsIs(state), AsIs(country)])
+            results = cur.fetchone()
+        except Exception as error:
+            print_psycopg2_exception(error)
+    
+        cur.close()
+        conn.close()
+    #if results is not None:
+    #    results = str(results[0])
+    #    if len(results)< 7:
+    #        results = f'0{results}'
+    #else:
+    #    print("No id was found for given country, state and county")
+    #    results = ""
+
+    print(results)
+    return results
 
 def get_id_by_county(county, state, country):
     results = None
@@ -194,7 +234,8 @@ def get_id_by_county(county, state, country):
     else:
         print("No id was found for given country, state and county")
         results = ""
-    
+
+    print(results)
     return results
 
 def get_ids_by_state(state, country):
@@ -307,6 +348,7 @@ def get_weather_data(columnList, idList, startYear, endYear):
         conn.close()
     
     df = pd.DataFrame(data=results, columns=cols)
+    df.id = df.id.apply('{:0>11}'.format).astype(str)
     return df
 
 def get_data_for_single_county(columnList, county, state, country, startYear, endYear):
@@ -417,6 +459,30 @@ def get_ids_for_countries_list(countries):
     results['Country'] = countryList
     return results
 
+def get_postal_fips(states, counties, country):
+    idsList = []
+    postalsFips = []
+    stateList = []
+    countyList = []
+    countryList = []
+
+    for index, state in enumerate(states):
+        for county in counties[index]:
+            id_to_add = get_id_by_county(county, state, country)
+            postal_to_add = get_postal_fips(county, state, country)
+            postalFips.append(postal_to_add)
+            idsList.append(id_to_add)
+            stateList.append(state)
+            countyList.append(county)
+            countryList.append(country)
+
+    results = pd.DataFrame(idsList, columns=["id"])
+    results['PostalFips'] = postalFips
+    results['County'] = countyList
+    results['State'] = stateList
+    results['Country'] = countryList
+    return results
+
 def get_data_for_counties_dataset(states, counties, country, columns, startMonth, endMonth, startYear, endYear):
     results = []
     columnList = []
@@ -460,5 +526,39 @@ def get_data_for_countries_dataset(countries, columns, startMonth, endMonth, sta
         results.append(next_set)
     return results
 
-if __name__ == "__main__":
-    setup_database()
+#if __name__ == "__main__":
+#    setup_database()
+
+
+
+
+
+startMonth = 'jan'
+#convertedStartMonth = Months[startMonth.upper()].value
+#print(convertedStartMonth)
+endMonth = 'jun'
+#for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
+#    print(Months(i).name.lower())
+columns = ["tmp_avg", "tmp_min"]
+idList = ["0101001", "0101005"]
+startYear = 1990
+endYear = 1995
+county = "Baldwin"
+state = "AL"
+country = "US"
+countries = ["US"]
+states = ["AL", "OR", "WA", "WI"]
+counties = []
+alabama = ["Baldwin", "Bibb", "Calhoun"]
+oregon = ["Linn", "Lane", "Multnomah"]
+washington = ["Clark", "Cowlitz", "Grant"]
+wisconsin = ["Clark"]
+counties.append(alabama)
+counties.append(oregon)
+counties.append(washington)
+counties.append(wisconsin)
+results = get_data_for_counties_dataset(states, counties, country, columns, startMonth, endMonth, startYear, endYear)
+#results =get_data_for_states_dataset(states, country, columns, startMonth, endMonth, startYear, endYear)
+#results = get_data_for_countries_dataset(countries, columns, startMonth, endMonth, startYear, endYear)
+#for result in results:
+#    print(result)
