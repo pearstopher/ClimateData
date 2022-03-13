@@ -10,12 +10,10 @@ from psycopg2 import OperationalError, errorcodes, errors
 from psycopg2 import __version__ as psycopg2_version
 from enum import Enum
 
-
 #Put your postgres password here if different
 password = 'PASSWORD'
 outputDir = './data/processed/'
 debug = False
-
 
 class Months(Enum):
     JAN = 1
@@ -74,6 +72,10 @@ def setup_database():
                     except Exception as error:
                         if debug == True:
                             print_psycopg2_exception(error)
+                        else:
+                            print("WARNING: Some exception messages were suppressed while creating tables.")
+                            print("This will happen if updating the database.")
+                            print("Ensure the tables that you are trying to update have printed as successfully created.")
                         conn.rollback()
 
 
@@ -106,6 +108,10 @@ def setup_coordinates_table():
                 except Exception as error:
                     if debug == True:
                         print_psycopg2_exception(error)
+                    else:
+                        print("WARNING: Some exception messages were suppressed while creating coordinates table.")
+                        print("This will happen if updating the database.")
+                        print("Ensure the tables that you are trying to update have printed as successfully created.")
                     conn.rollback()
                 try:
                     for row in reader:
@@ -118,10 +124,12 @@ def setup_coordinates_table():
                 except Exception as error:
                     if debug == True:
                         print_psycopg2_exception(error)
+                    else:
+                        print("WARNING: Some exception messages were suppressed. This will happen if updating the database.")
+                        print("Ensure the tables that you are trying to update have printed as successfully created.")
                     conn.rollback()
         cur.close()
         conn.close()
-
 
 def find_csv_filenames(path_to_dir, suffix=".csv"):
     filenames = listdir(path_to_dir)
@@ -144,6 +152,10 @@ def drop_table(tableName):
         except Exception as error:
             if debug == True:
                 print_psycopg2_exception(error)
+            else:
+                print("WARNING: Some exception messages were suppressed while dropping a table.")
+                print("This will happen if updating the database.")
+                print("Ensure the tables that you are trying to update have printed as successfully created.")
             conn.rollback()
         cur.close()
         conn.close()
@@ -156,7 +168,7 @@ def drop_all_tables():
         conn = None
 
     if conn != None:
-        tableString = "weather, drought"
+        tableString = "weather, drought, county_codes"
 
         print("Dropping tables: " + tableString)
 
@@ -170,11 +182,15 @@ def drop_all_tables():
         except Exception as error:
             if debug == True:
                 print_psycopg2_exception(error)
+            else:
+                print("WARNING: Some exception messages were suppressed while dropping tables.")
+                print("This will happen if updating the database.")
+                print("Ensure the tables that you are trying to update have printed as successfully created.")
             conn.rollback()
         cur.close()
         conn.close()
 
-def get_postal_fips(county, state, country):
+def get_postal(county, state, country):
     results = None
     try:
         conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
@@ -195,15 +211,14 @@ def get_postal_fips(county, state, country):
     
         cur.close()
         conn.close()
-    #if results is not None:
-    #    results = str(results[0])
-    #    if len(results)< 7:
-    #        results = f'0{results}'
-    #else:
-    #    print("No id was found for given country, state and county")
-    #    results = ""
+    if results is not None:
+        results = str(results[0])
+        if len(results)< 5:
+            results = f'0{results}'
+    else:
+        print("No postal fips id was found for given country, state and county")
+        results = ""
 
-    print(results)
     return results
 
 def get_id_by_county(county, state, country):
@@ -235,7 +250,6 @@ def get_id_by_county(county, state, country):
         print("No id was found for given country, state and county")
         results = ""
 
-    print(results)
     return results
 
 def get_ids_by_state(state, country):
@@ -410,6 +424,7 @@ def print_psycopg2_exception(error):
 
 
 
+
 #EXTERNAL CALLS---------------------------------------------------------------------
 def get_ids_for_counties_list(states, counties, country):
     idsList = []
@@ -461,7 +476,7 @@ def get_ids_for_countries_list(countries):
 
 def get_postal_fips(states, counties, country):
     idsList = []
-    postalsFips = []
+    postalFips = []
     stateList = []
     countyList = []
     countryList = []
@@ -469,7 +484,7 @@ def get_postal_fips(states, counties, country):
     for index, state in enumerate(states):
         for county in counties[index]:
             id_to_add = get_id_by_county(county, state, country)
-            postal_to_add = get_postal_fips(county, state, country)
+            postal_to_add = get_postal(county, state, country)
             postalFips.append(postal_to_add)
             idsList.append(id_to_add)
             stateList.append(state)
@@ -526,39 +541,5 @@ def get_data_for_countries_dataset(countries, columns, startMonth, endMonth, sta
         results.append(next_set)
     return results
 
-#if __name__ == "__main__":
-#    setup_database()
-
-
-
-
-
-startMonth = 'jan'
-#convertedStartMonth = Months[startMonth.upper()].value
-#print(convertedStartMonth)
-endMonth = 'jun'
-#for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
-#    print(Months(i).name.lower())
-columns = ["tmp_avg", "tmp_min"]
-idList = ["0101001", "0101005"]
-startYear = 1990
-endYear = 1995
-county = "Baldwin"
-state = "AL"
-country = "US"
-countries = ["US"]
-states = ["AL", "OR", "WA", "WI"]
-counties = []
-alabama = ["Baldwin", "Bibb", "Calhoun"]
-oregon = ["Linn", "Lane", "Multnomah"]
-washington = ["Clark", "Cowlitz", "Grant"]
-wisconsin = ["Clark"]
-counties.append(alabama)
-counties.append(oregon)
-counties.append(washington)
-counties.append(wisconsin)
-results = get_data_for_counties_dataset(states, counties, country, columns, startMonth, endMonth, startYear, endYear)
-#results =get_data_for_states_dataset(states, country, columns, startMonth, endMonth, startYear, endYear)
-#results = get_data_for_countries_dataset(countries, columns, startMonth, endMonth, startYear, endYear)
-#for result in results:
-#    print(result)
+if __name__ == "__main__":
+    setup_database()
