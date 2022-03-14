@@ -11,8 +11,28 @@ import database
 import os
 import re
 
-testDF1 = {'fips' : ['01001', '08105','22127', '12121'], 'county':['Autauga', 'Rio Grande', 'Winn', 'Taylor'], 'state':['AL', 'CO', 'LA', 'FL'], 'data':['60', '70', '80', '20']}
-testdf1 = pd.DataFrame(data=testDF1)
+datatype_dict = {
+    "Maximum temperature" : "tmp_max",
+    "Minimum temperature" : "tmp_min",
+    "Average temperature" : "tmp_avg",
+    "Precipitation"       : "precip"
+} 
+
+month_dict = {
+    "01" : "jan",
+    "02" : "feb",
+    "03" : "mar",
+    "04" : "apr",
+    "05" : "may",
+    "06" : "jun",
+    "07" : "jul",
+    "08" : "aug",
+    "09" : "sep",
+    "10" : "oct",
+    "11" : "nov",
+    "12" : "dec"
+}
+
 def validate_dates(date):
 
       #check that date is in correct format (month/year)
@@ -29,6 +49,18 @@ def validate_dates(date):
 
 def dateError():
     print("Date Error")
+
+def padWithZero(val):
+    if len(val) < 5:
+      return "0" + val
+    else:
+      return val
+
+def updateFIPS(df):
+    for idx in range(len(df)):
+      df.at[idx, 'fips_code'] = padWithZero(str(df.iat[idx,1]))
+
+testdf1 = database.get_map_data_for_states(['OR','FL'], 'US', ['tmp_avg'], 'jul', 'jul', 2019, 2019)
 
 class MapWindow(QWindow):
 
@@ -52,21 +84,21 @@ class MapWindow(QWindow):
     self.yearSlider.setMaximum(2022)
     self.yearSlider.valueChanged.connect(self.slideValChange)
     self.sliderBox.returnPressed.connect(self.slideBoxChange)
-    # self.addButton = QPushButton('+', self)
-    # self.addButton.setMinimumHeight(30)
-    # self.addButton.setMaximumWidth(40)
-    # self.addButton.clicked.connect(self.addLine)
+    self.addButton = QPushButton('+', self.window)
+    self.addButton.setMinimumHeight(30)
+    self.addButton.setMaximumWidth(40)
+    self.addButton.clicked.connect(self.addLine)
     # self.deleteButton = QPushButton('-')
     # self.deleteButton.setMinimumHeight(30)
     # self.deleteButton.setMaximumWidth(40)
     # self.deleteButton.clicked.connect(self.removeLine)
-    # self.mapItButton = QPushButton('Map it!', self)
-    # self.mapItButton.setMinimumHeight(30)
-    # self.mapItButton.setMaximumWidth(150)
-    # self.mapItButton.clicked.connect(self.genMap)
-    # self.controls.addWidget(self.addButton)
+    self.mapItButton = QPushButton('Map it!', self.window)
+    self.mapItButton.setMinimumHeight(30)
+    self.mapItButton.setMaximumWidth(150)
+    self.mapItButton.clicked.connect(self.genMap)
+    self.controls.addWidget(self.addButton)
     # self.controls.addWidget(self.deleteButton)
-    # self.controls.addWidget(self.mapItButton)
+    self.controls.addWidget(self.mapItButton)
     self.controls.addWidget(self.yearSlider)
     self.controls.addWidget(self.sliderBox)
    
@@ -84,7 +116,7 @@ class MapWindow(QWindow):
 
     self.window.setWindowTitle("Climate Data")
     self.browser = QWebEngineView()
-    self.genMap()
+    self.openDefaultMap()
     self.layout.addWidget(self.browser)
     self.layout.addLayout(self.controls)
     self.layout.addLayout(self.navbar)
@@ -92,27 +124,24 @@ class MapWindow(QWindow):
 
     self.window.setLayout(self.layout)
     self.window.show()
+
   def slideBoxChange(self):
     self.yearSlider.setValue(int(self.sliderBox.text()))
   def slideValChange(self):
     self.sliderBox.setText(str(self.yearSlider.value()))
   def genMap(self):
-    # df_list = database.get_data_for_counties_dataset(self.state_list)
-    # df = pd.read_csv('data/TX_Data.csv')
-    # f1 = open('data/tx-us-county-codes.txt', 'r')
-    # f = f1.read()
-    # f1.close()
-    # fipslist = f.splitlines()
+    states = self.getStates()
+    df = database.get_map_data_for_states(states, 'US', ['tmp_avg'], 'jul', 'jul', 2019, 2019)
     with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
       counties = json.load(response)
 
-    cli_map = px.choropleth(testdf1, geojson=counties, locations='fips', color='data',color_continuous_scale='jet',range_color=(10,130), scope='usa', hover_name='county', hover_data=['state'])
-    cli_map.update_layout(title='Texas')
+    cli_map = px.choropleth(df, geojson=counties, locations='fips_code', color='tmp_avg_jul',color_continuous_scale='jet',range_color=(10,130), scope='usa', hover_name='county_name', hover_data=['state'])
+    cli_map.update_layout(title='Climate Data')
     cli_map.update_geos(fitbounds='locations', visible=True)
     cli_map.write_html('HTML/map_fig.html')
     self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/map_fig.html')))
 
-  def openMap(self): 
+  def openDefaultMap(self): 
       self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/default_fig.html')))
 
   def addLine(self):
@@ -149,7 +178,7 @@ class MapWindow(QWindow):
     states = []
     for boxes in self.state_boxes:
       states.append(boxes.currentText())
-    print(states)
+    return states
 
   def getDates(self):
     dates = []
@@ -165,5 +194,4 @@ class MapWindow(QWindow):
 if __name__ == "__main__":
   app = QApplication([])
   window = MapWindow('yo')
-  print(testdf1)
   app.exec_()
