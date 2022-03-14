@@ -9,7 +9,6 @@ import json
 datadir = './data/raw/'
 droughtDir = f'{datadir}drought/'
 outputDir = './data/processed/'
-order = ['min', 'avg', 'max', 'precip']
 months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 
 weatherFileName = 'weather.csv'
@@ -174,7 +173,7 @@ def convert_county_coords():
           id += 1
 
 def build_weather_table():
-    filesToStrip = ['mintmp', 'avgtmp', 'maxtmp', 'precip']
+    filesToStrip = ['avgtmp', 'mintmp', 'maxtmp', 'precip']
     colsPrefix = ['tmp_avg', 'tmp_max', 'tmp_min', 'precip']
 
     icols = [i for i in range(len(months) + 1)]
