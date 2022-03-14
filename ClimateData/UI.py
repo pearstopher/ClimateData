@@ -10,6 +10,8 @@ import plotting
 import re
 from itertools import chain
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
+import MapUI
+from PyQt5.QtWidgets import *                   #pip install PyQt5
 
 # Dictionaries
 degree_dict = {
@@ -78,6 +80,7 @@ cur = conn.cursor()
 class App(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
+        self.app = QApplication([])
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
 
         container = tk.Frame(self)
@@ -102,14 +105,16 @@ class App(tk.Tk):
         frame = self.frames[page_name]
         frame.tkraise()
 
-    
+    def open_map(self, df):
+      window = MapUI.MapWindow(df)
+      self.app.exec_()
 class StartPage(tk.Frame):
     def __init__(self, parent, controller, master):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
         button1 = TTK.Button(self, text = "Graph", width="15", bootstyle="secondary", command=lambda: controller.show_frame("graphPage"))
-        button2 = TTK.Button(self, text = "Map", width="15", bootstyle="secondary", command=lambda: controller.show_frame("mapPage"))
+        button2 = TTK.Button(self, text = "Map", width="15", bootstyle="secondary", command=lambda: controller.open_map("dataframe_placeholder"))
         button1.grid(row=0, column=1, padx=(450,0), pady=(100,500))
         button2.grid(row=0, column=2, padx=(10,0), pady=(100,500))
 
@@ -168,7 +173,7 @@ class graphPage(tk.Frame):
             begin_month = month_dict[begin_month]
             end_month = month_dict[end_month]
             
-            polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else self.ent.get()
+            polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
             data_type =  datatype_dict[self.dropdown_graphs.get()]
             # Intermediate Steps
             rows = self.data_table.get_children()
@@ -205,10 +210,25 @@ class graphPage(tk.Frame):
 
             df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], begin_month, end_month, int(begin_year), int(end_year))
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> a036ce40144e1fd086f58bec8c61de0bb25e9511
+            # We only need the ID and the data here - Remove everything else
+            # TODO: Make the function only return this data
+            for i, df in enumerate(df_list):
+                df_list[i] = pd.concat([df_list[i].iloc[:, 0], df_list[i].iloc[:, 4:]], axis=1)
+
+<<<<<<< HEAD
+            # Flatten the list of counties
+=======
+>>>>>>> b185fd0940dd6e6424ed041e655899ebe3da0603
+=======
+>>>>>>> a036ce40144e1fd086f58bec8c61de0bb25e9511
             counties = list(chain(*counties))
             fig = plotting.plot('scatter_poly', df_list, {'process_type': 'months', 'begin_month': monthsIdx[begin_month],
                                                           'degree': polynomial_degree, 'plots_per_graph' : len(df_list), 'counties' : counties})
-            canvas = FigureCanvasTkAgg(fig, master = master)  
+            canvas = FigureCanvasTkAgg(fig, master=master)  
             canvas.draw()
             canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
 
@@ -374,7 +394,10 @@ class graphPage(tk.Frame):
         self.dropdown_state = TTK.Combobox(self.frame_right, font="Helvetica 12")
         self.dropdown_state.set('Select state...')
         self.dropdown_state['state'] = 'readonly'
-        self.dropdown_state['values'] = (['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
+        self.dropdown_state['values'] = (['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN',
+                                          'KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE',
+                                          'NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX',
+                                          'UT','VA','VT','WA','WI','WV','WY'])
         self.dropdown_state.bind('<<ComboboxSelected>>', gen_counties)
         self.dropdown_state.grid(row=1, column=1, padx=(0, 190), pady=(20, 20))
 
@@ -425,10 +448,7 @@ class graphPage(tk.Frame):
         # Generate Table Rows
         gen_table()
 
-
-def start_ui():
+if __name__ == "__main__":
     app = App()
     app.mainloop()
 
-if __name__ == "__main__":
-    start_ui()

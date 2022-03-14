@@ -323,6 +323,9 @@ def get_weather_data(columnList, idList, startYear, endYear):
     results = None
     cols = []
     matchString = "|| '%'"
+    defaultColumns = "w.id, cc.county_name, cc.state, cc.country, cc.fips_code, "
+    columns = ["w." + col for col in columnList]
+    columnString = ", ".join(columns)
     defaultColumns = "id, "
     columnString = ", ".join(columnList)
     idYearList = []
