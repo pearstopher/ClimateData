@@ -15,20 +15,6 @@ password = 'PASSWORD'
 outputDir = './data/processed/'
 debug = False
 
-#class Months(Enum):
-#    JAN = 1
-#    FEB = 2
-#    MAR = 3
-#    APR = 4
-#    MAY = 5
-#    JUN = 6
-#    JUL = 7
-#    AUG = 8
-#    SEP = 9
-#    OCT = 10
-#    NOV = 11
-#    DEC = 12
-
 #INTERNAL CALLS---------------------------------------------------------------------
 def setup_database():
     try:
@@ -613,8 +599,6 @@ def get_map_data_for_countries(countries, columns, months, startYear, endYear):
 
     return results
 
-
-
 def get_data_for_counties_dataset(states, counties, country, columns, months, startYear, endYear):
     results = []
     columnList = []
@@ -658,42 +642,5 @@ def get_data_for_countries_dataset(countries, columns, months, startYear, endYea
         results.append(next_set)
     return results
 
-#if __name__ == "__main__":
-#    setup_database()
-
-
-
-
-
-startMonth = 'jan'
-#convertedStartMonth = Months[startMonth.upper()].value
-#print(convertedStartMonth)
-endMonth = 'jun'
-#for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
-#    print(Months(i).name.lower())
-columns = ["tmp_avg", "tmp_min"]
-idList = ["0101001", "0101005"]
-startYear = 1900
-endYear = 2020
-county = "Baldwin"
-state = "AL"
-country = "US"
-countries = ["US"]
-states = ["AL", "OR", "WA"]
-counties = []
-alabama = ["Baldwin", "Bibb", "Calhoun"]
-oregon = ["Linn", "Lane", "Multnomah"]
-washington = ["Clark", "Cowlitz", "Grant"]
-counties.append(alabama)
-counties.append(oregon)
-counties.append(washington)
-months = ['Jan', 'feb', 'MAR', 'dec']
-#results = get_data_for_countries_dataset(countries, columns, months, startYear, endYear)
-#results = get_data_for_states_dataset(states, country, columns, months, startYear, endYear)
-#results = get_data_for_counties_dataset(states, counties, country, columns, months, startYear, endYear)
-#results = get_map_data_for_counties(states, counties, country, columns, months, startYear, endYear)
-#results = get_map_data_for_states(states, country, columns, months, startYear, endYear)
-results = get_map_data_for_countries(countries, columns, months, startYear, endYear)
-for result in results:
-    print(results)
-
+if __name__ == "__main__":
+    setup_database()
