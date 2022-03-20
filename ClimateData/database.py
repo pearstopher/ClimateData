@@ -15,20 +15,6 @@ password = 'PASSWORD'
 outputDir = './data/processed/'
 debug = False
 
-class Months(Enum):
-    JAN = 1
-    FEB = 2
-    MAR = 3
-    APR = 4
-    MAY = 5
-    JUN = 6
-    JUL = 7
-    AUG = 8
-    SEP = 9
-    OCT = 10
-    NOV = 11
-    DEC = 12
-
 #INTERNAL CALLS---------------------------------------------------------------------
 def setup_database():
     try:
@@ -564,14 +550,14 @@ def get_postal_fips(states, counties, country):
     results['Country'] = countryList
     return results
 
-def get_map_data_for_counties(states, counties, country, columns, startMonth, endMonth, startYear, endYear):
+def get_map_data_for_counties(states, counties, country, columns, months, startYear, endYear):
     results = []
     columnList = []
     idList = []
 
     for column in columns:
-        for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
-            to_add = column + '_' + Months(i).name.lower()
+        for month in months:
+            to_add = column + '_' + month.lower()
             columnList.append(to_add)
 
     for index, state in enumerate(states):
@@ -581,15 +567,15 @@ def get_map_data_for_counties(states, counties, country, columns, startMonth, en
     results = get_map_weather_data(columnList, idList, startYear, endYear)
     return results
 
-def get_map_data_for_states(states, country, columns, startMonth, endMonth, startYear, endYear):
+def get_map_data_for_states(states, country, columns, months, startYear, endYear):
     results = []
     columnList = []
     idList = []
     ids = []
 
     for column in columns:
-        for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
-            to_add = column + '_' + Months(i).name.lower()
+        for month in months:
+            to_add = column + '_' + month.lower()
             columnList.append(to_add)
 
     for state in states:
@@ -599,14 +585,14 @@ def get_map_data_for_states(states, country, columns, startMonth, endMonth, star
 
     return results
 
-def get_map_data_for_countries(countries, columns, startMonth, endMonth, startYear, endYear):
+def get_map_data_for_countries(countries, columns, months, startYear, endYear):
     results = []
     columnList = []
     ids = []
 
     for column in columns:
-        for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
-            to_add = column + '_' + Months(i).name.lower()
+        for month in months:
+            to_add = column + '_' + month.lower()
             columnList.append(to_add)
 
     for country in countries:
@@ -616,13 +602,13 @@ def get_map_data_for_countries(countries, columns, startMonth, endMonth, startYe
 
     return results
 
-def get_data_for_counties_dataset(states, counties, country, columns, startMonth, endMonth, startYear, endYear):
+def get_data_for_counties_dataset(states, counties, country, columns, months, startYear, endYear):
     results = []
     columnList = []
 
     for column in columns:
-        for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
-            to_add = column + '_' + Months(i).name.lower()
+        for month in months:
+            to_add = column + '_' + month.lower()
             columnList.append(to_add)
 
     for index, state in enumerate(states):
@@ -631,13 +617,13 @@ def get_data_for_counties_dataset(states, counties, country, columns, startMonth
             results.append(next_set)
     return results
 
-def get_data_for_states_dataset(states, country, columns, startMonth, endMonth, startYear, endYear):
+def get_data_for_states_dataset(states, country, columns, months, startYear, endYear):
     results = []
     columnList = []
 
     for column in columns:
-        for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
-            to_add = column + '_' + Months(i).name.lower()
+        for month in months:
+            to_add = column + '_' + month.lower()
             columnList.append(to_add)
 
     for state in states:
@@ -645,13 +631,13 @@ def get_data_for_states_dataset(states, country, columns, startMonth, endMonth, 
         results.append(next_set)
     return results
 
-def get_data_for_countries_dataset(countries, columns, startMonth, endMonth, startYear, endYear):
+def get_data_for_countries_dataset(countries, columns, months, startYear, endYear):
     results = []
     columnList = []
 
     for column in columns:
-        for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
-            to_add = column + '_' + Months(i).name.lower()
+        for month in months:
+            to_add = column + '_' + month.lower()
             columnList.append(to_add)
 
     for country in countries:
