@@ -60,7 +60,7 @@ def updateFIPS(df):
     for idx in range(len(df)):
       df.at[idx, 'fips_code'] = padWithZero(str(df.iat[idx,1]))
 
-testdf1 = database.get_map_data_for_states(['OR','FL'], 'US', ['tmp_avg'], 'jul', 'jul', 2019, 2019)
+# testdf1 = database.get_map_data_for_states(['OR','FL'], 'US', ['tmp_avg'], 'jul', 'jul', 2019, 2019)
 
 class MapWindow(QWindow):
 
@@ -131,7 +131,8 @@ class MapWindow(QWindow):
     self.sliderBox.setText(str(self.yearSlider.value()))
   def genMap(self):
     states = self.getStates()
-    df = database.get_map_data_for_states(states, 'US', ['tmp_avg'], 'jul', 'jul', 2019, 2019)
+    df = database.get_map_data_for_states(states, 'US', ['tmp_avg'], ['jul'], 2019, 2019)
+
     with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
       counties = json.load(response)
 
