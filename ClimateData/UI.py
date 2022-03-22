@@ -210,22 +210,12 @@ class graphPage(tk.Frame):
 
             df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], begin_month, end_month, int(begin_year), int(end_year))
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> a036ce40144e1fd086f58bec8c61de0bb25e9511
             # We only need the ID and the data here - Remove everything else
             # TODO: Make the function only return this data
             for i, df in enumerate(df_list):
                 df_list[i] = pd.concat([df_list[i].iloc[:, 0], df_list[i].iloc[:, 4:]], axis=1)
 
-<<<<<<< HEAD
             # Flatten the list of counties
-=======
->>>>>>> b185fd0940dd6e6424ed041e655899ebe3da0603
-=======
->>>>>>> a036ce40144e1fd086f58bec8c61de0bb25e9511
-            counties = list(chain(*counties))
             fig = plotting.plot('scatter_poly', df_list, {'process_type': 'months', 'begin_month': monthsIdx[begin_month],
                                                           'degree': polynomial_degree, 'plots_per_graph' : len(df_list), 'counties' : counties})
             canvas = FigureCanvasTkAgg(fig, master=master)  
