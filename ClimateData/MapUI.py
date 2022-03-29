@@ -131,8 +131,20 @@ class MapWindow(QWindow):
     self.sliderBox.setText(str(self.yearSlider.value()))
   def genMap(self):
     states = self.getStates()
-    df = database.get_map_data_for_states(states, 'US', ['tmp_avg'], ['jul'], 2019, 2019)
-
+    dates = self.getDates()
+    df = []
+    if states:
+      dates[0] = dates[0].split('/')
+      month = month_dict[dates[0][0]]
+      print(month)
+      df = (database.get_map_data_for_states(states, 'US', ['tmp_avg'], [month], 2019, 2019))
+      if len(states) > 1:
+        for i in range(1, len(states)):
+          dates[i] = dates[i].split('/')
+          month = month_dict[dates[i][0]]
+          print(month)
+          df.append(database.get_map_data_for_states(states[i], 'US', ['tmp_avg'], [month], 2019, 2019))
+    print(df)
     with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
       counties = json.load(response)
 
@@ -188,7 +200,7 @@ class MapWindow(QWindow):
         dateError()
         return
       dates.append(boxes.text())
-    print(dates) 
+    return dates
   
 
 
