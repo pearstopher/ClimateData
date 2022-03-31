@@ -2,11 +2,13 @@ name: Package Linux Application with Pyinstaller
 
 on:
   push:
-    branches: [ feature/develop ]
-    branches: [ feature/master ]
+    branches:
+      - develop
+      - master
   pull_request:
-    branches: [ feature/develop ]
-    branches: [ feature/master ]
+    branches:
+      - develop
+      - master
 
 jobs:
   build:
