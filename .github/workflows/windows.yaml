@@ -2,11 +2,13 @@ name: Package Windows Application with Pyinstaller
 
 on:
   push:
-    branches: [ feature/develop ]
-    branches: [ feature/master ]
+    branches:
+      - feature/develop
+      - feature/master
   pull_request:
-    branches: [ feature/develop ]
-    branches: [ feature/master ]
+    branches:
+      - feature/develop
+      - feature/master
 
 jobs:
   build:
