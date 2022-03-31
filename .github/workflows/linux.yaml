@@ -1,0 +1,33 @@
+name: Package Linux Application with Pyinstaller
+
+on:
+  push:
+    branches: [ feature/develop ]
+    branches: [ feature/master ]
+  pull_request:
+    branches: [ feature/develop ]
+    branches: [ feature/master ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Package Application
+      uses: Dnawrkshp/pyinstaller-action@linux
+      with:
+        path: ClimateData
+        spec: ClimateData.spec
+        tkinter: true
+
+    - name: Copy raw data
+      run: |
+        mkdir -p ClimateData/dist/linux/data && cp -R ClimateData/data/raw ClimateData/dist/linux/data
+
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ClimateData
+        path: ClimateData/dist/linux
