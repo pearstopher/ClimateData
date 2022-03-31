@@ -73,6 +73,7 @@ class MapWindow(QWindow):
     self.lines = []
     self.state_boxes = []
     self.date_boxes = []
+    self.curr_month = ''
     self.window = QWidget()
     self.layout = QVBoxLayout()
     self.navbar = QHBoxLayout()
@@ -135,20 +136,23 @@ class MapWindow(QWindow):
     df = []
     if states:
       dates[0] = dates[0].split('/')
-      month = month_dict[dates[0][0]]
+      year = int(dates[0][1])
+      self.curr_month = month = month_dict[dates[0][0]]
       print(month)
-      df = (database.get_map_data_for_states(states, 'US', ['tmp_avg'], [month], 2019, 2019))
+      print(year)
+      df = (database.get_map_data_for_states(states, 'US', ['tmp_avg'], [month], year, year))
       if len(states) > 1:
         for i in range(1, len(states)):
           dates[i] = dates[i].split('/')
+          year = dates[i][1]
           month = month_dict[dates[i][0]]
           print(month)
-          df.append(database.get_map_data_for_states(states[i], 'US', ['tmp_avg'], [month], 2019, 2019))
+          df.append(database.get_map_data_for_states(states[i], 'US', ['tmp_avg'], [month], year, year))
     print(df)
     with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
       counties = json.load(response)
 
-    cli_map = px.choropleth(df, geojson=counties, locations='fips_code', color='tmp_avg_jul',color_continuous_scale='jet',range_color=(10,130), scope='usa', hover_name='county_name', hover_data=['state'])
+    cli_map = px.choropleth(df, geojson=counties, locations='fips_code', color='tmp_avg_'+self.curr_month, color_continuous_scale='jet',range_color=(10,130), scope='usa', hover_name='county_name', hover_data=['state'])
     cli_map.update_layout(title='Climate Data')
     cli_map.update_geos(fitbounds='locations', visible=True)
     cli_map.write_html('HTML/map_fig.html')
