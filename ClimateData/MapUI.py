@@ -65,8 +65,7 @@ def updateFIPS(df):
 class MapWindow(QWindow):
 
   def __init__(self, pdDF, *args, **kwargs):
-    
-        
+
     super(MapWindow, self).__init__(*args, **kwargs)
     path = QDir.current().filePath('HTML/map_fig.html')
     self.pdDF = pdDF
@@ -79,6 +78,7 @@ class MapWindow(QWindow):
     self.navbar = QHBoxLayout()
     self.controls = QHBoxLayout()
 
+    #Map Controls
     self.yearSlider = QSlider(Qt.Horizontal)
     self.sliderBox = QLineEdit()
     self.yearSlider.setMinimum(1800)
@@ -102,8 +102,8 @@ class MapWindow(QWindow):
     self.controls.addWidget(self.mapItButton)
     self.controls.addWidget(self.yearSlider)
     self.controls.addWidget(self.sliderBox)
-   
 
+    #Initial line
     # self.state_list = QComboBox()
     # self.state_list.addItems(['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
     # self.state_list.setMinimumHeight(30)
@@ -115,21 +115,24 @@ class MapWindow(QWindow):
     # self.navbar.addWidget(self.state_list)
     # self.navbar.addWidget(self.date)
 
+    #Set title and add widgets and layouts to main window. 
     self.window.setWindowTitle("Climate Data")
     self.browser = QWebEngineView()
     self.openDefaultMap()
     self.layout.addWidget(self.browser)
     self.layout.addLayout(self.controls)
     self.layout.addLayout(self.navbar)
-    
-
     self.window.setLayout(self.layout)
     self.window.show()
 
+  #Displays slider value
   def slideBoxChange(self):
     self.yearSlider.setValue(int(self.sliderBox.text()))
+  #Changes slider value
   def slideValChange(self):
     self.sliderBox.setText(str(self.yearSlider.value()))
+
+  #Generates the map using pandas dataframe
   def genMap(self):
     states = self.getStates()
     dates = self.getDates()
@@ -158,9 +161,11 @@ class MapWindow(QWindow):
     cli_map.write_html('HTML/map_fig.html')
     self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/map_fig.html')))
 
+  #Used to open blank map of US
   def openDefaultMap(self): 
       self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/default_fig.html')))
 
+  #Button control for adding a new line
   def addLine(self):
       self.addNavbar = QHBoxLayout()
       self.state_list = QComboBox()
@@ -176,6 +181,7 @@ class MapWindow(QWindow):
       self.lines.append(self.addNavbar)
       self.date_boxes.append(self.date)
  
+ #Button control to remove a line
   def removeLine(self):
       try:
         toDelete = self.lines.pop()
@@ -187,16 +193,19 @@ class MapWindow(QWindow):
       self.date_boxes.pop()
       return
 
+  #Helper function to remove line.
   def deleteLayoutItems(self, layout):
     for i in reversed(range(layout.count())): 
       layout.itemAt(i).widget().clear()
 
+  #Gets a list of states selected for every line
   def getStates(self):
     states = []
     for boxes in self.state_boxes:
       states.append(boxes.currentText())
     return states
 
+  #Gets a list of dates specified on every line.
   def getDates(self):
     dates = []
     for boxes in self.date_boxes:
