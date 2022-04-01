@@ -363,5 +363,6 @@ MigrationBackup/
 FodyWeavers.xsd
 
 /ClimateData/data/processed/
-/ClimateData/data/raw/us-county-boundaries.csv
+/ClimateData/data/raw/weather/
+/ClimateData/data/raw/drought/
 /ClimateData/config.json

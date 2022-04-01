@@ -12,6 +12,7 @@ import re
 
 datadir = './data/raw/'
 droughtDir = f'{datadir}drought/'
+weatherDir = f'{datadir}weather/'
 outputDir = './data/processed/'
 months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 
@@ -149,7 +150,7 @@ def convert_countycodes():
 
 def convert_county_coords():
   # download coordinate data
-  county_boundaries = download('https://public.opendatasoft.com/explore/dataset/us-county-boundaries/download/?format=csv&timezone=America/Los_Angeles&lang=en&use_labels_for_header=true&csv_separator=%3B', f'{datadir}us-county-boundaries.csv')
+  county_boundaries = download('https://public.opendatasoft.com/explore/dataset/us-county-boundaries/download/?format=csv&timezone=America/Los_Angeles&lang=en&use_labels_for_header=true&csv_separator=%3B', f'{weatherDir}us-county-boundaries.csv')
 
   state_map = {}
   with open(f'{datadir}county-state-codes.txt', 'r') as f:
@@ -228,7 +229,7 @@ def build_weather_table():
       url_path_idx = weather_directory.index(url_path)
       url_path_end_idx = weather_directory.index('"', url_path_idx)
       path = weather_directory[url_path_idx:url_path_end_idx]
-      dataFiles[filename] = download(f'https://www1.ncdc.noaa.gov/pub/data/cirs/climdiv/{path}', f'{datadir}climdiv-{filename}.txt')
+      dataFiles[filename] = download(f'https://www1.ncdc.noaa.gov/pub/data/cirs/climdiv/{path}', f'{weatherDir}climdiv-{filename}.txt')
 
 
     for filename, prefix, i in zip(filesToStrip, colsPrefix, range(len(colsPrefix))):
@@ -358,6 +359,8 @@ def create_working_directory():
         os.makedirs(outputDir)
     if not os.path.exists(droughtDir):
         os.makedirs(droughtDir)
+    if not os.path.exists(weatherDir):
+        os.makedirs(weatherDir)
 
 if __name__ == '__main__':
     create_working_directory()
