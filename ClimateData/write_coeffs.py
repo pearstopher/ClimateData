@@ -365,6 +365,16 @@ def build_coeffs_by_month_single_file(deg, deriv=0, months=None):
                 min_coeffs = poly.polyfit(x_min, y_min, deg)
                 precip_coeffs = poly.polyfit(x_precip, y_precip, deg)
 
+                # avg_coeffs = poly.Polynomial.fit(x_avg, y_avg, deg)
+                # max_coeffs = poly.Polynomial.fit(x_max, y_max, deg)
+                # min_coeffs = poly.Polynomial.fit(x_min, y_min, deg)
+                # precip_coeffs = poly.Polynomial.fit(x_precip, y_precip, deg)
+
+                # avg_coeffs = avg_coeffs.convert().coef
+                # max_coeffs = max_coeffs.convert().coef
+                # min_coeffs = min_coeffs.convert().coef
+                # precip_coeffs = precip_coeffs.convert().coef
+
                 # Dynamically add coefficients (any size)
                 if deriv > 0:
                     assert cols.size > deg + 3
