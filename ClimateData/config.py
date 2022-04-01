@@ -36,7 +36,7 @@ def config_save():
 
 # whether or not the config has the given path
 # path is a list of strings
-def config_has(path):
+def _config_has(path):
   if _config is None:
     return False
 
@@ -51,16 +51,16 @@ def config_has(path):
 
 # returns the config value at path or the default value at path
 # path is a list of strings
-def config_get(path):
-  item = _config if config_has(path) else _config_default
+def _config_get(path):
+  item = _config if _config_has(path) else _config_default
   for field in path:
     item = item[field]
   
   return item
 
-# returns the config value at path or the default value at path
+# sets the config value at path
 # path is a list of strings
-def config_set(path, value):
+def _config_set(path, value):
   item = _config
   path_len = len(path)
   for i in range(path_len):
@@ -77,31 +77,31 @@ def config_set(path, value):
 
 #DATABASE SECTION---------------------------------------------------------------------
 def config_get_db_host() -> str:
-  return config_get(["Database", "Host"])
+  return _config_get(["Database", "Host"])
 def config_set_db_host(host):
-  config_set(["Database", "Host"], host)
+  _config_set(["Database", "Host"], host)
 
 def config_get_db_name() -> str:
-  return config_get(["Database", "Name"])
+  return _config_get(["Database", "Name"])
 def config_set_db_name(name):
-  config_set(["Database", "Name"], name)
+  _config_set(["Database", "Name"], name)
 
 def config_get_db_user() -> str:
-  return config_get(["Database", "User"])
+  return _config_get(["Database", "User"])
 def config_set_db_user(user):
-  config_set(["Database", "User"], user)
+  _config_set(["Database", "User"], user)
 
 def config_get_db_password() -> str:
-  return config_get(["Database", "Password"])
+  return _config_get(["Database", "Password"])
 def config_set_db_password(password):
-  config_set(["Database", "Password"], password)
+  _config_set(["Database", "Password"], password)
 
 def config_get_db_last_updated() -> datetime:
   try:
-    return datetime.fromisoformat(config_get(["Database", "LastUpdated"]))
+    return datetime.fromisoformat(_config_get(["Database", "LastUpdated"]))
   except:
     return None
 def config_set_db_last_updated(last_updated: datetime):
-  config_set(["Database", "LastUpdated"], last_updated.isoformat())
+  _config_set(["Database", "LastUpdated"], last_updated.isoformat())
 def config_set_db_last_updated_utc_now():
   config_set_db_last_updated(datetime.utcnow())
