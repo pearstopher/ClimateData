@@ -211,8 +211,8 @@ def convert_county_coords():
           id += 1
 
 def build_weather_table():
-    filesToStrip = ['avgtmp', 'mintmp', 'maxtmp', 'precip']
-    urlPaths = ['climdiv-tmpccy', 'climdiv-tmincy', 'climdiv-tmaxcy', 'climdiv-pcpncy']
+    filesToStrip = ['avgtmp', 'maxtmp', 'mintmp', 'precip']
+    urlPaths = ['climdiv-tmpccy', 'climdiv-tmaxcy', 'climdiv-tmincy', 'climdiv-pcpncy']
     colsPrefix = ['tmp_avg', 'tmp_max', 'tmp_min', 'precip']
     dataFiles = {}
 
