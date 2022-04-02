@@ -364,3 +364,4 @@ FodyWeavers.xsd
 
 /ClimateData/data/processed/
 /ClimateData/data/raw/us-county-boundaries.csv
+/ClimateData/config.json

@@ -15,20 +15,6 @@ password = 'PASSWORD'
 outputDir = './data/processed/'
 debug = False
 
-class Months(Enum):
-    JAN = 1
-    FEB = 2
-    MAR = 3
-    APR = 4
-    MAY = 5
-    JUN = 6
-    JUL = 7
-    AUG = 8
-    SEP = 9
-    OCT = 10
-    NOV = 11
-    DEC = 12
-
 #INTERNAL CALLS---------------------------------------------------------------------
 def setup_database():
     try:
@@ -365,6 +351,69 @@ def get_weather_data(columnList, idList, startYear, endYear):
     df.id = df.id.apply('{:0>11}'.format).astype(str)
     return df
 
+def get_map_weather_data(columnList, idList, startYear, endYear):
+    results = None
+    cols = []
+    matchString = "|| '%'"
+    defaultColumns = "w.id, cc.fips_code, cc.county_name, cc.state, cc.country, "
+    columns = ["w." + col for col in columnList]
+    columnString = ", ".join(columns)
+    idYearList = []
+    columnString = defaultColumns + columnString
+
+    for year in range(startYear, endYear+1):
+        for dataId in idList:
+            idYearList.append(dataId+str(year))
+
+    idString = ", ".join(idYearList)
+
+    try:
+        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+    except OperationalError as error:
+        print_psycopg2_exception(error)
+        conn = None
+
+    if conn != None:
+        cur = conn.cursor()
+
+        try:
+            cur.execute("""
+            SELECT %s FROM weather as w JOIN county_codes as cc 
+            ON CAST(w.id AS TEXT) like CAST(cc.county_code AS TEXT) || '%%' WHERE w.id IN (%s) ORDER BY id ASC;
+            """,
+            [AsIs(columnString), AsIs(idString)])
+            conn.commit()
+            results = cur.fetchall()
+        except Exception as error:
+            print_psycopg2_exception(error)
+
+        if results is not None:
+            for item in cur.description:
+                cols.append(item[0])
+        else:
+            print("No data found for given columns, ids and years")
+        cur.close()
+        conn.close()
+
+    df = pd.DataFrame(data=results, columns=cols)
+    return df
+
+def get_map_data_for_single_county(columnList, county, state, country, startYear, endYear):
+        idList = []
+        idList.append(get_id_by_county(county, state, country))
+        return get_map_weather_data(columnList, idList, startYear, endYear)
+
+def get_map_data_for_state(columnList, state, country, startYear, endYear):
+        idList = []
+        idList = get_ids_by_state(state, country)
+        return get_map_weather_data(columnList, idList, startYear, endYear)
+
+def get_map_data_for_country(columnList, country, startYear, endYear):
+        idList = []
+        idList = get_ids_by_country(country)
+        return get_map_weather_data(columnList, idList, startYear, endYear)
+
+
 def get_data_for_single_county(columnList, county, state, country, startYear, endYear):
         idList = []
         idList.append(get_id_by_county(county, state, country))
@@ -498,13 +547,65 @@ def get_postal_fips(states, counties, country):
     results['Country'] = countryList
     return results
 
-def get_data_for_counties_dataset(states, counties, country, columns, startMonth, endMonth, startYear, endYear):
+def get_map_data_for_counties(states, counties, country, columns, months, startYear, endYear):
+    results = []
+    columnList = []
+    idList = []
+
+    for column in columns:
+        for month in months:
+            to_add = column + '_' + month.lower()
+            columnList.append(to_add)
+
+    for index, state in enumerate(states):
+        for county in counties[index]:
+            idList.append(get_id_by_county(county, state, country))
+    
+    results = get_map_weather_data(columnList, idList, startYear, endYear)
+    return results
+
+def get_map_data_for_states(states, country, columns, months, startYear, endYear):
+    results = []
+    columnList = []
+    idList = []
+    ids = []
+
+    for column in columns:
+        for month in months:
+            to_add = column + '_' + month.lower()
+            columnList.append(to_add)
+
+    for state in states:
+        ids = ids + get_ids_by_state(state, country)
+        
+    results = get_map_weather_data(columnList, ids, startYear, endYear)
+
+    return results
+
+def get_map_data_for_countries(countries, columns, months, startYear, endYear):
+    results = []
+    columnList = []
+    ids = []
+
+    for column in columns:
+        for month in months:
+            to_add = column + '_' + month.lower()
+            columnList.append(to_add)
+
+    for country in countries:
+        ids = ids + get_ids_by_country(country)
+
+    results = get_map_weather_data(columnList, ids, startYear, endYear)
+
+    return results
+
+def get_data_for_counties_dataset(states, counties, country, columns, months, startYear, endYear):
     results = []
     columnList = []
 
     for column in columns:
-        for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
-            to_add = column + '_' + Months(i).name.lower()
+        for month in months:
+            to_add = column + '_' + month.lower()
             columnList.append(to_add)
 
     for index, state in enumerate(states):
@@ -513,13 +614,13 @@ def get_data_for_counties_dataset(states, counties, country, columns, startMonth
             results.append(next_set)
     return results
 
-def get_data_for_states_dataset(states, country, columns, startMonth, endMonth, startYear, endYear):
+def get_data_for_states_dataset(states, country, columns, months, startYear, endYear):
     results = []
     columnList = []
 
     for column in columns:
-        for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
-            to_add = column + '_' + Months(i).name.lower()
+        for month in months:
+            to_add = column + '_' + month.lower()
             columnList.append(to_add)
 
     for state in states:
@@ -527,13 +628,13 @@ def get_data_for_states_dataset(states, country, columns, startMonth, endMonth, 
         results.append(next_set)
     return results
 
-def get_data_for_countries_dataset(countries, columns, startMonth, endMonth, startYear, endYear):
+def get_data_for_countries_dataset(countries, columns, months, startYear, endYear):
     results = []
     columnList = []
 
     for column in columns:
-        for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
-            to_add = column + '_' + Months(i).name.lower()
+        for month in months:
+            to_add = column + '_' + month.lower()
             columnList.append(to_add)
 
     for country in countries:
