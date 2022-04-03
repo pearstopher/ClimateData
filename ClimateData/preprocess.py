@@ -58,42 +58,7 @@ def download(url, save_path, skip_download_if_save_file_exists = False):
   
   return download_contents
 
-# ensures that each entry in complete.csv has a corresponding county mapping in county_codes.csv
-def test_countycodes():
-  missing_codes = []
-
-  # read in county code mappings
-  county_map = {}
-  with open(f'{outputDir}{countyCodesName}', 'r') as f:
-    # eat header
-    f.readline()
-
-    lines = f.readlines()
-    for line in lines:
-      line = line.strip()
-      values = line.split(',')
-
-      # store county code as key and uid as value
-      county_map[values[1]] = values[0]
-
-  # iterate over data set
-  with open(f'{outputDir}{weatherFileName}', 'r') as f:
-    # eat header
-    f.readline()
-
-    lines = f.readlines()
-    for line in lines:
-      line = line.strip()
-      values = line.split(',')
-
-      # read first 7 characters of id as county code
-      code = values[0][:7]
-      
-      if not code in county_map and not code in missing_codes:
-        missing_codes.append(code)
-        print(f'missing {code}')
-
-def convert_countycodes():
+def convert_countycodes(skip_download_if_save_file_exists):
   state_map = {}
   with open(f'{datadir}county-state-codes.txt', 'r') as f:
     lines = f.readlines()
@@ -148,9 +113,9 @@ def convert_countycodes():
           w.write(f'{id},01{county_code},{fips_code},{name},{state},US\n')
           id += 1
 
-def convert_county_coords():
+def convert_county_coords(skip_download_if_save_file_exists):
   # download coordinate data
-  county_boundaries = download('https://public.opendatasoft.com/explore/dataset/us-county-boundaries/download/?format=csv&timezone=America/Los_Angeles&lang=en&use_labels_for_header=true&csv_separator=%3B', f'{weatherDir}us-county-boundaries.csv')
+  county_boundaries = download('https://public.opendatasoft.com/explore/dataset/us-county-boundaries/download/?format=csv&timezone=America/Los_Angeles&lang=en&use_labels_for_header=true&csv_separator=%3B', f'{weatherDir}us-county-boundaries.csv', skip_download_if_save_file_exists)
 
   state_map = {}
   with open(f'{datadir}county-state-codes.txt', 'r') as f:
@@ -210,7 +175,7 @@ def convert_county_coords():
           w.write(f'01{county_code},"{geo_point}",{shape_processed}\n')
           id += 1
 
-def build_weather_table():
+def build_weather_table(skip_download_if_save_file_exists):
     filesToStrip = ['avgtmp', 'maxtmp', 'mintmp', 'precip']
     urlPaths = ['climdiv-tmpccy', 'climdiv-tmaxcy', 'climdiv-tmincy', 'climdiv-pcpncy']
     colsPrefix = ['tmp_avg', 'tmp_max', 'tmp_min', 'precip']
@@ -229,7 +194,7 @@ def build_weather_table():
       url_path_idx = weather_directory.index(url_path)
       url_path_end_idx = weather_directory.index('"', url_path_idx)
       path = weather_directory[url_path_idx:url_path_end_idx]
-      dataFiles[filename] = download(f'https://www1.ncdc.noaa.gov/pub/data/cirs/climdiv/{path}', f'{weatherDir}climdiv-{filename}.txt')
+      dataFiles[filename] = download(f'https://www1.ncdc.noaa.gov/pub/data/cirs/climdiv/{path}', f'{weatherDir}climdiv-{filename}.txt', skip_download_if_save_file_exists)
 
 
     for filename, prefix, i in zip(filesToStrip, colsPrefix, range(len(colsPrefix))):
@@ -239,7 +204,7 @@ def build_weather_table():
         for m in months:
             cols.append(f'{prefix}_{m} FLOAT')
 
-        s = re.sub('[^\S\r\n]+', ' ', dataFiles[filename])
+        s = re.sub('( |\t)+', ' ', dataFiles[filename])
         strio = StringIO(s)
         df = pd.read_csv(strio, delimiter=' ', header=None, index_col=False, usecols=icols, dtype=d)
         
@@ -278,7 +243,7 @@ def build_weather_table():
     dff.to_csv(f'{outputDir}{weatherFileName}', index=False)
     print('Succesful merge!')
 
-def build_drought_table():
+def build_drought_table(skip_download_if_save_file_exists):
   
     urlPaths = ['climdiv-pdsist', 'climdiv-phdist', 'climdiv-pmdist', 'climdiv-sp01st', 'climdiv-sp02st', 'climdiv-sp03st', 'climdiv-sp06st', 'climdiv-sp09st', 'climdiv-sp12st', 'climdiv-sp24st']
     dataFiles = {}
@@ -296,7 +261,7 @@ def build_drought_table():
       url_path_idx = weather_directory.index(url_path)
       url_path_end_idx = weather_directory.index('"', url_path_idx)
       path = weather_directory[url_path_idx:url_path_end_idx]
-      dataFiles[url_path] = download(f'https://www1.ncdc.noaa.gov/pub/data/cirs/climdiv/{path}', f'{droughtDir}{url_path}.txt')
+      dataFiles[url_path] = download(f'https://www1.ncdc.noaa.gov/pub/data/cirs/climdiv/{path}', f'{droughtDir}{url_path}.txt', skip_download_if_save_file_exists)
 
     for i, path in enumerate(urlPaths):
         datatype = path[8:]
@@ -344,15 +309,12 @@ def build_drought_table():
     dff.to_csv(f'{outputDir}{droughtFileName}', index=False)
     print('Succesful merge!')
 
-def processFiles():
+def process_files(force_data_redownload = True):
     # process county codes and test the output
-    build_drought_table()
-    build_weather_table()
-    convert_countycodes()
-    convert_county_coords()
-
-    # TODO: Move this into a test suite
-    test_countycodes()
+    build_drought_table(not force_data_redownload)
+    build_weather_table(not force_data_redownload)
+    convert_countycodes(not force_data_redownload)
+    convert_county_coords(not force_data_redownload)
 
 def create_working_directory():
     if not os.path.exists(outputDir):
@@ -364,4 +326,4 @@ def create_working_directory():
 
 if __name__ == '__main__':
     create_working_directory()
-    processFiles()
+    process_files()

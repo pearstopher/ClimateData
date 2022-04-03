@@ -1,0 +1,47 @@
+name: release
+
+on:
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["tests"]
+    branches: master
+    types:
+      - completed
+
+jobs:
+
+  actions-linux:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Package Application
+      uses: Dnawrkshp/pyinstaller-action@linux
+      with:
+        path: ClimateData
+        spec: ClimateData.spec
+    - name: Copy raw data
+      run: |
+        mkdir -p ClimateData/dist/linux/data && cp -R ClimateData/data/raw ClimateData/dist/linux/data
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ClimateData
+        path: ClimateData/dist/linux
+
+  actions-windows:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Package Application
+      uses: Dnawrkshp/pyinstaller-action@windows
+      with:
+        path: ClimateData
+        spec: ClimateData.spec
+    - name: Copy raw data
+      run: |
+        mkdir -p ClimateData/dist/windows/data && cp -R ClimateData/data/raw ClimateData/dist/windows/data
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ClimateData
+        path: ClimateData/dist/windows

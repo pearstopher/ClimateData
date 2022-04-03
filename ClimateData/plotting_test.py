@@ -11,7 +11,7 @@ import tkinter as tk
 from tkinter import *
 
 # Include import statement to get data
-matplotlib.use("TkAgg")
+matplotlib.use("TkAgg", force= False)
 
 csv_path = './data/raw/climdiv-avgtmp.csv'
 # Can probably leave headers if importing df is formatted like this

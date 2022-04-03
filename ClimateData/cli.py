@@ -1,4 +1,4 @@
-from preprocess import processFiles, create_working_directory
+from preprocess import process_files, create_working_directory
 from database import setup_database
 from UI import start_ui
 from config import config_load, config_save, config_set_db_last_updated_utc_now, config_get_db_last_updated
@@ -12,7 +12,7 @@ if __name__ == '__main__':
 
     # preprocess files
     create_working_directory()
-    processFiles()
+    process_files()
 
     # build database
     setup_database()
