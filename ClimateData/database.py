@@ -399,6 +399,7 @@ def get_map_weather_data(columnList, idList, startYear, endYear):
         conn.close()
 
     df = pd.DataFrame(data=results, columns=cols)
+    df.fips_code = df.fips_code.apply('{:0>5}'.format).astype(str)
     return df
 
 def get_map_data_for_single_county(columnList, county, state, country, startYear, endYear):

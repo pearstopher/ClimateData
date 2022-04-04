@@ -1,13 +1,18 @@
+from io import StringIO
 import os
 import sys
 import csv
+from tracemalloc import start
 import numpy as np
 import pandas as pd
 import urllib.request
 import json
+import datetime
+import re
 
 datadir = './data/raw/'
 droughtDir = f'{datadir}drought/'
+weatherDir = f'{datadir}weather/'
 outputDir = './data/processed/'
 order = ['min', 'avg', 'max', 'precip']
 months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
@@ -17,6 +22,42 @@ droughtFileName = 'drought.csv'
 countyCodesName = 'county_codes.csv'
 countyCoordsName = 'county_coords.csv'
 
+
+#
+def download(url, save_path, skip_download_if_save_file_exists = False):
+
+  delete_file = False
+  download_contents = None
+
+  # construct friendly name from path filename
+  if save_path is not None:
+    data_name = os.path.splitext(os.path.basename(save_path))[0]
+    friendly_name = data_name.replace("-", " ") \
+                            .replace("_", " ")
+  else:
+    friendly_name = 'data'
+    delete_file = True
+    save_path = 'download.temp'
+  
+
+  def report_hook(count, block_size, total_size):
+    percent = int(count * block_size * 100 / total_size)
+    print(f'downloading {friendly_name}.... {(count * block_size)/1024} KB', end='\r')
+
+  if not skip_download_if_save_file_exists or not os.path.exists(save_path):
+    print(f'downloading {friendly_name}....', end='\r')
+    urllib.request.urlretrieve(url, save_path, reporthook=report_hook)
+    print('')
+  
+  # read contents from file
+  with open(save_path, 'r') as f:
+    download_contents = f.read()
+
+  # delete file
+  if delete_file:
+    os.remove(save_path)
+  
+  return download_contents
 
 # ensures that each entry in complete.csv has a corresponding county mapping in county_codes.csv
 def test_countycodes():
@@ -110,10 +151,7 @@ def convert_countycodes():
 
 def convert_county_coords():
   # download coordinate data
-  if not os.path.exists(f'{datadir}us-county-boundaries.csv'):
-    print('downloading coordinate data.... (194 MB)')
-    urllib.request.urlretrieve('https://public.opendatasoft.com/explore/dataset/us-county-boundaries/download/?format=csv&timezone=America/Los_Angeles&lang=en&use_labels_for_header=true&csv_separator=%3B', f'{datadir}us-county-boundaries.csv')
-    print('finished')
+  county_boundaries = download('https://public.opendatasoft.com/explore/dataset/us-county-boundaries/download/?format=csv&timezone=America/Los_Angeles&lang=en&use_labels_for_header=true&csv_separator=%3B', f'{weatherDir}us-county-boundaries.csv')
 
   state_map = {}
   with open(f'{datadir}county-state-codes.txt', 'r') as f:
@@ -135,20 +173,20 @@ def convert_county_coords():
         county_map[values[0]] = values[1]
 
   # converts county coords csv
-  with open(f'{datadir}us-county-boundaries.csv', 'r') as f:
-    with open(f'{outputDir}{countyCoordsName}', 'w') as w:
-      # this csv contains very large fields so
-      # we must increase the field size limit to something larger
-      csv.field_size_limit(0x1000000)
-      reader = csv.reader(f, delimiter=';')
-      columns = next(reader)
+  with open(f'{outputDir}{countyCoordsName}', 'w') as w:
+    # this csv contains very large fields so
+    # we must increase the field size limit to something larger
+    csv.field_size_limit(0x1000000)
+    reader = csv.reader(county_boundaries.split('\n'), delimiter=';')
+    columns = next(reader)
 
-      # header
-      w.write('county_code INTEGER PRIMARY KEY,geo_point VARCHAR(50),geo_shape TEXT[][]\n')
+    # header
+    w.write('county_code INTEGER PRIMARY KEY,geo_point VARCHAR(50),geo_shape TEXT[][]\n')
 
-      # iterate lines
-      id = 1
-      for row in reader:
+    # iterate lines
+    id = 1
+    for row in reader:
+      if len(row) > 8:
         geo_point = row[0]
         geo_shape = row[1]
         state = row[8]
@@ -175,12 +213,26 @@ def convert_county_coords():
 
 def build_weather_table():
     filesToStrip = ['mintmp', 'avgtmp', 'maxtmp', 'precip']
+    filesToStrip = ['avgtmp', 'maxtmp', 'mintmp', 'precip']
+    urlPaths = ['climdiv-tmpccy', 'climdiv-tmaxcy', 'climdiv-tmincy', 'climdiv-pcpncy']
     colsPrefix = ['tmp_avg', 'tmp_max', 'tmp_min', 'precip']
+    dataFiles = {}
 
     icols = [i for i in range(len(months) + 1)]
     dtypes = [str] + [str] * len(months)
     d = pd.DataFrame(np.vstack([icols, dtypes])).to_dict(orient='records')[1]
     dff = pd.DataFrame()
+    
+    # download weather data directory listing
+    weather_directory = download('https://www1.ncdc.noaa.gov/pub/data/cirs/climdiv/', None)
+
+    # download weather data
+    for filename, url_path in zip(filesToStrip, urlPaths):
+      url_path_idx = weather_directory.index(url_path)
+      url_path_end_idx = weather_directory.index('"', url_path_idx)
+      path = weather_directory[url_path_idx:url_path_end_idx]
+      dataFiles[filename] = download(f'https://www1.ncdc.noaa.gov/pub/data/cirs/climdiv/{path}', f'{weatherDir}climdiv-{filename}.txt')
+
 
     for filename, prefix, i in zip(filesToStrip, colsPrefix, range(len(colsPrefix))):
 
@@ -189,7 +241,9 @@ def build_weather_table():
         for m in months:
             cols.append(f'{prefix}_{m} FLOAT')
 
-        df = pd.read_csv(f'{datadir}climdiv-{filename}.csv', delimiter=',', header=None, index_col=False, usecols=icols, dtype=d)
+        s = re.sub('[^\S\r\n]+', ' ', dataFiles[filename])
+        strio = StringIO(s)
+        df = pd.read_csv(strio, delimiter=' ', header=None, index_col=False, usecols=icols, dtype=d)
         
         # Remove datatype field, since it's the same throughout the entirity of each file
         s = df.iloc[:,0]
@@ -227,27 +281,36 @@ def build_weather_table():
     print('Succesful merge!')
 
 def build_drought_table():
+  
+    urlPaths = ['climdiv-pdsist', 'climdiv-phdist', 'climdiv-pmdist', 'climdiv-sp01st', 'climdiv-sp02st', 'climdiv-sp03st', 'climdiv-sp06st', 'climdiv-sp09st', 'climdiv-sp12st', 'climdiv-sp24st']
+    dataFiles = {}
+
     icols = [i for i in range(len(months) + 1)]
     dtypes = [str] + [str] * len(months)
     d = pd.DataFrame(np.vstack([icols, dtypes])).to_dict(orient='records')[1]
     dff = pd.DataFrame()
 
-    for i, bf in enumerate(os.listdir(droughtDir)):
-        if bf == 'drought-readme.txt':
-            continue
+    # download weather data directory listing
+    weather_directory = download('https://www1.ncdc.noaa.gov/pub/data/cirs/climdiv/', None)
 
-        datatype = bf[8:-4]
+    # download weather data
+    for url_path in urlPaths:
+      url_path_idx = weather_directory.index(url_path)
+      url_path_end_idx = weather_directory.index('"', url_path_idx)
+      path = weather_directory[url_path_idx:url_path_end_idx]
+      dataFiles[url_path] = download(f'https://www1.ncdc.noaa.gov/pub/data/cirs/climdiv/{path}', f'{droughtDir}{url_path}.txt')
+
+    for i, path in enumerate(urlPaths):
+        datatype = path[8:]
         cols = ['id INTEGER PRIMARY KEY']
         for m in months:
             cols.append(f'{datatype}_{m} FLOAT')
 
-        with open(f'{droughtDir}{bf}', 'r') as f: 
-
-
-            newLines = []
-            lines = f.readlines()
-            for line in lines:
-                parts = line.split()
+        newLines = []
+        lines = dataFiles[path].split('\n')
+        for line in lines:
+            parts = line.split()
+            if len(parts) > 0:
 
                 # TODO: Add the years of 1895 & 1896 back in. It looks like the bad 
                 # data comes from the rolling averages of 12 & 24 months respectively
@@ -258,7 +321,7 @@ def build_drought_table():
                 parts[0] = parts[0][1:3] + parts[0][6:]
                 newLines.append(parts)
 
-            df = pd.DataFrame(newLines, columns=cols)
+        df = pd.DataFrame(newLines, columns=cols)
 
         if i == 0:
             # Add USA Country code
@@ -296,6 +359,10 @@ def processFiles():
 def create_working_directory():
     if not os.path.exists(outputDir):
         os.makedirs(outputDir)
+    if not os.path.exists(droughtDir):
+        os.makedirs(droughtDir)
+    if not os.path.exists(weatherDir):
+        os.makedirs(weatherDir)
 
 if __name__ == '__main__':
     create_working_directory()
