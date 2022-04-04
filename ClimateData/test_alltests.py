@@ -1,12 +1,15 @@
-from preprocess import *
-from config import *
+import preprocess
+import config
+import database
 import pytest
 import warnings
+import UI
 
 def test_preprocess():
-  config_load()
-  create_working_directory()
-  process_files(False)
+  config.config_load()
+  preprocess.create_working_directory()
+  preprocess.process_files(False)
+  config.config_set_db_last_updated_utc_now()
 
 # ensures that each entry in weather.csv has a corresponding county mapping in county_codes.csv
 def test_countycodes():
@@ -14,7 +17,7 @@ def test_countycodes():
 
   # read in county code mappings
   county_map = {}
-  with open(f'{outputDir}{countyCodesName}', 'r') as f:
+  with open(f'{preprocess.outputDir}{preprocess.countyCodesName}', 'r') as f:
     # eat header
     f.readline()
 
@@ -27,7 +30,7 @@ def test_countycodes():
       county_map[values[1]] = values[0]
 
   # iterate over data set
-  with open(f'{outputDir}{weatherFileName}', 'r') as f:
+  with open(f'{preprocess.outputDir}{preprocess.weatherFileName}', 'r') as f:
     # eat header
     f.readline()
 
@@ -44,4 +47,14 @@ def test_countycodes():
         #warnings.warn(f'missing {code}', RuntimeWarning)
         pytest.fail(f'missing county code {code}')
 
-      
+#
+def test_database():
+  database.setup_database()
+
+#
+def test_ui():
+  app = UI.App()
+  
+  # run loop once
+  app.update_idletasks()
+  app.update()
