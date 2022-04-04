@@ -67,14 +67,17 @@ def updateFIPS(df):
 class MapWindow(QWindow):
 
   def __init__(self, pdDF, *args, **kwargs):
-
+    self.conn = psycopg2.connect("host=localhost dbname=postgres user=postgres password=PASSWORD")
+    self.cur = self.conn.cursor()
     super(MapWindow, self).__init__(*args, **kwargs)
     path = QDir.current().filePath('HTML/map_fig.html')
     self.pdDF = pdDF
     self.lines = []
     self.state_boxes = []
+    self.county_boxes = []
     self.date_boxes = []
     self.curr_month = ''
+    self.curr_year = ''
     self.window = QWidget()
     self.layout = QVBoxLayout()
     self.navbar = QHBoxLayout()
@@ -92,6 +95,7 @@ class MapWindow(QWindow):
     self.month_list = QComboBox()
     self.month_list.addItems(['January','February','March','April','May','June','July','August','September','October','November','December'])
     self.month_list.setMinimumWidth(200)
+    self.month_list.currentIndexChanged.connect(self.month_list_change)
 
     # self.addButton = QPushButton('+', self.window)
     # self.addButton.setMinimumHeight(30)
@@ -118,6 +122,7 @@ class MapWindow(QWindow):
     #State/County Selection
     self.state_list = QComboBox()
     self.state_list.addItems(['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
+    self.state_list.currentIndexChanged.connect(self.state_list_change)
     self.county_list = QComboBox()
     self.selection.addWidget(self.state_list)
     self.selection.addWidget(self.county_list)
@@ -144,12 +149,34 @@ class MapWindow(QWindow):
     self.window.setLayout(self.layout)
     self.window.show()
 
+  def county_list_change(self):
+    self.state_boxes.append(self.state_list.currentText())
+    self.county_boxes.append(self.county_list.currentText())
+  #Month List Change
+  def month_list_change(self):
+    self.curr_month = self.month_list.currentText()
+    print(self.month_list.currentText())
+  #State List Change
+  def state_list_change(self):
+    self.county_list.clear()
+    self.cur.execute("""
+      SELECT county_name FROM county_codes WHERE state = %s;
+            """,
+            [self.state_list.currentText()])
+    self.conn.commit()
+    data = self.cur.fetchall()
+    data = [x[0] for x in data]
+    self.county_list.addItems(data)
   #Displays slider value
   def yearSlideBoxChange(self):
     self.yearSlider.setValue(int(self.yearSliderBox.text()))
+    self.curr_year = int(self.yearSlider.value())
+    print(self.curr_year)
   #Changes slider value
   def yearSlideValChange(self):
     self.yearSliderBox.setText(str(self.yearSlider.value()))
+    self.curr_year = int(self.yearSliderBox.text())
+    print(self.curr_year)
   def monthSlideBoxChange(self):
     self.monthSlider.setValue(int(self.monthSliderBox.text()))
   #Changes slider value
