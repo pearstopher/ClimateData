@@ -1,3 +1,4 @@
+from tkinter import HORIZONTAL
 import pandas as pd                             #pip install pandas
 import plotly.express as px                     #pip install plotly   
 import psycopg2                                 #pip install psycopg2-binary
@@ -32,6 +33,7 @@ month_dict = {
     "11" : "nov",
     "12" : "dec"
 }
+
 
 def validate_dates(date):
 
@@ -77,43 +79,58 @@ class MapWindow(QWindow):
     self.layout = QVBoxLayout()
     self.navbar = QHBoxLayout()
     self.controls = QHBoxLayout()
+    self.selection = QHBoxLayout()
+    self.echo = QHBoxLayout()
 
     #Map Controls
     self.yearSlider = QSlider(Qt.Horizontal)
-    self.sliderBox = QLineEdit()
-    self.yearSlider.setMinimum(1800)
+    self.yearSliderBox = QLineEdit()
+    self.yearSlider.setMinimum(1895)
     self.yearSlider.setMaximum(2022)
-    self.yearSlider.valueChanged.connect(self.slideValChange)
-    self.sliderBox.returnPressed.connect(self.slideBoxChange)
-    self.addButton = QPushButton('+', self.window)
-    self.addButton.setMinimumHeight(30)
-    self.addButton.setMaximumWidth(40)
-    self.addButton.clicked.connect(self.addLine)
+    self.yearSlider.valueChanged.connect(self.yearSlideValChange)
+    self.yearSliderBox.returnPressed.connect(self.yearSlideBoxChange)
+    self.month_list = QComboBox()
+    self.month_list.addItems(['January','February','March','April','May','June','July','August','September','October','November','December'])
+    self.month_list.setMinimumWidth(200)
+
+    # self.addButton = QPushButton('+', self.window)
+    # self.addButton.setMinimumHeight(30)
+    # self.addButton.setMaximumWidth(40)
+    # self.addButton.clicked.connect(self.addLine)
     # self.deleteButton = QPushButton('-')
     # self.deleteButton.setMinimumHeight(30)
     # self.deleteButton.setMaximumWidth(40)
     # self.deleteButton.clicked.connect(self.removeLine)
+
     self.mapItButton = QPushButton('Map it!', self.window)
     self.mapItButton.setMinimumHeight(30)
     self.mapItButton.setMaximumWidth(150)
     self.mapItButton.clicked.connect(self.genMap)
-    self.controls.addWidget(self.addButton)
+    
+    # self.controls.addWidget(self.addButton)
     # self.controls.addWidget(self.deleteButton)
-    self.controls.addWidget(self.mapItButton)
-    self.controls.addWidget(self.yearSlider)
-    self.controls.addWidget(self.sliderBox)
 
-    #Initial line
-    # self.state_list = QComboBox()
-    # self.state_list.addItems(['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
-    # self.state_list.setMinimumHeight(30)
-    # self.state_boxes.append(self.state_list)
-    # self.date = QLineEdit()
-    # self.date_boxes.append(self.date)
-    # self.date.setMinimumHeight(30)
-    # self.date.setMaximumWidth(250)
-    # self.navbar.addWidget(self.state_list)
-    # self.navbar.addWidget(self.date)
+    self.controls.addWidget(self.mapItButton)
+    self.controls.addWidget(self.month_list)
+    self.controls.addWidget(self.yearSlider)
+    self.controls.addWidget(self.yearSliderBox)
+    
+    #State/County Selection
+    self.state_list = QComboBox()
+    self.state_list.addItems(['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
+    self.county_list = QComboBox()
+    self.selection.addWidget(self.state_list)
+    self.selection.addWidget(self.county_list)
+
+    #Data table
+    self.data_tree = QTreeView()
+    self.data_table = QStandardItemModel(0,4)
+    self.data_table.setHeaderData(0, Qt.Horizontal, "State")
+    self.data_table.setHeaderData(1, Qt.Horizontal, "County Name")
+    self.data_table.setHeaderData(2, Qt.Horizontal, "County FIPS")
+    self.data_table.setHeaderData(3, Qt.Horizontal, "Country")
+    self.data_tree.setModel(self.data_table)
+    self.echo.addWidget(self.data_tree)
 
     #Set title and add widgets and layouts to main window. 
     self.window.setWindowTitle("Climate Data")
@@ -121,16 +138,37 @@ class MapWindow(QWindow):
     self.openDefaultMap()
     self.layout.addWidget(self.browser)
     self.layout.addLayout(self.controls)
+    self.layout.addLayout(self.selection)
+    self.layout.addLayout(self.echo)
     self.layout.addLayout(self.navbar)
     self.window.setLayout(self.layout)
     self.window.show()
 
   #Displays slider value
-  def slideBoxChange(self):
-    self.yearSlider.setValue(int(self.sliderBox.text()))
+  def yearSlideBoxChange(self):
+    self.yearSlider.setValue(int(self.yearSliderBox.text()))
   #Changes slider value
-  def slideValChange(self):
-    self.sliderBox.setText(str(self.yearSlider.value()))
+  def yearSlideValChange(self):
+    self.yearSliderBox.setText(str(self.yearSlider.value()))
+  def monthSlideBoxChange(self):
+    self.monthSlider.setValue(int(self.monthSliderBox.text()))
+  #Changes slider value
+  def monthSlideValChange(self):
+    monthDict = {
+    "1" : "January",
+    "2" : "February",
+    "3" : "March",
+    "4" : "April",
+    "5" : "May",
+    "6" : "June",
+    "7" : "July",
+    "8" : "August",
+    "9" : "September",
+    "10" : "October",
+    "11" : "November",
+    "12" : "December"
+    }
+    self.monthSliderBox.setText(monthDict[str(self.monthSlider.value())])
 
   #Generates the map using pandas dataframe
   def genMap(self):
