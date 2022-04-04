@@ -332,8 +332,8 @@ def build_coeffs_by_month_single_file(deg, deriv=0, months=None):
 
     for month in months:
         for state in states:
-            if state != 'OR':
-                continue
+            # if state != 'OR':
+            #     continue
             print(f"Storing sub-dataframe for state: {state}")
 
             # Get county codes, names, state, country etc..
@@ -344,8 +344,8 @@ def build_coeffs_by_month_single_file(deg, deriv=0, months=None):
             state_df.reset_index()  # make sure indices pair with number of rows
 
             for index, row in state_df.iterrows():
-                if row['county_name'] != 'Clackamas':
-                    continue
+                # if row['county_name'] != 'Clackamas':
+                #     continue
                 print(f"Building and storing coefficients for county: {row['county_name']}")
                 [avg_df, max_df, min_df, precip_df] = get_data_dfs(row)
 
@@ -367,16 +367,6 @@ def build_coeffs_by_month_single_file(deg, deriv=0, months=None):
                 max_coeffs = poly.polyfit(x_max, y_max, deg)
                 min_coeffs = poly.polyfit(x_min, y_min, deg)
                 precip_coeffs = poly.polyfit(x_precip, y_precip, deg)
-
-                # avg_coeffs = poly.Polynomial.fit(x_avg, y_avg, deg)
-                # max_coeffs = poly.Polynomial.fit(x_max, y_max, deg)
-                # min_coeffs = poly.Polynomial.fit(x_min, y_min, deg)
-                # precip_coeffs = poly.Polynomial.fit(x_precip, y_precip, deg)
-
-                # avg_coeffs = avg_coeffs.convert().coef
-                # max_coeffs = max_coeffs.convert().coef
-                # min_coeffs = min_coeffs.convert().coef
-                # precip_coeffs = precip_coeffs.convert().coef
 
                 # Dynamically add coefficients (any size)
                 if deriv > 0:
@@ -413,7 +403,7 @@ def build_coeffs_by_month_single_file(deg, deriv=0, months=None):
     precip_poly_df.to_csv(f"precip_poly_coeffs_3.csv", sep=',', encoding='utf-8', index=False)
     print(f'Successfully wrote polynomial coeffs to csv!')
 
-
+'''
 def get_oregon_year_data():
     df = pd.DataFrame()
     state = 'OR'
@@ -432,13 +422,163 @@ def get_oregon_year_data():
         df[county] = county_df['year_avg']
 
     df.to_csv('oregon_counties_year_avg.csv', sep=',', encoding='utf-8', index=False)
+'''
+
+def build_all_coefficients(deg):
+    # Default
+    start_year = 1895
+    end_year = 2021
+    months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+    print(f'Degree {deg} Polynomial')
+
+    if deg < 1:
+        logging.error('Please enter polynomial degree greater than 0')
+        quit(1)
+
+    # Dynamically create column headers from 'a' ... deg
+    # TODO Change this once deriv moved
+    # cols = np.hstack(['County', 'Month', coeff_cols[:deg + 1]])
+    avg_cols_name = []
+    max_cols_name = []
+    min_cols_name = []
+    precip_cols_name = []
+    for i in range(start_year, end_year+1):
+        avg_cols_name.append(f"Avg Temp {str(i)}")
+        max_cols_name.append(f"Max Temp {str(i)}")
+        min_cols_name.append(f"Min Temp {str(i)}")
+        precip_cols_name.append(f"Precip Temp {str(i)}")
+
+    avg_cols_coeffs_name = []
+    max_cols_coeffs_name = []
+    min_cols_coeffs_name = []
+    precip_cols_coeffs_name = []
+    for i in coeff_cols[:deg+1]:
+        avg_cols_coeffs_name.append(f"Avg Temp {i.upper()}")
+        max_cols_coeffs_name.append(f"Max Temp {i.upper()}")
+        min_cols_coeffs_name.append(f"Min Temp {i.upper()}")
+        precip_cols_coeffs_name.append(f"Precip Temp {i.upper()}")
+
+    # Returning Df column names
+    cols = np.hstack(['Counter', 'State', 'County', 'County Code', 'Month', avg_cols_name, min_cols_name, max_cols_name, precip_cols_name, avg_cols_coeffs_name, min_cols_coeffs_name, max_cols_coeffs_name, precip_cols_coeffs_name])
+
+    # Always init
+    avg_data_rows = []
+    max_data_rows = []
+    min_data_rows = []
+    precip_data_rows = []
+    missed_counties = []
+
+    data_rows = []
+    counter = 0
+
+    for month in months:
+        avg_data_values = []
+        max_data_values = []
+        min_data_values = []
+        precip_data_values = []
+
+        for state in states:
+            print(f"Storing sub-dataframe for state: {state}")
+
+            # Get county codes, names, state, country etc..
+            county_codes_df = get_county_codes_as_df()
+
+            # Get df that matches current state
+            state_df = county_codes_df[(county_codes_df['state'] == state)]
+            state_df.reset_index()  # make sure indices pair with number of rows
+
+            for index, row in state_df.iterrows():
+                # For counter column
+                counter += 1
+
+                print(f"Building and storing coefficients for county: {row['county_name']}")
+                [avg_df, max_df, min_df, precip_df] = get_data_dfs(row)
+
+                # Check for missing counties
+                if avg_df.empty is True and max_df.empty is True and min_df.empty is True and precip_df.empty is True:
+                    logging.warning(
+                        f'Unable to get weather data for county: {row["county_name"]} state: {row["state"]}')
+                    missed_counties.append([row['state'], row['county_name'], row['county_code']])
+                    continue
+
+                # Build row of temperature data
+                # Using avg_cols_name. Any of them should work tho
+                # TODO TEST THIS
+                index = 0
+                for yearStr in avg_cols_name:
+                    year = yearStr[len(yearStr) - 4:]
+                    id_year = avg_df.at[index, 'id']
+                    if year in id_year:
+                        avg_data_values.append(avg_df.iat[index, months_dict[month]])
+                        max_data_values.append(max_df.iat[index, months_dict[month]])
+                        min_data_values.append(min_df.iat[index, months_dict[month]])
+                        precip_data_values.append(precip_df.iat[index, months_dict[month]])
+                        index += 1
+                    else:
+                        avg_data_values.append(np.nan)
+                        max_data_values.append(np.nan)
+                        min_data_values.append(np.nan)
+                        precip_data_values.append(np.nan)
+
+                # Process data
+                [x_avg, y_avg, x_avg_dates] = get_xy_data_for_months(avg_df, months_dict[month])
+                [x_max, y_max, x_max_dates] = get_xy_data_for_months(max_df, months_dict[month])
+                [x_min, y_min, x_min_dates] = get_xy_data_for_months(min_df, months_dict[month])
+                [x_precip, y_precip, x_precip_dates] = get_xy_data_for_months(precip_df, months_dict[month])
+
+                # Get polynomial coefficents
+                avg_coeffs = poly.polyfit(x_avg, y_avg, deg)
+                max_coeffs = poly.polyfit(x_max, y_max, deg)
+                min_coeffs = poly.polyfit(x_min, y_min, deg)
+                precip_coeffs = poly.polyfit(x_precip, y_precip, deg)
+
+                # Dynamically add coefficients (any size)
+                '''
+                avg_data_rows.append(np.hstack([row['county_name'], month, avg_coeffs[::-1]]))
+                max_data_rows.append(np.hstack([row['county_name'], month, max_coeffs[::-1]]))
+                min_data_rows.append(np.hstack([row['county_name'], month, min_coeffs[::-1]]))
+                precip_data_rows.append(np.hstack([row['county_name'], month, precip_coeffs[::-1]]))
+                '''
+                # cols = np.hstack(
+                #     ['Counter', 'State', 'County', 'County Code', 'Month', avg_cols_name, min_cols_name, max_cols_name,
+                #      precip_cols_name, avg_cols_coeffs_name, min_cols_coeffs_name, max_cols_coeffs_name,
+                #      precip_cols_coeffs_name])
+                data_rows.append(np.hstack([str(counter), row['state'], row['county_name'], row['county_code'], month,
+                                            avg_data_values, min_data_values, max_data_values, precip_data_values,
+                                            avg_coeffs[::-1], min_coeffs[::-1], max_coeffs[::-1], precip_coeffs[::-1]]))
+
+        # After data has been looped and appended to, create new dfs to write to csv
+    # avg_poly_df = pd.DataFrame(avg_data_rows, columns=cols)
+    # max_poly_df = pd.DataFrame(max_data_rows, columns=cols)
+    # min_poly_df = pd.DataFrame(min_data_rows, columns=cols)
+    # precip_poly_df = pd.DataFrame(precip_data_rows, columns=cols)
+    #
+    # # Write to csv
+    # avg_poly_df.to_csv(f"avg_county_coeffs_3.csv", sep=',', encoding='utf-8', index=False)
+    # max_poly_df.to_csv(f"max_poly_coeffs_3.csv", sep=',', encoding='utf-8', index=False)
+    # min_poly_df.to_csv(f"min_poly_coeffs_3.csv", sep=',', encoding='utf-8', index=False)
+    # precip_poly_df.to_csv(f"precip_poly_coeffs_3.csv", sep=',', encoding='utf-8', index=False)
+
+    data_poly_df = pd.Dataframe(data_rows, columns=cols)
+    data_poly_df.to_csv(f"US_poly_3.csv", sep=',', encoding='utf-8', index=False)
+    print(f'Successfully wrote polynomial coeffs to csv!')
+
+
+    # Write all counties missed from line 114-117 check
+    if not os.path.exists('missed_counties.txt'):
+        print(f'Writing missed counties to text file!')
+        with open(f'missed_counties.txt', 'w') as text_file:
+            for line in missed_counties:
+                text_file.write(
+                    'state: ' + str(line[0]) + ', county: ' + str(line[1]) + ', county_code: ' + str(line[2]) + '\n')
+        print(f'Successfully wrote missed counties to text file!')
+
 
 
 if __name__ == '__main__':
-    # build_poly_coeffs_for_county_csv(3)
-    # get_oregon_year_data()
-    # build_poly_coeffs_for_county_by_months_csv(3)
-    build_coeffs_by_month_single_file(3)
+    # TODO remmeber to drop tables and update db. Pull first
+    build_all_coefficients(3)
+    # build_coeffs_by_month_single_file(3)
     pass
     # Ex) build_poly_coeffs_for_county_csv(degree, derivative order (optional))
     # build_poly_coeffs_for_county_csv(3, 1)
