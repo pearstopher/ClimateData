@@ -76,8 +76,8 @@ class MapWindow(QWindow):
     self.state_boxes = []
     self.county_boxes = []
     self.date_boxes = []
-    self.curr_month = ''
-    self.curr_year = ''
+    self.curr_month = None
+    self.curr_year = None
     self.window = QWidget()
     self.layout = QVBoxLayout()
     self.navbar = QHBoxLayout()
@@ -93,7 +93,7 @@ class MapWindow(QWindow):
     self.yearSlider.valueChanged.connect(self.yearSlideValChange)
     self.yearSliderBox.returnPressed.connect(self.yearSlideBoxChange)
     self.month_list = QComboBox()
-    self.month_list.addItems(['January','February','March','April','May','June','July','August','September','October','November','December'])
+    self.month_list.addItems(['Select month...', 'January','February','March','April','May','June','July','August','September','October','November','December'])
     self.month_list.setMinimumWidth(200)
     self.month_list.currentIndexChanged.connect(self.month_list_change)
 
@@ -121,9 +121,11 @@ class MapWindow(QWindow):
     
     #State/County Selection
     self.state_list = QComboBox()
-    self.state_list.addItems(['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
+    self.state_list.addItems(['Select State...', 'AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
     self.state_list.currentIndexChanged.connect(self.state_list_change)
     self.county_list = QComboBox()
+    self.county_list.addItem('Select County...')
+    self.county_list.activated.connect(self.county_list_change)
     self.selection.addWidget(self.state_list)
     self.selection.addWidget(self.county_list)
 
@@ -152,10 +154,29 @@ class MapWindow(QWindow):
   def county_list_change(self):
     self.state_boxes.append(self.state_list.currentText())
     self.county_boxes.append(self.county_list.currentText())
+    self.state_boxes = list(set(self.state_boxes))
+    self.county_boxes = list(set(self.county_boxes))
+    print(self.state_boxes)
+    print(self.county_boxes)
+
   #Month List Change
   def month_list_change(self):
-    self.curr_month = self.month_list.currentText()
-    print(self.month_list.currentText())
+    monthDict = {
+    "January" : "jan",
+    "February" : "feb",
+    "March" : "mar",
+    "April" : "apr",
+    "May" : "may",
+    "June" : "jun",
+    "July" : "jul",
+    "August" : "aug",
+    "September" : "sep",
+    "October" : "oct",
+    "November" : "nov",
+    "December" : "dec"
+    }
+    self.curr_month = monthDict[self.month_list.currentText()]
+    print(self.curr_month)
   #State List Change
   def state_list_change(self):
     self.county_list.clear()
@@ -167,6 +188,8 @@ class MapWindow(QWindow):
     data = self.cur.fetchall()
     data = [x[0] for x in data]
     self.county_list.addItems(data)
+    self.state_boxes.append(self.state_list.currentText())
+    print(self.state_boxes)
   #Displays slider value
   def yearSlideBoxChange(self):
     self.yearSlider.setValue(int(self.yearSliderBox.text()))
@@ -181,41 +204,25 @@ class MapWindow(QWindow):
     self.monthSlider.setValue(int(self.monthSliderBox.text()))
   #Changes slider value
   def monthSlideValChange(self):
-    monthDict = {
-    "1" : "January",
-    "2" : "February",
-    "3" : "March",
-    "4" : "April",
-    "5" : "May",
-    "6" : "June",
-    "7" : "July",
-    "8" : "August",
-    "9" : "September",
-    "10" : "October",
-    "11" : "November",
-    "12" : "December"
-    }
-    self.monthSliderBox.setText(monthDict[str(self.monthSlider.value())])
+    # self.monthSliderBox.setText(monthDict[str(self.monthSlider.value())])
+    return
 
   #Generates the map using pandas dataframe
   def genMap(self):
-    states = self.getStates()
-    dates = self.getDates()
-    df = []
-    if states:
-      dates[0] = dates[0].split('/')
-      year = int(dates[0][1])
-      self.curr_month = month = month_dict[dates[0][0]]
-      print(month)
-      print(year)
-      df = (database.get_map_data_for_states(states, 'US', ['tmp_avg'], [month], year, year))
-      if len(states) > 1:
-        for i in range(1, len(states)):
-          dates[i] = dates[i].split('/')
-          year = dates[i][1]
-          month = month_dict[dates[i][0]]
-          print(month)
-          df.append(database.get_map_data_for_states(states[i], 'US', ['tmp_avg'], [month], year, year))
+    if self.curr_month == None:
+      print("A month must be selected!")
+      return
+    if self.curr_year == None:
+      print("A year must be selected!")
+      return
+    if not self.state_boxes:
+      print("You must selected atleast 1 state!")
+      return
+
+    if not self.county_boxes:
+      df = database.get_map_data_for_states(self.state_boxes, 'US', ['tmp_avg'], [self.curr_month], self.curr_year, self.curr_year)
+    else:
+      df = database.get_map_data_for_counties(self.state_boxes, self.county_boxes, 'US', ['tmp_avg'], [self.curr_month], self.curr_year, self.curr_year)
     print(df)
     with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
       counties = json.load(response)
