@@ -42,5 +42,4 @@ jobs:
       run: |
         cd ClimateData
         echo '{ "Database": { "Host": "postgres", "Name": "postgres", "User": "postgres", "Password": "PASSWORD" } }' > config.json
-        python cli.py
         pytest
