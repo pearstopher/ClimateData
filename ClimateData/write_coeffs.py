@@ -1,3 +1,5 @@
+import random
+
 import numpy.polynomial.polynomial as poly
 from database import *
 import psycopg2
@@ -547,7 +549,6 @@ def build_all_coefficients(deg):
                 text_file.write(
                     'state: ' + str(line[0]) + ', county: ' + str(line[1]) + ', county_code: ' + str(line[2]) + '\n')
         print(f'Successfully wrote missed counties to text file!')
-
 
 
 if __name__ == '__main__':
