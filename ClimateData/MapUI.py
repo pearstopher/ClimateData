@@ -181,12 +181,7 @@ class MapWindow(QWindow):
   def state_list_change(self):
     self.county_list.clear()
     self.county_list.addItem('Select County...')
-    self.cur.execute("""
-      SELECT county_name FROM county_codes WHERE state = %s;
-            """,
-            [self.state_list.currentText()])
-    self.conn.commit()
-    data = self.cur.fetchall()
+    data = database.get_counties_for_state(self.state_list.currentText())
     data = [x[0] for x in data]
     self.county_list.addItems(data)
     self.state_boxes.append(self.state_list.currentText())
