@@ -180,6 +180,7 @@ class MapWindow(QWindow):
   #State List Change
   def state_list_change(self):
     self.county_list.clear()
+    self.county_list.addItem('Select County...')
     self.cur.execute("""
       SELECT county_name FROM county_codes WHERE state = %s;
             """,
