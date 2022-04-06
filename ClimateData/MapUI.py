@@ -13,10 +13,11 @@ import os
 import re
 
 datatype_dict = {
-    "Maximum temperature" : "tmp_max",
-    "Minimum temperature" : "tmp_min",
-    "Average temperature" : "tmp_avg",
-    "Precipitation"       : "precip"
+    "Maximum Temperature" : "tmp_max",
+    "Minimum Temperature" : "tmp_min",
+    "Average Temperature" : "tmp_avg",
+    "Precipitation"       : "precip",
+    "Select Data Type..." : "",
 } 
 
 month_dict = {
@@ -78,6 +79,7 @@ class MapWindow(QWindow):
     self.date_boxes = []
     self.curr_month = None
     self.curr_year = None
+    self.dataType = ''
     self.window = QWidget()
     self.layout = QVBoxLayout()
     self.navbar = QHBoxLayout()
@@ -121,13 +123,18 @@ class MapWindow(QWindow):
     
     #State/County Selection
     self.state_list = QComboBox()
-    self.state_list.addItems(['Select State...', 'AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
+    self.state_list.addItems(['Select State...', 'AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA', 'HI', 'IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
     self.state_list.currentIndexChanged.connect(self.state_list_change)
     self.county_list = QComboBox()
     self.county_list.addItem('Select County...')
     self.county_list.activated.connect(self.county_list_change)
+    self.dataType_list = QComboBox()
+    self.dataType_list.addItems(['Select Data Type...', 'Maximum Temperature', 'Minimum Temperature', 'Average Temperature', 'Precipitation'])
+    self.dataType_list.activated.connect(self.dataType_list_change)
     self.selection.addWidget(self.state_list)
     self.selection.addWidget(self.county_list)
+    self.selection.addWidget(self.dataType_list)
+
 
     #Data table
     self.data_tree = QTreeView()
@@ -186,6 +193,9 @@ class MapWindow(QWindow):
     self.county_list.addItems(data)
     self.state_boxes.append(self.state_list.currentText())
     print(self.state_boxes)
+  def dataType_list_change(self):
+    self.dataType = datatype_dict[self.dataType_list.currentText()]
+    print(self.dataType)
   #Displays slider value
   def yearSlideBoxChange(self):
     self.yearSlider.setValue(int(self.yearSliderBox.text()))
@@ -214,16 +224,18 @@ class MapWindow(QWindow):
     if not self.state_boxes:
       print("You must selected atleast 1 state!")
       return
-
+    if self.dataType == '':
+      print("You must select a data type!")
+      return
     if not self.county_boxes:
-      df = database.get_map_data_for_states(self.state_boxes, 'US', ['tmp_avg'], [self.curr_month], self.curr_year, self.curr_year)
+      df = database.get_map_data_for_states(self.state_boxes, 'US', [self.dataType], [self.curr_month], self.curr_year, self.curr_year)
     else:
-      df = database.get_map_data_for_counties(self.state_boxes, self.county_boxes, 'US', ['tmp_avg'], [self.curr_month], self.curr_year, self.curr_year)
+      df = database.get_map_data_for_counties(self.state_boxes, self.county_boxes, 'US', [self.dataType], [self.curr_month], self.curr_year, self.curr_year)
     print(df)
     with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
       counties = json.load(response)
 
-    cli_map = px.choropleth(df, geojson=counties, locations='fips_code', color='tmp_avg_'+self.curr_month, color_continuous_scale='jet',range_color=(10,130), scope='usa', hover_name='county_name', hover_data=['state'])
+    cli_map = px.choropleth(df, geojson=counties, locations='fips_code', color=self.dataType+"_"+self.curr_month, color_continuous_scale='jet',range_color=(10,130), scope='usa', hover_name='county_name', hover_data=['state'])
     cli_map.update_layout(title='Climate Data')
     cli_map.update_geos(fitbounds='locations', visible=True)
     cli_map.write_html('HTML/map_fig.html')
