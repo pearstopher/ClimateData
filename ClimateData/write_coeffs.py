@@ -406,26 +406,6 @@ def build_coeffs_by_month_single_file(deg, deriv=0, months=None):
     precip_poly_df.to_csv(f"precip_poly_coeffs_3.csv", sep=',', encoding='utf-8', index=False)
     print(f'Successfully wrote polynomial coeffs to csv!')
 
-'''
-def get_oregon_year_data():
-    df = pd.DataFrame()
-    state = 'OR'
-    country = 'US'
-    start_year = 1895
-    end_year = 2021
-    cols = ['tmp_avg_jan', 'tmp_avg_feb', 'tmp_avg_mar', 'tmp_avg_apr', 'tmp_avg_may', 'tmp_avg_jun',
-            'tmp_avg_jul',
-            'tmp_avg_aug', 'tmp_avg_sep', 'tmp_avg_oct', 'tmp_avg_nov', 'tmp_avg_dec']
-
-    state_df = get_data_for_state(temp_avg_cols, state, country, start_year, end_year)
-    county_dict = state_df['county_name'].unique()
-    for county in county_dict:
-        county_df = get_data_for_single_county(temp_avg_cols, county, state, country, start_year, end_year)
-        county_df['year_avg'] = county_df[cols].mean(axis=1)
-        df[county] = county_df['year_avg']
-
-    df.to_csv('oregon_counties_year_avg.csv', sep=',', encoding='utf-8', index=False)
-'''
 
 def build_all_coefficients(deg):
     start_year = 1895
