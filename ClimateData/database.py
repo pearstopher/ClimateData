@@ -562,7 +562,7 @@ def get_map_data_for_counties(states, counties, country, columns, months, startY
             columnList.append(to_add)
 
     for index, state in enumerate(states):
-        for county in counties[index]:
+        for county in counties:
             idList.append(get_id_by_county(county, state, country))
     
     results = get_map_weather_data(columnList, idList, startYear, endYear)

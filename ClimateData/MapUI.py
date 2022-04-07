@@ -144,6 +144,7 @@ class MapWindow(QWindow):
     self.data_table.setHeaderData(2, Qt.Horizontal, "County FIPS")
     self.data_table.setHeaderData(3, Qt.Horizontal, "Country")
     self.data_tree.setModel(self.data_table)
+    self.data_tree.setMaximumHeight(200)
     self.echo.addWidget(self.data_tree)
 
     #Set title and add widgets and layouts to main window. 
@@ -234,7 +235,7 @@ class MapWindow(QWindow):
     print(df)
     with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
       counties = json.load(response)
-
+    
     cli_map = px.choropleth(df, geojson=counties, locations='fips_code', color=self.dataType+"_"+self.curr_month, color_continuous_scale='jet',range_color=(10,130), scope='usa', hover_name='county_name', hover_data=['state'])
     cli_map.update_layout(title='Climate Data')
     cli_map.update_geos(fitbounds='locations', visible=True)
