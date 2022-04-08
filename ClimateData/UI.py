@@ -174,14 +174,6 @@ class graphPage(tk.Frame):
 
         #The data has been entered/ selected by the user. Here is it:
         def on_enter_data():
-<<<<<<< HEAD
-            [begin_month, begin_year] = self.begin_date.get().split('/')
-            [end_month, end_year] = self.end_date.get().split('/')
-            begin_month = month_dict[begin_month]
-            end_month = month_dict[end_month]
-            
-            polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
-=======
             [begin_month_num, begin_year] = self.begin_date.get().split('/')
             [end_month_num, end_year] = self.end_date.get().split('/')
             begin_month = month_dict[begin_month_num]
@@ -199,7 +191,6 @@ class graphPage(tk.Frame):
             if derivitive_degree != None:
                 plot_type = 'poly_deriv'
 
->>>>>>> 7d7f73fb5736f0bf00a015ba8ff703597c1c8327
             data_type =  datatype_dict[self.dropdown_graphs.get()]
             # Intermediate Steps
             rows = self.data_table.get_children()
@@ -236,23 +227,11 @@ class graphPage(tk.Frame):
 
             df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], months, int(begin_year), int(end_year))
 
-<<<<<<< HEAD
-            # We only need the ID and the data here - Remove everything else
-            # TODO: Make the function only return this data
-            for i, df in enumerate(df_list):
-                df_list[i] = pd.concat([df_list[i].iloc[:, 0], df_list[i].iloc[:, 4:]], axis=1)
-
-            # Flatten the list of counties
-            fig = plotting.plot('scatter_poly', df_list, {'process_type': 'months', 'begin_month': monthsIdx[begin_month],
-                                                          'degree': polynomial_degree, 'plots_per_graph' : len(df_list), 'counties' : counties})
-            canvas = FigureCanvasTkAgg(fig, master=master)  
-=======
             counties = list(chain(*counties))
             fig = plotting.plot(plot_type, df_list, {'process_type': 'months', 'begin_month': monthsIdx[begin_month],
                                                           'degree': polynomial_degree, 'deriv_degree': derivitive_degree,
                                                           'plots_per_graph' : len(df_list), 'counties' : counties})
             canvas = FigureCanvasTkAgg(fig, master = master)  
->>>>>>> 7d7f73fb5736f0bf00a015ba8ff703597c1c8327
             canvas.draw()
             canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
 
