@@ -299,6 +299,7 @@ class graphPage(tk.Frame):
                     sub_btn2.grid(row=7, column=1, padx=(450, 0), pady=(30,0))
                 else:
                     self.ent = None
+                    self.ent2 = None
                     degree = event.widget.get()
                     print("Degree of equation is: ")
                     print(degree_dict[degree])
