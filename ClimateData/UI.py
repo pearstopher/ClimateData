@@ -169,7 +169,7 @@ class graphPage(tk.Frame):
             end_month = month_dict[end_month_num]
             months = []
 
-            for monthNum in range(int(begin_month_num), int(end_month_num)):
+            for monthNum in range(int(begin_month_num), int(end_month_num)+1):
                 month = str(monthNum).zfill(2)
                 months.append(month_dict[month])
 
