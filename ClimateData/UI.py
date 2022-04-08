@@ -163,11 +163,16 @@ class graphPage(tk.Frame):
 
         #The data has been entered/ selected by the user. Here is it:
         def on_enter_data():
-            [begin_month, begin_year] = self.begin_date.get().split('/')
-            [end_month, end_year] = self.end_date.get().split('/')
-            begin_month = month_dict[begin_month]
-            end_month = month_dict[end_month]
-            
+            [begin_month_num, begin_year] = self.begin_date.get().split('/')
+            [end_month_num, end_year] = self.end_date.get().split('/')
+            begin_month = month_dict[begin_month_num]
+            end_month = month_dict[end_month_num]
+            months = []
+
+            for monthNum in range(int(begin_month_num), int(end_month_num)):
+                month = str(monthNum).zfill(2)
+                months.append(month_dict[month])
+
             polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else self.ent.get()
             data_type =  datatype_dict[self.dropdown_graphs.get()]
             # Intermediate Steps
@@ -203,7 +208,7 @@ class graphPage(tk.Frame):
             monthsIdx = {'jan' : 0, 'feb' : 1, 'mar' : 2, 'apr': 3, 'may': 4, 'jun': 5, 
                          'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11}
 
-            df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], begin_month, end_month, int(begin_year), int(end_year))
+            df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], months, int(begin_year), int(end_year))
 
             counties = list(chain(*counties))
             fig = plotting.plot('scatter_poly', df_list, {'process_type': 'months', 'begin_month': monthsIdx[begin_month],
