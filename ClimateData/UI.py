@@ -165,13 +165,6 @@ class graphPage(tk.Frame):
                 print("Degree is: ")
                 print(self.ent.get())
 
-        def on_submit_derivitive():
-            if validate_degree(self.ent2.get()) == False:
-                tkboot.dialogs.Messagebox.show_error("Invalid degree entry. \nDegree must be a number.", title='Invalid degree entry')
-            else:
-                print("Derivitive Degree is: ")
-                print(self.ent2.get())
-
         #The data has been entered/ selected by the user. Here is it:
         def on_enter_data():
             [begin_month_num, begin_year] = self.begin_date.get().split('/')
@@ -280,28 +273,10 @@ class graphPage(tk.Frame):
                     self.ent.grid(row=6, column=1, padx=(240,0), pady=(30,0))
                     degree_label = tk.Label(self.frame_right, font="10", text="Degree: ")
                     degree_label.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
-                    sub_btn = tkboot.Button(
-                        self.frame_right,
-                        text="Submit degree",
-                        command=on_submit_degree,
-                        bootstyle="blue",
-                        width=12
-                    )
-                    sub_btn.grid(row=6, column=1, padx=(450, 0), pady=(30,0))
-                    #sub_btn.focus_set()
-
                     self.ent2 = tkboot.Entry(self.frame_right, width="6")
                     self.ent2.grid(row=7, column=1, padx=(240,0), pady=(30,0))
                     deriv_label = tk.Label(self.frame_right, font="10", text="Derivitive: ")
                     deriv_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
-                    sub_btn2 = tkboot.Button(
-                        self.frame_right,
-                        text="Submit Derivitive",
-                        command=on_submit_derivitive,
-                        bootstyle="blue",
-                        width=12
-                    )
-                    sub_btn2.grid(row=7, column=1, padx=(450, 0), pady=(30,0))
                 else:
                     self.ent = None
                     self.ent2 = None
