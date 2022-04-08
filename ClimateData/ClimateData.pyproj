@@ -11,7 +11,6 @@
     <OutputPath>.</OutputPath>
     <Name>ClimateData</Name>
     <RootNamespace>ClimateData</RootNamespace>
-    <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -24,8 +23,8 @@
   <ItemGroup>
     <Compile Include="ClimateData.py" />
     <Compile Include="database.py" />
+    <Compile Include="MapUI.py" />
     <Compile Include="plotting.py" />
-    <Compile Include="plotting_test.py" />
     <Compile Include="preprocess.py">
       <SubType>Code</SubType>
     </Compile>

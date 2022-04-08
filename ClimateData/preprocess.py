@@ -14,6 +14,7 @@ datadir = './data/raw/'
 droughtDir = f'{datadir}drought/'
 weatherDir = f'{datadir}weather/'
 outputDir = './data/processed/'
+order = ['min', 'avg', 'max', 'precip']
 months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 
 weatherFileName = 'weather.csv'
@@ -211,6 +212,7 @@ def convert_county_coords():
           id += 1
 
 def build_weather_table():
+    filesToStrip = ['mintmp', 'avgtmp', 'maxtmp', 'precip']
     filesToStrip = ['avgtmp', 'maxtmp', 'mintmp', 'precip']
     urlPaths = ['climdiv-tmpccy', 'climdiv-tmaxcy', 'climdiv-tmincy', 'climdiv-pcpncy']
     colsPrefix = ['tmp_avg', 'tmp_max', 'tmp_min', 'precip']
