@@ -114,7 +114,7 @@ class StartPage(tk.Frame):
         self.controller = controller
 
         button1 = TTK.Button(self, text = "Graph", width="15", bootstyle="secondary", command=lambda: controller.show_frame("graphPage"))
-        button2 = TTK.Button(self, text = "Map", width="15", bootstyle="secondary", command=lambda: controller.open_map("dataframe_placeholder"))
+        button2 = TTK.Button(self, text = "Map", width="15", bootstyle="secondary", command=lambda: controller.open_map("TODO:"))
         button1.grid(row=0, column=1, padx=(450,0), pady=(100,500))
         button2.grid(row=0, column=2, padx=(10,0), pady=(100,500))
 

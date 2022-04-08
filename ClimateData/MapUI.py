@@ -35,36 +35,6 @@ month_dict = {
     "12" : "dec"
 }
 
-
-def validate_dates(date):
-
-      #check that date is in correct format (month/year)
-      if bool(re.match("\d+\/\d+", date)) == False: 
-         return False
-      
-      [month, year] = date.split('/')
-
-      #check that years are four digits 
-      if len(year) != 4:
-        return False
-
-      return True
-
-def dateError():
-    print("Date Error")
-
-def padWithZero(val):
-    if len(val) < 5:
-      return "0" + val
-    else:
-      return val
-
-def updateFIPS(df):
-    for idx in range(len(df)):
-      df.at[idx, 'fips_code'] = padWithZero(str(df.iat[idx,1]))
-
-# testdf1 = database.get_map_data_for_states(['OR','FL'], 'US', ['tmp_avg'], 'jul', 'jul', 2019, 2019)
-
 class MapWindow(QWindow):
 
   def __init__(self, pdDF, *args, **kwargs):
@@ -286,19 +256,11 @@ class MapWindow(QWindow):
       states.append(boxes.currentText())
     return states
 
-  #Gets a list of dates specified on every line.
-  def getDates(self):
-    dates = []
-    for boxes in self.date_boxes:
-      if not validate_dates(boxes.text()):
-        dateError()
-        return
-      dates.append(boxes.text())
-    return dates
+ 
   
 
 
 if __name__ == "__main__":
   app = QApplication([])
-  window = MapWindow('yo')
+  window = MapWindow('TODO:')
   app.exec_()
