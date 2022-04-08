@@ -174,6 +174,17 @@ class graphPage(tk.Frame):
             end_month = month_dict[end_month]
             
             polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
+            [begin_month_num, begin_year] = self.begin_date.get().split('/')
+            [end_month_num, end_year] = self.end_date.get().split('/')
+            begin_month = month_dict[begin_month_num]
+            end_month = month_dict[end_month_num]
+            months = []
+
+            for monthNum in range(int(begin_month_num), int(end_month_num)+1):
+                month = str(monthNum).zfill(2)
+                months.append(month_dict[month])
+
+            polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else self.ent.get()
             data_type =  datatype_dict[self.dropdown_graphs.get()]
             # Intermediate Steps
             rows = self.data_table.get_children()
@@ -208,7 +219,7 @@ class graphPage(tk.Frame):
             monthsIdx = {'jan' : 0, 'feb' : 1, 'mar' : 2, 'apr': 3, 'may': 4, 'jun': 5, 
                          'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11}
 
-            df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], begin_month, end_month, int(begin_year), int(end_year))
+            df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], months, int(begin_year), int(end_year))
 
             # We only need the ID and the data here - Remove everything else
             # TODO: Make the function only return this data
