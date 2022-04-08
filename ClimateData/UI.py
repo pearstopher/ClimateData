@@ -154,12 +154,18 @@ class graphPage(tk.Frame):
                 print("End year in correct format: " + end_year)
                 
         def on_submit_degree():
-           
             if validate_degree(self.ent.get()) == False:
                 tkboot.dialogs.Messagebox.show_error("Invalid degree entry. \nDegree must be a number.", title='Invalid degree entry')
             else:
                 print("Degree is: ")
                 print(self.ent.get())
+
+        def on_submit_derivitive():
+            if validate_degree(self.ent2.get()) == False:
+                tkboot.dialogs.Messagebox.show_error("Invalid degree entry. \nDegree must be a number.", title='Invalid degree entry')
+            else:
+                print("Derivitive Degree is: ")
+                print(self.ent2.get())
 
         #The data has been entered/ selected by the user. Here is it:
         def on_enter_data():
@@ -173,7 +179,13 @@ class graphPage(tk.Frame):
                 month = str(monthNum).zfill(2)
                 months.append(month_dict[month])
 
-            polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else self.ent.get()
+            polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
+            derivitive_degree = None if self.ent2 == None else int(self.ent2.get())
+
+            plot_type = 'scatter_poly'
+            if derivitive_degree != None:
+                plot_type = 'poly_deriv'
+
             data_type =  datatype_dict[self.dropdown_graphs.get()]
             # Intermediate Steps
             rows = self.data_table.get_children()
@@ -211,8 +223,9 @@ class graphPage(tk.Frame):
             df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], months, int(begin_year), int(end_year))
 
             counties = list(chain(*counties))
-            fig = plotting.plot('scatter_poly', df_list, {'process_type': 'months', 'begin_month': monthsIdx[begin_month],
-                                                          'degree': polynomial_degree, 'plots_per_graph' : len(df_list), 'counties' : counties})
+            fig = plotting.plot(plot_type, df_list, {'process_type': 'months', 'begin_month': monthsIdx[begin_month],
+                                                          'degree': polynomial_degree, 'deriv_degree': derivitive_degree,
+                                                          'plots_per_graph' : len(df_list), 'counties' : counties})
             canvas = FigureCanvasTkAgg(fig, master = master)  
             canvas.draw()
             canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
@@ -257,6 +270,33 @@ class graphPage(tk.Frame):
                     )
                     sub_btn.grid(row=6, column=1, padx=(450, 0), pady=(30,0))
                     sub_btn.focus_set()
+                elif event.widget.get() == 'n-degree derivative':
+                    self.ent = tkboot.Entry(self.frame_right, width="6", textvariable=event.widget.get())
+                    self.ent.grid(row=6, column=1, padx=(240,0), pady=(30,0))
+                    degree_label = tk.Label(self.frame_right, font="10", text="Degree: ")
+                    degree_label.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+                    sub_btn = tkboot.Button(
+                        self.frame_right,
+                        text="Submit degree",
+                        command=on_submit_degree,
+                        bootstyle="blue",
+                        width=12
+                    )
+                    sub_btn.grid(row=6, column=1, padx=(450, 0), pady=(30,0))
+                    #sub_btn.focus_set()
+
+                    self.ent2 = tkboot.Entry(self.frame_right, width="6")
+                    self.ent2.grid(row=7, column=1, padx=(240,0), pady=(30,0))
+                    deriv_label = tk.Label(self.frame_right, font="10", text="Derivitive: ")
+                    deriv_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
+                    sub_btn2 = tkboot.Button(
+                        self.frame_right,
+                        text="Submit Derivitive",
+                        command=on_submit_derivitive,
+                        bootstyle="blue",
+                        width=12
+                    )
+                    sub_btn2.grid(row=7, column=1, padx=(450, 0), pady=(30,0))
                 else:
                     self.ent = None
                     degree = event.widget.get()
@@ -402,7 +442,7 @@ class graphPage(tk.Frame):
         self.dropdown_equations = TTK.Combobox(self.frame_right, font="Helvetica 12")
         self.dropdown_equations.set('Select equation...')
         self.dropdown_equations['state'] = 'readonly'
-        self.dropdown_equations['values'] = ['Linear', 'Quadratic', 'Cubic', 'n-degree..']
+        self.dropdown_equations['values'] = ['Linear', 'Quadratic', 'Cubic', 'n-degree..', 'n-degree derivative']
         self.dropdown_equations.bind('<<ComboboxSelected>>', gen_equation)
         self.dropdown_equations.grid(row=6, column=1,  padx=(0, 190), pady=(30, 0))
 
