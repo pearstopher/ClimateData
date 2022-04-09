@@ -209,7 +209,7 @@ class MapWindow(QWindow):
     range = (10,130)
 
     if self.dataType == 'precip':
-      colorscale = 'PuBu'
+      colorscale = 'dense'
       range = (0,15)
     cli_map = px.choropleth(df, geojson=counties, locations='fips_code', color=self.dataType+"_"+self.curr_month, color_continuous_scale=colorscale, range_color=range, scope='usa', hover_name='county_name', hover_data=['state'])
     cli_map.update_layout(title='Climate Data')
