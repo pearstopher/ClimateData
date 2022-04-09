@@ -12,6 +12,7 @@
     <Name>ClimateData</Name>
     <RootNamespace>ClimateData</RootNamespace>
     <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
+    <InterpreterId>Global|PythonCore|3.8</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -58,6 +59,9 @@
     <Content Include="data\raw\drought\climdiv-sp12st.txt" />
     <Content Include="data\raw\drought\climdiv-sp24st.txt" />
     <Content Include="data\raw\drought\drought-readme.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|PythonCore|3.8" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
