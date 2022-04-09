@@ -367,4 +367,4 @@ FodyWeavers.xsd
 /ClimateData/data/raw/drought/
 /ClimateData/config.json
 /ClimateData/data/raw/us-county-boundaries.csv
-/ClimateData/map_fig.html
+/ClimateData/HTML/map_fig.html
