@@ -205,7 +205,13 @@ class MapWindow(QWindow):
     with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
       counties = json.load(response)
     
-    cli_map = px.choropleth(df, geojson=counties, locations='fips_code', color=self.dataType+"_"+self.curr_month, color_continuous_scale='jet',range_color=(10,130), scope='usa', hover_name='county_name', hover_data=['state'])
+    colorscale = 'jet'
+    range = (10,130)
+
+    if self.dataType == 'precip':
+      colorscale = 'PuBu'
+      range = (0,15)
+    cli_map = px.choropleth(df, geojson=counties, locations='fips_code', color=self.dataType+"_"+self.curr_month, color_continuous_scale=colorscale, range_color=range, scope='usa', hover_name='county_name', hover_data=['state'])
     cli_map.update_layout(title='Climate Data')
     cli_map.update_geos(fitbounds='locations', visible=True)
     cli_map.write_html('HTML/map_fig.html')
