@@ -673,5 +673,35 @@ def get_counties_for_state(state):
         results = ""
 
     return results
+
+
+def get_selected_counties_for_state(state, county):
+    results = None
+    try:
+        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+    except OperationalError as error:
+        print_psycopg2_exception(error)
+        conn = None
+
+    if conn != None:
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+            SELECT state, county_name, county_code, country FROM county_codes WHERE county_name = %s AND state = %s;
+            """,
+            [county, state])
+            conn.commit()
+            results = cur.fetchall()
+        except Exception as error:
+            print_psycopg2_exception(error)
+
+        cur.close()
+        conn.close()
+    if results is None:
+        print("No counties were found for given state and counties")
+        results = ""
+    
+    return results
+
 if __name__ == "__main__":
     setup_database()

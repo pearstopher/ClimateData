@@ -73,10 +73,6 @@ def validate_degree(degree):
     return True
 
 
-# Setup database connection
-conn = psycopg2.connect("host=localhost dbname=postgres user=postgres password=PASSWORD")
-cur = conn.cursor()
-
 class App(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
@@ -294,15 +290,11 @@ class graphPage(tk.Frame):
 
         def gen_counties(event=None):
             if event == None:
-                county_name = ''
+                state = ''
             else:
-                county_name = event.widget.get()
-            cur.execute("""
-            SELECT county_name FROM county_codes WHERE state = %s;
-            """,
-            [county_name])
-            conn.commit()
-            data = cur.fetchall()
+                state = event.widget.get()
+            data = get_counties_for_state(state)
+
             print("Your query returned this data: ")
             data = [ x[0] for x in data ]
             print(data)
@@ -318,12 +310,7 @@ class graphPage(tk.Frame):
                 state = self.dropdown_state.get()
             #for child in self.data_table.get_children():
                 #self.data_table.delete(child)
-            cur.execute("""
-            SELECT state, county_name, county_code, country FROM county_codes WHERE county_name = %s AND state = %s;
-            """,
-            [county_name, state])
-            conn.commit()
-            data = cur.fetchall()
+            data = get_selected_counties_for_state(state, county_name)
             print("Your query returned this data: ")
             print(data)
             for row in data:
