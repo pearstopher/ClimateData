@@ -108,11 +108,11 @@ class MapWindow(QWindow):
 
     #Data table
     self.data_tree = QTreeView()
-    self.data_table = QStandardItemModel(0,4)
+    self.data_table = QStandardItemModel(0,3)
     self.data_table.setHeaderData(0, Qt.Horizontal, "State")
     self.data_table.setHeaderData(1, Qt.Horizontal, "County Name")
-    self.data_table.setHeaderData(2, Qt.Horizontal, "County FIPS")
-    self.data_table.setHeaderData(3, Qt.Horizontal, "Country")
+    #self.data_table.setHeaderData(2, Qt.Horizontal, "County FIPS")
+    self.data_table.setHeaderData(2, Qt.Horizontal, "Country")
     self.data_tree.setModel(self.data_table)
     self.data_tree.setMaximumHeight(200)
     self.echo.addWidget(self.data_tree)
@@ -134,6 +134,14 @@ class MapWindow(QWindow):
     self.county_boxes.append(self.county_list.currentText())
     self.state_boxes = list(set(self.state_boxes))
     self.county_boxes = list(set(self.county_boxes))
+    model = self.data_tree.model()
+    
+    #match = model.findItems(self.county_list.currentText(), Qt.MatchExactly, column=1)
+    #if len(match) == 0:
+    model.insertRow(0)
+    model.setData(model.index(0, 0), self.state_list.currentText())
+    model.setData(model.index(0, 1), self.county_list.currentText())
+    model.setData(model.index(0, 2), "US")
     print(self.state_boxes)
     print(self.county_boxes)
 
