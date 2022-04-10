@@ -63,11 +63,11 @@ month_abbrev_to_whole = {
 def validate_dates(start, end):
 
     #check that date is in correct format (month/year)
-    if bool(re.match("\d+\/\d+", start)) == False or bool(re.match("\d+\/\d+", end)) == False: 
+    if bool(re.match("^[0-9]{4}$", start)) == False or bool(re.match("[0-9]{4}$", end)) == False: 
         return False
    
-    [begin_month, begin_year] = start.split('/')
-    [end_month, end_year] = end.split('/')
+    begin_year = start
+    end_year= end
 
     #check that years are four digits 
     if len(begin_year) != 4 or len(end_year) != 4:
@@ -171,8 +171,8 @@ class graphPage(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        self.begin_date = tkboot.StringVar(value="")
-        self.end_date = tkboot.StringVar(value="")
+        self.begin_year = tkboot.StringVar(value="")
+        self.end_year = tkboot.StringVar(value="")
         self.n_degree = tkboot.StringVar(value="")
 
         def on_submit_degree():
@@ -196,10 +196,9 @@ class graphPage(tk.Frame):
             self.button_coeff = TTK.Button(self.tab, width="16", text="Export data to CSV", bootstyle="blue")
             self.button_coeff.grid(row=9, column=1, padx=(537,0), pady=(50, 0))
 
-            [begin_month, begin_year] = self.begin_date.get().split('/')
-            [end_month, end_year] = self.end_date.get().split('/')
-            begin_month = month_dict[begin_month]
-            end_month = month_dict[end_month]
+            begin_year = self.begin_year.get()
+            end_year = self.end_year.get()
+            
             
             polynomial_degree = degree_dict[self.dropdown_equations.get()]
             data_type =  datatype_dict[self.dropdown_graphs.get()]
@@ -208,6 +207,7 @@ class graphPage(tk.Frame):
             states = []
             county_codes = []
             countries = []
+            months = []
             temp_dict = {}
             for line in rows:
                 values = self.data_table.item(line)['values']
@@ -222,10 +222,8 @@ class graphPage(tk.Frame):
                 #make counties list of lists:
                 if values[0] in temp_dict:
                     temp_dict[values[0]].append(values[1])
-                    print("in if")
                     print(temp_dict[values[0]])
                 else:
-                    print("in else")
                     temp_dict[values[0]] = [values[1]]
                     print(temp_dict[values[0]])
             
@@ -236,7 +234,9 @@ class graphPage(tk.Frame):
             monthsIdx = {'jan' : 0, 'feb' : 1, 'mar' : 2, 'apr': 3, 'may': 4, 'jun': 5, 
                          'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11}
 
-            df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], begin_month, end_month, int(begin_year), int(end_year))
+            print("States: ", states, "Counties: ", counties, "Country: US", "Data type: ", [data_type], "Months: ", months, "Begin year: ", begin_year, "End year: ", end_year)
+            df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], months, int(begin_year), int(end_year))
+            #df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], begin_month, end_month, int(begin_year), int(end_year))
 
             # We only need the ID and the data here - Remove everything else
             # TODO: Make the function only return this data
@@ -377,16 +377,16 @@ class graphPage(tk.Frame):
             self.notebook_label.grid(row=1, column=0, padx=(10, 710), pady=10)
 
             #Date range widgets
-            self.begin_date_ent = tkboot.Entry(self.tab, textvariable=self.begin_date, width=10)
+            self.begin_date_ent = tkboot.Entry(self.tab, textvariable=self.begin_year, width=10)
             self.begin_date_ent.grid(row=4, column=1, padx=(40,0), pady=(0,0))
 
-            self.end_date_ent = tkboot.Entry(self.tab, textvariable=self.end_date, width=10)
+            self.end_date_ent = tkboot.Entry(self.tab, textvariable=self.end_year, width=10)
             self.end_date_ent.grid(row=5, column=1, padx=(40, 0), pady=(0,0))
 
-            self.begin_date_label = tkboot.Label(self.tab, font="10", text="Date range begin: ", bootstyle="inverse-dark")
+            self.begin_date_label = tkboot.Label(self.tab, font="10", text="Year range begin: ", bootstyle="inverse-dark")
             self.begin_date_label.grid(row=4, column=1, padx=(0, 250), pady=(0,0))        
 
-            self.end_date_label = tkboot.Label(self.tab, font="10", text="Date range end: ", bootstyle="inverse-dark")
+            self.end_date_label = tkboot.Label(self.tab, font="10", text="Year range end: ", bootstyle="inverse-dark")
 
             self.end_date_label.grid(row=5, column=1, padx=(0, 265), pady=(0,0))
             self.specific_months = TTK.Combobox(self.tab, font="Helvetica 12")
