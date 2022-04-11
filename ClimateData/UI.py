@@ -63,20 +63,17 @@ month_abbrev_to_whole = {
 # Helper Functions --------------------------------------------------
 
 def validate_dates(start, end):
-
     #check that date is in correct format (month/year)
-    if bool(re.match("^[0-9]{4}$", start)) == False or bool(re.match("[0-9]{4}$", end)) == False: 
+    if bool(re.match("\d+\/\d{4}", start)) == False or bool(re.match("\d+\/\d{4}", end)) == False:
+        print("Dates were not in correct format") 
         return False
    
-    begin_year = start
-    end_year= end
-
-    #check that years are four digits 
-    if len(begin_year) != 4 or len(end_year) != 4:
-        return False
+    begin_year = start.split('/')[1]
+    end_year= end.split('/')[1]
 
     #check that first year occurs before second year
     if bool(begin_year < end_year) == False:
+        print("First year was not before last year")
         return False
 
     return True
@@ -176,7 +173,26 @@ class graphPage(tk.Frame):
 
         self.begin_year = tkboot.StringVar(value="")
         self.end_year = tkboot.StringVar(value="")
+        self.begin_date = tkboot.StringVar(value="")
+        self.end_date = tkboot.StringVar(value="")
         self.n_degree = tkboot.StringVar(value="")
+
+        def on_submit():
+            #user input is invalid, call validate_dates function
+            if validate_dates(self.begin_year.get(), self.end_year.get()) == False:    
+                tkboot.dialogs.Messagebox.show_error(f"Invalid date entry. \nEntry rules: \n- Entry must be in form: 'month/year' \n- Years must be in chronological order \n- Years must be four digits \n- Entry example: '06/1993'\n You entered: {self.begin_year.get()} || {self.end_year.get()}", title='Invalid date entry')
+
+            else: 
+                #user input is valid, parse it into two months and two years
+                print("User entered this begin date: " + self.begin_year.get())
+                print("User entered this ending date: " + self.end_year.get())
+                print("parsing data into months/ years.....")
+                [begin_month, begin_year] = self.begin_year.get().split('/')
+                [end_month, end_year] = self.end_year.get().split('/')
+                print("Begin month in correct format: " + begin_month)
+                print("Begin year in correct format: " + begin_year)
+                print("End month in correct format: " + end_month)
+                print("End year in correct format: " + end_year)
 
         def on_submit_degree():
             if validate_degree(self.ent.get()) == False:
@@ -190,6 +206,10 @@ class graphPage(tk.Frame):
 
         #The data has been entered/ selected by the user. Here is it:
         def on_enter_data():
+
+            [begin_month_num, begin_year] = self.begin_year.get().split('/')
+            [end_month_num, end_year] = self.end_year.get().split('/')
+            months = []
             #Coefficient Button
 
             self.button_coeff = TTK.Button(self.tab, width="15", text="View Coefficients", bootstyle="blue")
@@ -200,16 +220,14 @@ class graphPage(tk.Frame):
 
             
             polynomial_degree = degree_dict[self.dropdown_equations.get()]
-            begin_year = self.begin_year.get()
-            end_year = self.end_year.get()
             begin_month = month_dict[begin_month_num]
             end_month = month_dict[end_month_num]
-            months = []
 
             for monthNum in range(int(begin_month_num), int(end_month_num)+1):
                 month = str(monthNum).zfill(2)
                 months.append(month_dict[month])
 
+            monthly_split = self.monthly_check_var.get()
             polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
             derivitive_degree = None if self.ent2 == None else int(self.ent2.get())
 
@@ -217,13 +235,17 @@ class graphPage(tk.Frame):
             if derivitive_degree != None:
                 plot_type = 'poly_deriv'
 
+            process_type = 'normal'
+            if monthly_split:
+                process_type = 'monthly'
+
+
             data_type =  datatype_dict[self.dropdown_graphs.get()]
             # Intermediate Steps
             rows = self.data_table.get_children()
             states = []
             county_codes = []
             countries = []
-            months = []
             temp_dict = {}
             for line in rows:
                 values = self.data_table.item(line)['values']
@@ -253,9 +275,10 @@ class graphPage(tk.Frame):
             df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], months, int(begin_year), int(end_year))
 
             counties = list(chain(*counties))
-            fig = plotting.plot(plot_type, df_list, {'process_type': 'months', 'begin_month': monthsIdx[begin_month],
-                                                          'degree': polynomial_degree, 'deriv_degree': derivitive_degree,
-                                                          'plots_per_graph' : len(df_list), 'counties' : counties})
+            fig = plotting.plot(plot_type, df_list, {'process_type': process_type, 
+                                                     'begin_month': monthsIdx[begin_month], 'end_month': monthsIdx[end_month],
+                                                     'degree': polynomial_degree, 'deriv_degree': derivitive_degree,
+                                                     'plots_per_graph' : len(df_list), 'counties' : counties})
             canvas = FigureCanvasTkAgg(fig, master = master)  
             canvas.draw()
             canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
@@ -301,13 +324,13 @@ class graphPage(tk.Frame):
                     sub_btn.grid(row=6, column=1, padx=(450, 0), pady=(30,0))
                     sub_btn.focus_set()
                 elif event.widget.get() == 'n-degree derivative':
-                    self.ent = tkboot.Entry(self.frame_right, width="6", textvariable=event.widget.get())
+                    self.ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                     self.ent.grid(row=6, column=1, padx=(240,0), pady=(30,0))
-                    degree_label = tk.Label(self.frame_right, font="10", text="Degree: ")
+                    degree_label = tk.Label(self.tab, font="10", text="Degree: ")
                     degree_label.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
-                    self.ent2 = tkboot.Entry(self.frame_right, width="6")
+                    self.ent2 = tkboot.Entry(self.tab, width="6")
                     self.ent2.grid(row=7, column=1, padx=(240,0), pady=(30,0))
-                    deriv_label = tk.Label(self.frame_right, font="10", text="Derivitive: ")
+                    deriv_label = tk.Label(self.tab, font="10", text="Derivitive: ")
                     deriv_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                 else:
                     self.ent = None
@@ -373,8 +396,6 @@ class graphPage(tk.Frame):
             for row in data:
                 self.data_table.insert(parent='', index='end', values=row)
             self.data_table.grid(row=2, column=1, pady=(0,40), padx=(250, 235))
-
-
 
         def widgets(frame):
             self.tab = tk.Frame(frame, width=1920, height=1080)
@@ -503,6 +524,36 @@ class graphPage(tk.Frame):
         #tab1 = tk.Frame(frame, width=1920, height=1080)
         tab1 = widgets(frame)
         frame.add(tab1, text = "Main")
+        #frame = tk.Frame(self)
+        #frame.grid(row=0, sticky="nw")
+        #frame.grid_rowconfigure(0, weight=1)
+        #frame.grid_columnconfigure(1, weight=1)            
+        #frame.grid_columnconfigure(2, weight=1)
+        #frame.grid_columnconfigure(3, weight=1)
+
+        # Initialize Photo widget
+        #img = tk.PhotoImage(file='images/cubic_graph.png')
+        #label = tk.Label(frame_left, image=img)
+        #label.image = img
+        #label.grid(row=2, column=0, pady=(0, 0), padx=(80, 0))
+
+        #Notebook   
+        self.notebook_label = tk.Label(self.tab, font="12", text="Notebook: ")
+        self.notebook_label.grid(row=1, column=0, padx=(10, 710), pady=(0,10))
+
+        self.monthly_check_var = tk.IntVar()
+        self.monthly_check = TTK.Checkbutton(self.tab, text='Split Months', variable=self.monthly_check_var)
+        self.monthly_check.grid(row=4, column=1,  padx=(450, 0), pady=(0, 0))
+
+        self.sub_btn = tkboot.Button(
+            self.tab,
+            text="Submit dates",
+            command=on_submit,
+            bootstyle="blue",
+            width=12,
+        )
+        self.sub_btn.grid(row=5, column=1, padx=(450, 0), pady=(0,0))
+        self.sub_btn.focus_set()
         
 # WIDGETS ----------------------------------------------------------------------------       
         

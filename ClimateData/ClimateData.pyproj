@@ -11,6 +11,7 @@
     <OutputPath>.</OutputPath>
     <Name>ClimateData</Name>
     <RootNamespace>ClimateData</RootNamespace>
+    <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
     <InterpreterId>Global|PythonCore|3.8</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -61,6 +62,9 @@
     <Content Include="data\raw\drought\drought-readme.txt" />
     <Content Include="HTML\default_fig.html" />
     <Content Include="HTML\map_fig.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|PythonCore|3.8" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|PythonCore|3.8" />
