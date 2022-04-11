@@ -11,7 +11,7 @@
     <OutputPath>.</OutputPath>
     <Name>ClimateData</Name>
     <RootNamespace>ClimateData</RootNamespace>
-    <SuppressConfigureTestFrameworkPrompt>true</SuppressConfigureTestFrameworkPrompt>
+    <InterpreterId>Global|PythonCore|3.8</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -24,8 +24,8 @@
   <ItemGroup>
     <Compile Include="ClimateData.py" />
     <Compile Include="database.py" />
+    <Compile Include="MapUI.py" />
     <Compile Include="plotting.py" />
-    <Compile Include="plotting_test.py" />
     <Compile Include="preprocess.py">
       <SubType>Code</SubType>
     </Compile>
@@ -36,6 +36,7 @@
     <Folder Include="data\processed\" />
     <Folder Include="data\raw\" />
     <Folder Include="data\raw\drought\" />
+    <Folder Include="HTML\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="data\processed\county-to-climdivs.csv" />
@@ -58,6 +59,11 @@
     <Content Include="data\raw\drought\climdiv-sp12st.txt" />
     <Content Include="data\raw\drought\climdiv-sp24st.txt" />
     <Content Include="data\raw\drought\drought-readme.txt" />
+    <Content Include="HTML\default_fig.html" />
+    <Content Include="HTML\map_fig.html" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|PythonCore|3.8" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in

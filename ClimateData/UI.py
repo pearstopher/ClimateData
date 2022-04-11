@@ -11,6 +11,8 @@ import plotting
 import re
 from itertools import chain
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
+import MapUI
+from PyQt5.QtWidgets import *                   #pip install PyQt5
 
 # Dictionaries
 degree_dict = {
@@ -89,16 +91,14 @@ def validate_degree(degree):
     return True
 
 
-# Setup database connection
-conn = psycopg2.connect("host=localhost dbname=postgres user=postgres password=PASSWORD")
-cur = conn.cursor()
-
 class App(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
         self.title('Climate Data')
         self.geometry('1920x1080')
         tkboot.Style('darkly')
+
+        self.app = QApplication([])
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
         container = ttk.Notebook(self)
         tab1 = tk.Frame(container, width=1920, height=1080)
@@ -142,15 +142,18 @@ class App(tk.Tk):
         frame = self.frames[page_name]
         print(frame,"This is the frame")
         frame.tkraise()
-    
-    
+
+    def open_map(self, df):
+      window = MapUI.MapWindow(df)
+      self.app.exec_()
+
 class StartPage(tk.Frame):
     def __init__(self, parent, controller, master):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
         button1 = TTK.Button(self, text = "Graph", width="15", bootstyle="secondary", command=lambda: controller.show_frame("graphPage"))
-        button2 = TTK.Button(self, text = "Map", width="15", bootstyle="secondary", command=lambda: controller.show_frame("mapPage"))
+        button2 = TTK.Button(self, text = "Map", width="15", bootstyle="secondary", command=lambda: controller.open_map("TODO:"))
         button1.grid(row=0, column=1, padx=(450,0), pady=(100,500))
         button2.grid(row=0, column=2, padx=(10,0), pady=(100,500))
 
@@ -176,7 +179,6 @@ class graphPage(tk.Frame):
         self.n_degree = tkboot.StringVar(value="")
 
         def on_submit_degree():
-
             if validate_degree(self.ent.get()) == False:
                 tkboot.dialogs.Messagebox.show_error("Invalid degree entry. \nDegree must be a number.", title='Invalid degree entry')
             else:
@@ -196,11 +198,25 @@ class graphPage(tk.Frame):
             self.button_coeff = TTK.Button(self.tab, width="16", text="Export data to CSV", bootstyle="blue")
             self.button_coeff.grid(row=9, column=1, padx=(537,0), pady=(50, 0))
 
-            begin_year = self.begin_year.get()
-            end_year = self.end_year.get()
-            
             
             polynomial_degree = degree_dict[self.dropdown_equations.get()]
+            begin_year = self.begin_year.get()
+            end_year = self.end_year.get()
+            begin_month = month_dict[begin_month_num]
+            end_month = month_dict[end_month_num]
+            months = []
+
+            for monthNum in range(int(begin_month_num), int(end_month_num)+1):
+                month = str(monthNum).zfill(2)
+                months.append(month_dict[month])
+
+            polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
+            derivitive_degree = None if self.ent2 == None else int(self.ent2.get())
+
+            plot_type = 'scatter_poly'
+            if derivitive_degree != None:
+                plot_type = 'poly_deriv'
+
             data_type =  datatype_dict[self.dropdown_graphs.get()]
             # Intermediate Steps
             rows = self.data_table.get_children()
@@ -234,18 +250,12 @@ class graphPage(tk.Frame):
             monthsIdx = {'jan' : 0, 'feb' : 1, 'mar' : 2, 'apr': 3, 'may': 4, 'jun': 5, 
                          'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9, 'nov': 10, 'dec': 11}
 
-            print("States: ", states, "Counties: ", counties, "Country: US", "Data type: ", [data_type], "Months: ", months, "Begin year: ", begin_year, "End year: ", end_year)
             df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], months, int(begin_year), int(end_year))
-            #df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], begin_month, end_month, int(begin_year), int(end_year))
-
-            # We only need the ID and the data here - Remove everything else
-            # TODO: Make the function only return this data
-            for i, df in enumerate(df_list):
-                df_list[i] = pd.concat([df_list[i].iloc[:, 0], df_list[i].iloc[:, 4:]], axis=1)
 
             counties = list(chain(*counties))
-            fig = plotting.plot('scatter_poly', df_list, {'process_type': 'months', 'begin_month': monthsIdx[begin_month],
-                                                          'degree': polynomial_degree, 'plots_per_graph' : len(df_list), 'counties' : counties})
+            fig = plotting.plot(plot_type, df_list, {'process_type': 'months', 'begin_month': monthsIdx[begin_month],
+                                                          'degree': polynomial_degree, 'deriv_degree': derivitive_degree,
+                                                          'plots_per_graph' : len(df_list), 'counties' : counties})
             canvas = FigureCanvasTkAgg(fig, master = master)  
             canvas.draw()
             canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
@@ -288,10 +298,20 @@ class graphPage(tk.Frame):
                         bootstyle="blue",
                         width=12
                     )
-                    sub_deg.grid(row=6, column=1, padx=(450, 0), pady=(30,0))
-                    sub_deg.focus_set()
+                    sub_btn.grid(row=6, column=1, padx=(450, 0), pady=(30,0))
+                    sub_btn.focus_set()
+                elif event.widget.get() == 'n-degree derivative':
+                    self.ent = tkboot.Entry(self.frame_right, width="6", textvariable=event.widget.get())
+                    self.ent.grid(row=6, column=1, padx=(240,0), pady=(30,0))
+                    degree_label = tk.Label(self.frame_right, font="10", text="Degree: ")
+                    degree_label.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+                    self.ent2 = tkboot.Entry(self.frame_right, width="6")
+                    self.ent2.grid(row=7, column=1, padx=(240,0), pady=(30,0))
+                    deriv_label = tk.Label(self.frame_right, font="10", text="Derivitive: ")
+                    deriv_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                 else:
-                    self.deg_ent = None
+                    self.ent = None
+                    self.ent2 = None
                     degree = event.widget.get()
                     print("Degree of equation is: ")
                     print(degree_dict[degree])
@@ -306,15 +326,11 @@ class graphPage(tk.Frame):
 
         def gen_counties(event=None):
             if event == None:
-                county_name = ''
+                state = ''
             else:
-                county_name = event.widget.get()
-            cur.execute("""
-            SELECT county_name FROM county_codes WHERE state = %s;
-            """,
-            [county_name])
-            conn.commit()
-            data = cur.fetchall()
+                state = event.widget.get()
+            data = get_counties_for_state(state)
+
             print("Your query returned this data: ")
             data = [ x[0] for x in data ]
             data = ['All Counties'] + data
@@ -348,18 +364,10 @@ class graphPage(tk.Frame):
             else:
                 county_name = event.widget.get()
                 state = self.dropdown_state.get()
-            if county_name == 'All Counties':
-                cur.execute("""
-                SELECT state, county_name, county_code, country FROM county_codes WHERE state = %s;
-                """,
-                [state])
-            else: 
-                cur.execute("""
-                SELECT state, county_name, county_code, country FROM county_codes WHERE county_name = %s AND state = %s;
-            """,
-                [county_name, state])
-            conn.commit()
-            data = cur.fetchall()
+            #for child in self.data_table.get_children():
+                #self.data_table.delete(child)
+
+            data = get_selected_counties_for_state(state, county_name)
             print("Your query returned this data: ")
             print(data)
             for row in data:
@@ -504,239 +512,3 @@ def start_ui():
 
 if __name__ == "__main__":
     start_ui()
-
-
-
-
-
-
-"""
-        #second tab ---------------------------------------------------------------------------------------------------------------------------->
-        self.notebook_label = tk.Label(tab2, font="12", text="Notebook: ")
-        self.notebook_label.grid(row=1, column=0, padx=(10, 710), pady=(0,10))
-
-        #Date range widgets
-        self.begin_date_ent = tkboot.Entry(tab2, textvariable=self.begin_date)
-        self.begin_date_ent.grid(row=4, column=1, padx=(100,0), pady=(0,0))
-
-        self.end_date_ent = tkboot.Entry(tab2, textvariable=self.end_date)
-        self.end_date_ent.grid(row=5, column=1, padx=(100, 0), pady=(0,0))
-
-        self.begin_date_label = tk.Label(tab2, font="10", text="Date range begin: ")
-        self.begin_date_label.grid(row=4, column=1, padx=(0, 250), pady=(0,0))        
-
-        self.end_date_label = tk.Label(tab2, font="10", text="Date range end: ")
-        self.end_date_label.grid(row=5, column=1, padx=(0, 265), pady=(0,0))
-
-        self.sub_btn = tkboot.Button(
-            tab2,
-            text="Submit dates",
-            command=on_submit,
-            bootstyle="blue",
-            width=12,
-        )
-        self.sub_btn.grid(row=5, column=1, padx=(450, 0), pady=(0,0))
-        self.sub_btn.focus_set()
-        
-
-        # Initialize Table Widget
-        self.data_table = TTK.Treeview(tab2)
-        self.data_table['columns'] = ('state', 'county_name', 'county_code', 'country')
-        self.data_table.column('#0', width=0, stretch=tk.NO)
-        self.data_table.column('state', width=110)
-        self.data_table.column('county_name', width=110)
-        self.data_table.column('county_code', width=110)
-        self.data_table.column('country', width=80)
-        self.data_table.heading('#0', text="", anchor=tk.CENTER)
-        self.data_table.heading('state', text="State")
-        self.data_table.heading('county_name', text="County Name")
-        self.data_table.heading('county_code', text="County Code")
-        self.data_table.heading('country', text="Country")
-
-        # Initialize State Dropdown Widget
-        self.dropdown_state = TTK.Combobox(tab2, font="Helvetica 12")
-        self.dropdown_state.set('Select state...')
-        self.dropdown_state['state'] = 'readonly'
-        self.dropdown_state['values'] = (['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
-        self.dropdown_state.bind('<<ComboboxSelected>>', gen_counties)
-        self.dropdown_state.grid(row=1, column=1, padx=(0, 190), pady=(20, 20))
-
-        # Initialize Counties Dropdown Widget
-        self.dropdown_county = TTK.Combobox(tab2, font="Helvetica 12")
-        self.dropdown_county.set('Select county...')
-        self.dropdown_county['state'] = 'readonly'
-        self.dropdown_county.bind('<<ComboboxSelected>>', gen_table)
-        self.dropdown_county.grid(row=1, column=1, padx=(290, 0), pady=(20, 20))
-
-        #Home button
-        self.button_back = TTK.Button(tab2, width="15", text="Back to home", bootstyle="blue", command=lambda: controller.show_frame("StartPage"))
-        self.button_back.grid(row=0, column=1, padx=(0,250), pady=(100, 10))
-
-        #Add instance to notebook button
-        self.button_notebook_add = TTK.Button(tab2, width="25", text="Add instance to notebook", bootstyle="blue")
-        self.button_notebook_add.grid(row=0, column=0, padx=(10,580), pady=(50, 20))
-
-        #Dropdown Widget for equation selection
-        self.dropdown_equations = TTK.Combobox(tab2, font="Helvetica 12")
-        self.dropdown_equations.set('Select equation...')
-        self.dropdown_equations['state'] = 'readonly'
-        self.dropdown_equations['values'] = ['Linear', 'Quadratic', 'Cubic', 'n-degree..']
-        self.dropdown_equations.bind('<<ComboboxSelected>>', gen_equation)
-        self.dropdown_equations.grid(row=6, column=1,  padx=(0, 190), pady=(30, 0))
-
-
-        #Dropdown for datatype selection
-        self.dropdown_graphs = TTK.Combobox(tab2, font="Helvetica 12")
-        self.dropdown_graphs.set('Select data type...')
-        self.dropdown_graphs['state'] = 'readonly'
-        self.dropdown_graphs['values'] = ["Minimum temperature", "Maximum temperature", "Average temperature", "Precipitation"]
-        self.dropdown_graphs.bind('<<ComboboxSelected>>', gen_datatype_columns)
-        self.dropdown_graphs.grid(row=7, column=1,  padx=(0, 190), pady=(30, 0))
-
-
-        #Button for submitting all that the user has entered
-        self.data_submit = tkboot.Button(
-            tab2, 
-            command=on_enter_data,
-            width="25", 
-            text="Graph it!", 
-            bootstyle=SUCCESS
-        )
-        self.data_submit.grid(row=8, column=1, padx=(0,173), pady=(150,0))
-        self.data_submit.focus_set()
-"""
-
-
-
-
-
-"""
-        # Frame
-        frame = ttk.Notebook(self)
-        frame.pack(pady=10, expand=True)
-        #container = tk.Frame(self)
-        #tab1 = tk.Frame(frame, width=1920, height=1080)
-        #tab2 = tk.Frame(frame, width=1920, height=1080)
-        #tab1.pack(fill='both', expand=True)
-        #tab2.pack(fill='both', expand=True)
-        #frame.add(tab1, text ='Notebook tab 1')
-        #frame.add(tab2, text ='Notebook tab 2')
-        #frame.pack(expand = 1, fill ="both")
-        frame = tk.Frame(self)
-        frame.grid(row=0, sticky="nw")
-        frame.grid_rowconfigure(0, weight=1)
-        frame.grid_columnconfigure(1, weight=1)            
-        frame.grid_columnconfigure(2, weight=1)
-        frame.grid_columnconfigure(3, weight=1)
-        tabs = ["Notebook1", "Notebook2", "Notebook3", "Notebook4"]
-        tab = tk.Frame(frame, width=1920, height=1080)
-        tab2 = tk.Frame(frame, width=1920, height=1080)
-        tab3 = tk.Frame(frame, width=1920, height=1080)
-        tab4 = tk.Frame(frame, width=1920, height=1080)
-        loop = {"Notebook1": tab, "Notebook2":tab2, "Notebook3":tab3, "Notebook4":tab4}
-        count = 0 
-        size = len(tabs)
-        for values in range(size):
-            print(loop[tabs[count]], "This is the data <--->")
-            #print(tabs[values])
-            #loop[count] = tk.Frame(frame, width=1920, height=1080)
-            frame.add(loop[tabs[count]], text =tabs[values])
-            #Notebook   
-            self.notebook_label = tk.Label(loop[tabs[count]], font="12", text=tabs[values]+":")
-            self.notebook_label.grid(row=1, column=0, padx=(10, 710), pady=0)
-
-            #Date range widgets
-            self.begin_date_ent = tkboot.Entry(loop[tabs[count]], textvariable=self.begin_date)
-            self.begin_date_ent.grid(row=4, column=1, padx=(100,0), pady=(0,0))
-
-            self.end_date_ent = tkboot.Entry(loop[tabs[count]], textvariable=self.end_date)
-            self.end_date_ent.grid(row=5, column=1, padx=(100, 0), pady=(0,0))
-
-            self.begin_date_label = tk.Label(loop[tabs[count]], font="10", text="Date range begin: ")
-            self.begin_date_label.grid(row=4, column=1, padx=(0, 250), pady=(0,0))        
-
-            self.end_date_label = tk.Label(loop[tabs[count]], font="10", text="Date range end: ")
-            self.end_date_label.grid(row=5, column=1, padx=(0, 265), pady=(0,0))
-
-            self.sub_btn = tkboot.Button(
-                loop[tabs[count]],
-                text="Submit dates",
-                command=on_submit,
-                bootstyle="blue",
-                width=12,
-            )
-            self.sub_btn.grid(row=5, column=1, padx=(450, 0), pady=(0,0))
-            self.sub_btn.focus_set()
-            
-
-            # Initialize Table Widget
-            self.data_table = TTK.Treeview(loop[tabs[count]])
-            self.data_table['columns'] = ('state', 'county_name', 'county_code', 'country')
-            self.data_table.column('#0', width=0, stretch=tk.NO)
-            self.data_table.column('state', width=110)
-            self.data_table.column('county_name', width=110)
-            self.data_table.column('county_code', width=110)
-            self.data_table.column('country', width=80)
-            self.data_table.heading('#0', text="", anchor=tk.CENTER)
-            self.data_table.heading('state', text="State")
-            self.data_table.heading('county_name', text="County Name")
-            self.data_table.heading('county_code', text="County Code")
-            self.data_table.heading('country', text="Country")
-
-            # Initialize State Dropdown Widget
-            self.dropdown_state = TTK.Combobox(loop[tabs[count]], font="Helvetica 12")
-            self.dropdown_state.set('Select state...')
-            self.dropdown_state['state'] = 'readonly'
-            self.dropdown_state['values'] = (['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
-            self.dropdown_state.bind('<<ComboboxSelected>>', gen_counties)
-            self.dropdown_state.grid(row=1, column=1, padx=(0, 190), pady=(20, 20))
-
-            # Initialize Counties Dropdown Widget
-            self.dropdown_county = TTK.Combobox(loop[tabs[count]], font="Helvetica 12")
-            self.dropdown_county.set('Select county...')
-            self.dropdown_county['state'] = 'readonly'
-            self.dropdown_county.bind('<<ComboboxSelected>>', gen_table)
-            self.dropdown_county.grid(row=1, column=1, padx=(290, 0), pady=(20, 20))
-
-            #Home button
-            self.button_back = TTK.Button(loop[tabs[count]], width="15", text="Back to home", bootstyle="blue", command=lambda: controller.show_frame("StartPage"))
-            self.button_back.grid(row=0, column=1, padx=(0,250), pady=(100, 10))
-
-            #Add instance to notebook button
-            #self.button_notebook_add = TTK.Button(tab1, width="25", text="Add instance to notebook", bootstyle="blue")
-            #self.button_notebook_add.grid(row=0, column=0, padx=(10,580), pady=(50, 20))
-
-            #Dropdown Widget for equation selection
-            self.dropdown_equations = TTK.Combobox(loop[tabs[count]], font="Helvetica 12")
-            self.dropdown_equations.set('Select equation...')
-            self.dropdown_equations['state'] = 'readonly'
-            self.dropdown_equations['values'] = ['Linear', 'Quadratic', 'Cubic', 'n-degree..']
-            self.dropdown_equations.bind('<<ComboboxSelected>>', gen_equation)
-            self.dropdown_equations.grid(row=6, column=1,  padx=(0, 190), pady=(30, 0))
-
-
-            #Dropdown for datatype selection
-            self.dropdown_graphs = TTK.Combobox(loop[tabs[count]], font="Helvetica 12")
-            self.dropdown_graphs.set('Select data type...')
-            self.dropdown_graphs['state'] = 'readonly'
-            self.dropdown_graphs['values'] = ["Minimum temperature", "Maximum temperature", "Average temperature", "Precipitation"]
-            self.dropdown_graphs.bind('<<ComboboxSelected>>', gen_datatype_columns)
-            self.dropdown_graphs.grid(row=7, column=1,  padx=(0, 190), pady=(30, 0))
-
-
-            #Button for submitting all that the user has entered
-            self.data_submit = tkboot.Button(
-                loop[tabs[count]], 
-                command=on_enter_data,
-                width="25", 
-                text="Graph it!", 
-                bootstyle=SUCCESS
-            )
-            self.data_submit.grid(row=8, column=1, padx=(0,173), pady=(150,0))
-            self.data_submit.focus_set()
-
-            # Generate Table Rows
-            gen_table()
-            count += 1
-
-"""
