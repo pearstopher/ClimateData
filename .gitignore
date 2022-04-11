@@ -368,3 +368,6 @@ FodyWeavers.xsd
 /ClimateData/config.json
 /ClimateData/data/raw/us-county-boundaries.csv
 /ClimateData/HTML/map_fig.html
+
+# Attributes file for MacOS users
+.DS_Store
