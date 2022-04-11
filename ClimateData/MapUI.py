@@ -192,12 +192,11 @@ class MapWindow(QWindow):
     if self.curr_year == None:
       print("A year must be selected!")
       return
-    if not self.state_boxes:
-      print("You must selected atleast 1 state!")
-      return
     if self.dataType == '':
       print("You must select a data type!")
-      return
+      return  
+    if not self.state_boxes:
+      self.state_boxes = ['AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY']
     if not self.county_boxes:
       df = database.get_map_data_for_states(self.state_boxes, 'US', [self.dataType], [self.curr_month], self.curr_year, self.curr_year)
     else:
@@ -206,7 +205,13 @@ class MapWindow(QWindow):
     with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
       counties = json.load(response)
     
-    cli_map = px.choropleth(df, geojson=counties, locations='fips_code', color=self.dataType+"_"+self.curr_month, color_continuous_scale='jet',range_color=(10,130), scope='usa', hover_name='county_name', hover_data=['state'])
+    colorscale = 'jet'
+    range = (10,130)
+
+    if self.dataType == 'precip':
+      colorscale = 'dense'
+      range = (0,15)
+    cli_map = px.choropleth(df, geojson=counties, locations='fips_code', color=self.dataType+"_"+self.curr_month, color_continuous_scale=colorscale, range_color=range, scope='usa', hover_name='county_name', hover_data=['state'])
     cli_map.update_layout(title='Climate Data')
     cli_map.update_geos(fitbounds='locations', visible=True)
     cli_map.write_html('HTML/map_fig.html')
