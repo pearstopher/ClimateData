@@ -50,11 +50,3 @@ def test_countycodes():
 #
 def test_database():
   database.setup_database()
-
-#
-def test_ui():
-  app = UI.App()
-  
-  # run loop once
-  app.update_idletasks()
-  app.update()
