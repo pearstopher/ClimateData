@@ -14,6 +14,7 @@ datadir = './data/raw/'
 droughtDir = f'{datadir}drought/'
 weatherDir = f'{datadir}weather/'
 outputDir = './data/processed/'
+order = ['min', 'avg', 'max', 'precip']
 months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 
 weatherFileName = 'weather.csv'

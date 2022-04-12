@@ -309,6 +309,9 @@ def get_weather_data(columnList, idList, startYear, endYear):
     results = None
     cols = []
     matchString = "|| '%'"
+    defaultColumns = "w.id, cc.county_name, cc.state, cc.country, cc.fips_code, "
+    columns = ["w." + col for col in columnList]
+    columnString = ", ".join(columns)
     defaultColumns = "id, "
     columnString = ", ".join(columnList)
     idYearList = []
@@ -396,6 +399,7 @@ def get_map_weather_data(columnList, idList, startYear, endYear):
         conn.close()
 
     df = pd.DataFrame(data=results, columns=cols)
+    df.fips_code = df.fips_code.apply('{:0>5}'.format).astype(str)
     return df
 
 def get_map_data_for_single_county(columnList, county, state, country, startYear, endYear):
@@ -558,7 +562,7 @@ def get_map_data_for_counties(states, counties, country, columns, months, startY
             columnList.append(to_add)
 
     for index, state in enumerate(states):
-        for county in counties[index]:
+        for county in counties:
             idList.append(get_id_by_county(county, state, country))
     
     results = get_map_weather_data(columnList, idList, startYear, endYear)
@@ -640,6 +644,63 @@ def get_data_for_countries_dataset(countries, columns, months, startYear, endYea
     for country in countries:
         next_set = get_data_for_country(columnList, country, startYear, endYear)
         results.append(next_set)
+    return results
+
+def get_counties_for_state(state):
+    results = None
+    try:
+        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+    except OperationalError as error:
+        print_psycopg2_exception(error)
+        conn = None
+
+    if conn != None:
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+            SELECT county_name FROM county_codes WHERE state = %s;
+            """,
+            [state])
+            conn.commit()
+            results = cur.fetchall()
+        except Exception as error:
+            print_psycopg2_exception(error)
+            
+        cur.close()
+        conn.close()
+    if results is None:
+        print("No county was found for given state")
+        results = ""
+
+    return results
+
+
+def get_selected_counties_for_state(state, county):
+    results = None
+    try:
+        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+    except OperationalError as error:
+        print_psycopg2_exception(error)
+        conn = None
+
+    if conn != None:
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+            SELECT state, county_name, county_code, country FROM county_codes WHERE county_name = %s AND state = %s;
+            """,
+            [county, state])
+            conn.commit()
+            results = cur.fetchall()
+        except Exception as error:
+            print_psycopg2_exception(error)
+
+        cur.close()
+        conn.close()
+    if results is None:
+        print("No counties were found for given state and counties")
+        results = ""
+    
     return results
 
 if __name__ == "__main__":
