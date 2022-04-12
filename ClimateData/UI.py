@@ -137,23 +137,23 @@ class App(tk.Tk):
         data2 = ["StartPage", "graphPage"]
         loop = 0
         for F in (StartPage, graphPage):
-            frame = F(parent=tab1, controller=self, master=self)
+            frame = F(parent=tab1, controller=self, master=tab1)
             self.frames[data[loop]] = frame
             frame.grid(row=0, column=0, sticky="nsew")
             
-            frame2 = F(parent=tab2, controller=self, master=self)
+            frame2 = F(parent=tab2, controller=self, master=tab2)
             self.frames2[data2[loop]] = frame2
             frame2.grid(row=0, column=0, sticky="nsew")
 
-            frame3 = F(parent=tab3, controller=self, master=self)
+            frame3 = F(parent=tab3, controller=self, master=tab3)
             self.frames3[data2[loop]] = frame3
             frame3.grid(row=0, column=0, sticky="nsew")
 
-            frame4 = F(parent=tab4, controller=self, master=self)
+            frame4 = F(parent=tab4, controller=self, master=tab4)
             self.frames4[data2[loop]] = frame4
             frame4.grid(row=0, column=0, sticky="nsew")
 
-            frame5 = F(parent=tab5, controller=self, master=self)
+            frame5 = F(parent=tab5, controller=self, master=tab5)
             self.frames5[data2[loop]] = frame5
             frame5.grid(row=0, column=0, sticky="nsew")
             loop += 1
