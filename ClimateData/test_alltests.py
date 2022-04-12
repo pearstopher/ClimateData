@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use('Agg')
 import preprocess
 import config
 import database
