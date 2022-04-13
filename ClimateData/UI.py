@@ -169,6 +169,11 @@ class graphPage(tk.Frame):
             end_month = month_dict[end_month_num]
             months = []
 
+            # Enable export_csv_button.
+            self.export_csv_button = TTK.Button(self.frame_left, width="16", text="Export data to CSV", bootstyle="blue")
+            # TODO change padding
+            self.export_csv_button.grid(row=0, column=0, pady=(0, 50))
+
             for monthNum in range(int(begin_month_num), int(end_month_num)+1):
                 month = str(monthNum).zfill(2)
                 months.append(month_dict[month])
