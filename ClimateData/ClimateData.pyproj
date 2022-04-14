@@ -26,7 +26,6 @@
     <Compile Include="ClimateData.py" />
     <Compile Include="database.py" />
     <Compile Include="plotting.py" />
-    <Compile Include="plotting_test.py" />
     <Compile Include="preprocess.py">
       <SubType>Code</SubType>
     </Compile>
