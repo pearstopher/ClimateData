@@ -182,12 +182,18 @@ class graphPage(tk.Frame):
                 month = str(monthNum).zfill(2)
                 months.append(month_dict[month])
 
+            monthly_split = self.monthly_check_var.get()
             polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
             derivitive_degree = None if self.ent2 == None else int(self.ent2.get())
 
             plot_type = 'scatter_poly'
             if derivitive_degree != None:
                 plot_type = 'poly_deriv'
+
+            process_type = 'normal'
+            if monthly_split:
+                process_type = 'monthly'
+
 
             data_type =  datatype_dict[self.dropdown_graphs.get()]
             # Intermediate Steps
@@ -226,9 +232,10 @@ class graphPage(tk.Frame):
             df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], months, int(begin_year), int(end_year))
 
             counties = list(chain(*counties))
-            fig = plotting.plot(plot_type, df_list, {'process_type': 'months', 'begin_month': monthsIdx[begin_month],
-                                                          'degree': polynomial_degree, 'deriv_degree': derivitive_degree,
-                                                          'plots_per_graph' : len(df_list), 'counties' : counties})
+            fig = plotting.plot(plot_type, df_list, {'process_type': process_type, 
+                                                     'begin_month': monthsIdx[begin_month], 'end_month': monthsIdx[end_month],
+                                                     'degree': polynomial_degree, 'deriv_degree': derivitive_degree,
+                                                     'plots_per_graph' : len(df_list), 'counties' : counties})
             canvas = FigureCanvasTkAgg(fig, master = master)  
             canvas.draw()
             canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
@@ -380,6 +387,10 @@ class graphPage(tk.Frame):
 
         self.end_date_label = tk.Label(self.frame_right, font="10", text="Date range end: ")
         self.end_date_label.grid(row=5, column=1, padx=(0, 265), pady=(0,0))
+
+        self.monthly_check_var = tk.IntVar()
+        self.monthly_check = TTK.Checkbutton(self.frame_right, text='Split Months', variable=self.monthly_check_var)
+        self.monthly_check.grid(row=4, column=1,  padx=(450, 0), pady=(0, 0))
 
         self.sub_btn = tkboot.Button(
             self.frame_right,
