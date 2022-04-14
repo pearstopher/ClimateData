@@ -68,12 +68,7 @@ def to_date(x_data):
 
 def plot(ptype, df_list, plot_vars_map):
 
-    x_data_list = []
-    y_data_list = []
-    for df in df_list:
-        x_data, y_data = process_data(df, plot_vars_map['process_type'], plot_vars_map['begin_month'])
-        x_data_list.append(x_data)
-        y_data_list.append(y_data)
+    x_data_list, y_data_list, plot_vars_map = process_data(plot_vars_map, plot_vars_map['process_type'], df_list)
 
     if ptype == 'scatter':
         pass
@@ -89,12 +84,14 @@ def plot(ptype, df_list, plot_vars_map):
     else:
         return 'Invalid plot type!'
 
+def process_data(plot_vars_map, process_type, df_list):
+    x_data_list = []
+    y_data_list = []
 
-def process_data(df, process_type, beginMonth):
-    x_data = []
-    y_data = []
+    def pd_normal(df, beginMonth):
+        x_data = []
+        y_data = []
 
-    if process_type == 'months':
         for i in df.iloc[:,0]:
             for j in range(df.shape[1]-1):
                 x_data.append(int(str(i)[-4:]) + (j + beginMonth) / 12)
@@ -102,7 +99,45 @@ def process_data(df, process_type, beginMonth):
         for i, row in df.iterrows():
             for j in row[1:]:
                 y_data.append(j)
-    return x_data, y_data
+
+        return x_data, y_data
+
+    def pd_monthly(df, beginMonth, endMonth):
+        x_data = [[] for x in range(endMonth + 1 - beginMonth)]
+        y_data = [[] for x in range(endMonth + 1 - beginMonth)]
+
+        for i in df.iloc[:,0]:
+            for j in range(df.shape[1]-1):
+                x_data[j].append(float(str(i)[-4:]))
+        for i, row in df.iterrows():
+            for m, j in enumerate(row[1:]):
+                y_data[m].append(j)
+        return x_data, y_data
+
+    if process_type == 'normal':
+        for df in df_list:
+            x_data, y_data = pd_normal(df, plot_vars_map['begin_month'])
+            x_data_list.append(x_data)
+            y_data_list.append(y_data)
+    elif process_type == 'monthly':
+        # Convert conties to months, since that's what we're plotting
+        counties = plot_vars_map['counties']
+        newCounties = []
+        for i in range(len(counties)):
+            for j in range(plot_vars_map['begin_month'], plot_vars_map['end_month']+1):
+                name = headers[1:][j]
+                if len(counties) > 1:
+                    name = counties[i] + '-' + name
+                newCounties.append(name)
+        plot_vars_map['counties'] = newCounties
+
+        for df in df_list:
+            x_data, y_data = pd_monthly(df, plot_vars_map['begin_month'], plot_vars_map['end_month'])
+            x_data_list += x_data
+            y_data_list += y_data
+
+
+    return x_data_list, y_data_list, plot_vars_map
 
 def scatter_poly(x, y, deg, plots_per_graph, counties):
     # Example of what coeffs and fiteq do, for a 3rd degree polynomial
