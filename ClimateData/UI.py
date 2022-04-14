@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 import tkinter as tk
+from tkinter.filedialog import asksaveasfilename
 import ttkbootstrap as tkboot
 from ttkbootstrap import ttk as TTK
 from ttkbootstrap import font as tkfont
 from ttkbootstrap.constants import *
-import psycopg2
 from database import *
 import plotting
 import re
 from itertools import chain
-from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg)
 import MapUI
 from PyQt5.QtWidgets import *                   #pip install PyQt5
+from export_csv import export_csv
 
 # Dictionaries
 degree_dict = {
@@ -135,6 +136,8 @@ class graphPage(tk.Frame):
         self.end_date = tkboot.StringVar(value="")
         self.n_degree = tkboot.StringVar(value="")
 
+        self.export_csv_df = None
+
 # FUNCTIONS -----------------------------------------------------------------
         #called when submit button for date entry is used
         def on_submit():
@@ -170,7 +173,8 @@ class graphPage(tk.Frame):
             months = []
 
             # Enable export_csv_button.
-            self.export_csv_button = TTK.Button(self.frame_left, width="16", text="Export data to CSV", bootstyle="blue")
+            self.export_csv_button = TTK.Button(self.frame_left, width="16", command=save_csv_file,
+                                                text="Export data to CSV", bootstyle="blue")
             # TODO change padding
             self.export_csv_button.grid(row=0, column=0, pady=(0, 50))
 
@@ -229,6 +233,12 @@ class graphPage(tk.Frame):
             canvas.draw()
             canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
 
+            # Build csv df with data and coefficients
+            self.export_csv_df = export_csv(df_list=df_list, state_dict=temp_dict,
+                                            date_range={'begin_month': begin_month, 'begin_year': begin_year,
+                                                        'end_month': end_month, 'end_year': end_year},
+                                            data_type=data_type, deg=polynomial_degree,
+                                            deriv=(0 if derivitive_degree is None else derivitive_degree))
             #print("\nHere is the data that the user entered: ")
             #print("Begin date month: ")
             #print(begin_month)
@@ -321,6 +331,14 @@ class graphPage(tk.Frame):
             for row in data:
                 self.data_table.insert(parent='', index='end', values=row)
             self.data_table.grid(row=2, column=1, pady=(0,40), padx=(250, 235))
+
+        # Exporting data to csv
+        def save_csv_file():
+            if self.export_csv_df is not None:
+                file_name = asksaveasfilename(filetypes=[("CSV files", "*.csv")],
+                                              defaultextension='.csv')
+                self.export_csv_df.to_csv(file_name, sep=',', encoding='utf-8', index=False)
+
 
 # WIDGETS ----------------------------------------------------------------------------       
 
