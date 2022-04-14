@@ -253,15 +253,22 @@ class graphPage(tk.Frame):
             #print("Countries: ")
             #print(countries)
             
+        def gen_plot_type(event=None):
+            if event.widget.get() == 'Double Curve':
+                self.ent3 = tkboot.Entry(self.frame_right, width="6", textvariable=event.widget.get())
+                self.ent3.grid(row=6, column=1, padx=(240,0), pady=(30,0))
+                year_offset = tk.Label(self.frame_right, font="10", text="Year Diff: ")
+                year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+
         def gen_equation(event=None):
             if event == None:
                 degree = ''
             else:
                 if event.widget.get() == "n-degree..":
                     self.ent = tkboot.Entry(self.frame_right, width="6", textvariable=event.widget.get())
-                    self.ent.grid(row=6, column=1, padx=(240,0), pady=(30,0))
+                    self.ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
                     degree_label = tk.Label(self.frame_right, font="10", text="Degree: ")
-                    degree_label.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+                    degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                     sub_btn = tkboot.Button(
                         self.frame_right,
                         text="Submit degree",
@@ -273,20 +280,20 @@ class graphPage(tk.Frame):
                     sub_btn.focus_set()
                 elif event.widget.get() == 'n-degree derivative':
                     self.ent = tkboot.Entry(self.frame_right, width="6", textvariable=event.widget.get())
-                    self.ent.grid(row=6, column=1, padx=(240,0), pady=(30,0))
+                    self.ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
                     degree_label = tk.Label(self.frame_right, font="10", text="Degree: ")
-                    degree_label.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+                    degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                     self.ent2 = tkboot.Entry(self.frame_right, width="6")
-                    self.ent2.grid(row=7, column=1, padx=(240,0), pady=(30,0))
+                    self.ent2.grid(row=8, column=1, padx=(240,0), pady=(0,80))
                     deriv_label = tk.Label(self.frame_right, font="10", text="Derivitive: ")
-                    deriv_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
+                    deriv_label.grid(row=8, column=1, padx=(100, 0), pady=(0,80))
                 else:
                     self.ent = None
                     self.ent2 = None
                     degree = event.widget.get()
                     print("Degree of equation is: ")
                     print(degree_dict[degree])
-
+            
         def gen_datatype_columns(event):
             print("User selected this data type: " + event.widget.get())
             print("parsing data type into correct format.... ")
@@ -365,6 +372,7 @@ class graphPage(tk.Frame):
         self.end_date_label = tk.Label(self.frame_right, font="10", text="Date range end: ")
         self.end_date_label.grid(row=5, column=1, padx=(0, 265), pady=(0,0))
 
+        # Monthly Split checkbox
         self.monthly_check_var = tk.IntVar()
         self.monthly_check = TTK.Checkbutton(self.frame_right, text='Split Months', variable=self.monthly_check_var)
         self.monthly_check.grid(row=4, column=1,  padx=(450, 0), pady=(0, 0))
@@ -420,13 +428,21 @@ class graphPage(tk.Frame):
         self.button_notebook_add = TTK.Button(self.frame_left, width="25", text="Add instance to notebook", bootstyle="blue")
         self.button_notebook_add.grid(row=0, column=0, padx=(10,580), pady=(50, 20))
 
+        #Dropdown for datatype selection
+        self.plot_type = TTK.Combobox(self.frame_right, font="Helvetica 12")
+        self.plot_type.set('Select data type...')
+        self.plot_type['state'] = 'readonly'
+        self.plot_type['values'] = ['Curve', 'Double Curve', 'Line']
+        self.plot_type.bind('<<ComboboxSelected>>', gen_plot_type)
+        self.plot_type.grid(row=6, column=1,  padx=(0, 190), pady=(30, 0))
+
         #Dropdown Widget for equation selection
         self.dropdown_equations = TTK.Combobox(self.frame_right, font="Helvetica 12")
         self.dropdown_equations.set('Select equation...')
         self.dropdown_equations['state'] = 'readonly'
         self.dropdown_equations['values'] = ['Linear', 'Quadratic', 'Cubic', 'n-degree..', 'n-degree derivative']
         self.dropdown_equations.bind('<<ComboboxSelected>>', gen_equation)
-        self.dropdown_equations.grid(row=6, column=1,  padx=(0, 190), pady=(30, 0))
+        self.dropdown_equations.grid(row=7, column=1,  padx=(0, 190), pady=(30, 0))
 
 
         #Dropdown for datatype selection
@@ -435,7 +451,7 @@ class graphPage(tk.Frame):
         self.dropdown_graphs['state'] = 'readonly'
         self.dropdown_graphs['values'] = ["Minimum temperature", "Maximum temperature", "Average temperature", "Precipitation"]
         self.dropdown_graphs.bind('<<ComboboxSelected>>', gen_datatype_columns)
-        self.dropdown_graphs.grid(row=7, column=1,  padx=(0, 190), pady=(30, 0))
+        self.dropdown_graphs.grid(row=8, column=1,  padx=(0, 190), pady=(0, 80))
 
 
         #Button for submitting all that the user has entered
