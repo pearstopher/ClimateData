@@ -25,32 +25,6 @@ functions to implement
 csv_path = './data/raw/climdiv-avgtmp.csv'
 headers = ['Codes', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
-def get_test_data():
-    df = pd.read_csv(csv_path, delimiter=',', nrows=127, header=None)
-    df.columns = headers
-
-    print(df.head())
-
-    x_dates_format = []
-    x_data = []
-    for i in df['Codes']:
-        for j in range(1,13):
-            x_dates_format.append(str(i)[-4:] + '-' + str(j))
-            x_data.append(int(str(i)[-4:]) + (j-1) / 12)
-
-    y_data = []
-    for i, row in df.head(127).iterrows():
-        for j in row[1:]:
-            y_data.append(j)
-
-    return [x_data, y_data, x_dates_format]
- 
-
-def get_test_data_raw():
-    df = pd.read_csv(csv_path, delimiter=',', nrows=127, header=None)
-    df.columns = headers
-    return df
-
 def to_date(x_data):
     x_data_formatted = []
     decimal_map = {'0': 1, '083': 2, '166': 3, '25': 4, '333': 5, '416': 6, '5': 7, '583': 8, '666': 9, '75': 10, '833': 11, '916': 12}
@@ -76,9 +50,9 @@ def plot(ptype, df_list, plot_vars_map):
         pass
     elif ptype == 'poly_deriv':
         return plot_poly_deriv(x_data_list, y_data_list, plot_vars_map['degree'], plot_vars_map['deriv_degree'], 
-                               plot_vars_map['plots_per_graph'], plot_vars_map['counties'])
+                               plot_vars_map['plots_per_graph'], plot_vars_map['names'])
     elif ptype == 'scatter_poly':
-        return scatter_poly(x_data_list, y_data_list, plot_vars_map['degree'], plot_vars_map['plots_per_graph'], plot_vars_map['counties'])
+        return scatter_poly(x_data_list, y_data_list, plot_vars_map['degree'], plot_vars_map['plots_per_graph'], plot_vars_map['names'])
     elif ptype == 'us_heatmap':
         pass
     else:
@@ -120,8 +94,8 @@ def process_data(plot_vars_map, process_type, df_list):
             x_data_list.append(x_data)
             y_data_list.append(y_data)
     elif process_type == 'monthly':
-        # Convert conties to months, since that's what we're plotting
-        counties = plot_vars_map['counties']
+        # Convert counties to months, since that's what we're plotting
+        counties = plot_vars_map['names']
         newCounties = []
         for i in range(len(counties)):
             for j in range(plot_vars_map['begin_month'], plot_vars_map['end_month']+1):
@@ -129,7 +103,7 @@ def process_data(plot_vars_map, process_type, df_list):
                 if len(counties) > 1:
                     name = counties[i] + '-' + name
                 newCounties.append(name)
-        plot_vars_map['counties'] = newCounties
+        plot_vars_map['names'] = newCounties
 
         for df in df_list:
             x_data, y_data = pd_monthly(df, plot_vars_map['begin_month'], plot_vars_map['end_month'])

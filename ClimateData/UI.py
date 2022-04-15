@@ -176,6 +176,7 @@ class graphPage(tk.Frame):
             monthly_split = self.monthly_check_var.get()
             polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
             derivitive_degree = None if self.ent2 == None else int(self.ent2.get())
+            double_plot_diff = None if self.ent3 == None else int(self.ent3.get())
 
             plot_type = 'scatter_poly'
             if derivitive_degree != None:
@@ -223,10 +224,10 @@ class graphPage(tk.Frame):
             df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], months, int(begin_year), int(end_year))
 
             counties = list(chain(*counties))
-            fig = plotting.plot(plot_type, df_list, {'process_type': process_type, 
+            fig = plotting.plot(plot_type, df_list, {'process_type': process_type, 'double_plot_diff': double_plot_diff,
                                                      'begin_month': monthsIdx[begin_month], 'end_month': monthsIdx[end_month],
                                                      'degree': polynomial_degree, 'deriv_degree': derivitive_degree,
-                                                     'plots_per_graph' : len(df_list), 'counties' : counties})
+                                                     'plots_per_graph' : len(df_list), 'names' : counties})
             canvas = FigureCanvasTkAgg(fig, master = master)  
             canvas.draw()
             canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
@@ -259,6 +260,8 @@ class graphPage(tk.Frame):
                 self.ent3.grid(row=6, column=1, padx=(240,0), pady=(30,0))
                 year_offset = tk.Label(self.frame_right, font="10", text="Year Diff: ")
                 year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+            else:
+                self.ent3 = None
 
         def gen_equation(event=None):
             if event == None:
