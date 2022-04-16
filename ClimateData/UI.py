@@ -158,7 +158,7 @@ class App(tk.Tk):
             self.frames5[data2[loop]] = frame5
             frame5.grid(row=0, column=0, sticky="nsew")
             loop += 1
-        self.show_frame("StartPage")
+        #self.show_frame("StartPage")
         
     def show_frame(self, page_name):
         frame = self.frames[page_name]
@@ -492,10 +492,10 @@ class graphPage(tk.Frame):
             self.dropdown_county.grid(row=1, column=1, padx=(290, 0), pady=(20, 20))
 
             #Home button
-            self.button_back = TTK.Button(self.tab, width="15", text="Back to home", bootstyle="blue", command=lambda: controller.show_frame("StartPage"))
-            self.button_back.grid(row=0, column=1, padx=(0,250), pady=(50, 10))
+            #self.button_back = TTK.Button(self.tab, width="15", text="Back to home", bootstyle="blue", command=lambda: controller.show_frame("StartPage"))
+            #self.button_back.grid(row=0, column=1, padx=(0,250), pady=(50, 10))
             self.button2 = TTK.Button(self.tab, text = "Map", width="15", bootstyle="secondary", command=lambda: controller.open_map("TODO:"))
-            self.button2.grid(row=0, column=1, padx=(100,0), pady=(50, 10))
+            self.button2.grid(row=0, column=1, padx=(0,250), pady=(50, 10))
             #Add instance to notebook button
             #self.button_notebook_add = TTK.Button(tab1, width="25", text="Add instance to notebook", bootstyle="blue")
             #self.button_notebook_add.grid(row=0, column=0, padx=(10,580), pady=(50, 20))
