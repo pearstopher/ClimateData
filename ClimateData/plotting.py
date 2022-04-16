@@ -176,6 +176,8 @@ def scatter_poly(x, y, deg, plots_per_graph, counties, plot_points):
 
 def plot_poly_deriv(x, y, deg, deriv_deg, plots_per_graph, counties):
     
+    new_x = []
+    new_y = []
     fig, ax1 = plt.subplots()
     colors = cm.rainbow(np.linspace(0, 1, len(counties)))
     for x, y, county, color in zip(x, y, counties, colors):
@@ -189,6 +191,8 @@ def plot_poly_deriv(x, y, deg, deriv_deg, plots_per_graph, counties):
 
         x_fit = np.array(x)
         y_fit = fiteq(x_fit)
+        new_x.append(x_fit)
+        new_y.append(y_fit)
 
         lines = ax1.plot(x_fit, y_fit, color=color, alpha=0.5, label=county)
         #ax1.scatter(x, y, s=4, color=color)
@@ -196,7 +200,7 @@ def plot_poly_deriv(x, y, deg, deriv_deg, plots_per_graph, counties):
     ax1.set_title(f'Derivitive deg={deriv_deg} of polynomial fit deg={deg}')
     ax1.legend()
     cursor = mplcursors.cursor()
-    return fig, x, y
+    return fig, new_x, new_y
 
 def tkinter_scatter_poly(x, y, deg):
     coeffs = poly.polyfit(x, y, deg)
