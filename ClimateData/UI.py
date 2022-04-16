@@ -225,7 +225,7 @@ class graphPage(tk.Frame):
             df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], months, int(begin_year), int(end_year))
 
             counties = list(chain(*counties))
-            fig = plotting.plot(plot_type, df_list, {'process_type': process_type, 'double_plot_diff': double_plot_diff,
+            fig, x_data, y_data = plotting.plot(plot_type, df_list, {'process_type': process_type, 'double_plot_diff': double_plot_diff,
                                                      'plot_points': plot_points,
                                                      'begin_month': monthsIdx[begin_month], 'end_month': monthsIdx[end_month],
                                                      'degree': polynomial_degree, 'deriv_degree': derivitive_degree,

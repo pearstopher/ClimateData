@@ -58,7 +58,7 @@ def plot(ptype, df_list, plot_vars_map):
     elif ptype == 'us_heatmap':
         pass
     else:
-        return 'Invalid plot type!'
+        print('Invalid plot type!')
 
 def process_data(plot_vars_map, process_type, df_list):
     x_data_list = []
@@ -172,7 +172,7 @@ def scatter_poly(x, y, deg, plots_per_graph, counties, plot_points):
     #plt.text(15, 3.4, 'Coefficients', size=12)
     cursor = mplcursors.cursor()
     #plt.show()
-    return fig
+    return fig, x, y
 
 def plot_poly_deriv(x, y, deg, deriv_deg, plots_per_graph, counties):
     
@@ -196,7 +196,7 @@ def plot_poly_deriv(x, y, deg, deriv_deg, plots_per_graph, counties):
     ax1.set_title(f'Derivitive deg={deriv_deg} of polynomial fit deg={deg}')
     ax1.legend()
     cursor = mplcursors.cursor()
-    return fig
+    return fig, x, y
 
 def tkinter_scatter_poly(x, y, deg):
     coeffs = poly.polyfit(x, y, deg)
