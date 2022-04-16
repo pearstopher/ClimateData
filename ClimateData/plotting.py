@@ -96,20 +96,44 @@ def process_data(plot_vars_map, process_type, df_list):
     elif process_type == 'monthly':
         # Convert counties to months, since that's what we're plotting
         counties = plot_vars_map['names']
-        newCounties = []
+        newNames = []
         for i in range(len(counties)):
             for j in range(plot_vars_map['begin_month'], plot_vars_map['end_month']+1):
                 name = headers[1:][j]
                 if len(counties) > 1:
                     name = counties[i] + '-' + name
-                newCounties.append(name)
-        plot_vars_map['names'] = newCounties
+                newNames.append(name)
+        plot_vars_map['names'] = newNames
 
         for df in df_list:
             x_data, y_data = pd_monthly(df, plot_vars_map['begin_month'], plot_vars_map['end_month'])
             x_data_list += x_data
             y_data_list += y_data
 
+    year_size = df_list[0].shape[1] - 1
+    # Duplicate all values but slice off 
+    # diff number of years from duplicats
+    if plot_vars_map['double_plot_diff'] != None:
+        new_x_vals = []
+        new_y_vals = []
+        diff = plot_vars_map['double_plot_diff']
+        vals_to_cut = diff * year_size
+
+        for xarr, yarr in zip(x_data_list, y_data_list):
+            new_x = xarr[:-vals_to_cut]
+            new_y = yarr[:-vals_to_cut]
+            new_x_vals.append(new_x)
+            new_y_vals.append(new_y)
+
+        x_data_list += new_x_vals
+        y_data_list += new_y_vals
+
+        # Add new names for these lines
+        names = plot_vars_map['names']
+        newNames = []
+        for n in names:
+            newNames.append(n + '_diff')
+        plot_vars_map['names'] = names + newNames
 
     return x_data_list, y_data_list, plot_vars_map
 
