@@ -13,7 +13,7 @@ from matplotlib.pyplot import cm
 import math
 import datetime as dt
 
-matplotlib.use("TkAgg")
+matplotlib.use("TkAgg", force= False)
 '''
 TODO
 functions to implement
