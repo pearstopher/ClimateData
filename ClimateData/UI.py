@@ -12,6 +12,7 @@ import re
 from itertools import chain
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 import MapUI
+from idlelib.tooltip import Hovertip
 from PyQt5.QtWidgets import *                   #pip install PyQt5
 
 # Dictionaries
@@ -299,6 +300,9 @@ class graphPage(tk.Frame):
             df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], months, int(begin_year), int(end_year))
 
             counties = list(chain(*counties))
+
+            print("MONTHS!!:")
+            print(months)
             fig = plotting.plot(plot_type, df_list, {'process_type': process_type, 
                                                      'begin_month': monthsIdx[begin_month], 'end_month': monthsIdx[end_month],
                                                      'degree': polynomial_degree, 'deriv_degree': derivitive_degree,
@@ -396,13 +400,12 @@ class graphPage(tk.Frame):
                 print(month)
                 #print(year)
             if month == 'All months':
-                data = [('All months')]
-                print(data)
+                data = [('January'), ('February'), ('March'), ('April'), ('May'), ('June'), ('July'), ('August'), ('September'), ('October'), ('November'), ('December')]
             else:
                 data = [(month)]
             for row in data:
                 self.date_table.insert(parent='', index='end', values=row)
-            self.date_table.grid(row=7, column=1, pady=(0,0), padx=(400,0))
+            self.date_table.grid(row=7, column=1, pady=(15,0), padx=(400,0))
 
         def gen_table(event=None):
             if event == None:
@@ -411,13 +414,14 @@ class graphPage(tk.Frame):
             else:
                 county_name = event.widget.get()
                 state = self.dropdown_state.get()
-            #for child in self.data_table.get_children():
-                #self.data_table.delete(child)
-
-            data = get_selected_counties_for_state(state, county_name)
+            if county_name == 'All Counties':
+                data = get_counties_for_state_all_data(state)
+            else:
+                data = get_selected_counties_for_state(state, county_name)
             print("Your query returned this data: ")
             print(data)
             for row in data:
+                print(row)
                 self.data_table.insert(parent='', index='end', values=row)
             self.data_table.grid(row=2, column=1, pady=(0,40), padx=(250, 235))
 
@@ -436,18 +440,18 @@ class graphPage(tk.Frame):
             self.end_date_ent = tkboot.Entry(self.tab, textvariable=self.end_year, width=10)
             self.end_date_ent.grid(row=5, column=1, padx=(40, 0), pady=(0,0))
 
-            self.begin_date_label = tkboot.Label(self.tab, font="10", text="Year range begin: ", bootstyle="inverse-dark")
+            self.begin_date_label = tkboot.Label(self.tab, font="10", text="Date range begin: ", bootstyle="inverse-dark")
             self.begin_date_label.grid(row=4, column=1, padx=(0, 250), pady=(0,0))        
 
-            self.end_date_label = tkboot.Label(self.tab, font="10", text="Year range end: ", bootstyle="inverse-dark")
+            self.end_date_label = tkboot.Label(self.tab, font="10", text="Date range end: ", bootstyle="inverse-dark")
 
             self.end_date_label.grid(row=5, column=1, padx=(0, 265), pady=(0,0))
             self.specific_months = TTK.Combobox(self.tab, font="Helvetica 12")
             self.specific_months.set('Select months')
             self.specific_months['state'] = 'readonly'
-            self.specific_months['values'] = ('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December') 
+            self.specific_months['values'] = ('All months', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December') 
             self.specific_months.bind('<<ComboboxSelected>>', gen_specific_date_table) 
-            self.specific_months.grid(row=4, column=1, padx=(400, 0))
+            self.specific_months.grid(row=5, column=1, padx=(400, 0))
             
 
             # Initialize Table Widget
@@ -463,14 +467,6 @@ class graphPage(tk.Frame):
             self.data_table.heading('county_name', text="County Name")
             self.data_table.heading('county_code', text="County Code")
             self.data_table.heading('country', text="Country")
-
-            #Table widget for specific dates
-            self.date_table = TTK.Treeview(self.tab, height=5)
-            self.date_table['columns'] = ('Month')
-            self.date_table.column('#0', width=0, stretch=tk.NO)
-            self.date_table.column('Month', width=200)
-            self.date_table.heading('#0', text="", anchor=tk.CENTER)
-            self.date_table.heading('Month', text="Month")
 
             #Table widget for specific dates
             self.date_table = TTK.Treeview(self.tab, height=5)
@@ -551,17 +547,9 @@ class graphPage(tk.Frame):
 
         self.monthly_check_var = tk.IntVar()
         self.monthly_check = TTK.Checkbutton(self.tab, text='Split Months', variable=self.monthly_check_var)
-        self.monthly_check.grid(row=4, column=1,  padx=(450, 0), pady=(0, 0))
+        self.monthly_check.grid(row=4, column=1,  padx=(300, 0), pady=(0, 10))
+        splitTip = Hovertip(self.monthly_check, 'Plot induvidual equations for each month')
 
-        self.sub_btn = tkboot.Button(
-            self.tab,
-            text="Submit dates",
-            command=on_submit,
-            bootstyle="blue",
-            width=12,
-        )
-        self.sub_btn.grid(row=5, column=1, padx=(450, 0), pady=(0,0))
-        self.sub_btn.focus_set()
         
 # WIDGETS ----------------------------------------------------------------------------       
         
