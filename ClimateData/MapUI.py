@@ -56,6 +56,8 @@ class MapWindow(QWindow):
     self.controls = QHBoxLayout()
     self.selection = QHBoxLayout()
     self.echo = QHBoxLayout()
+    self.mapFig = None
+    self.df = None
 
     #Map Controls
     self.yearSlider = QSlider(Qt.Horizontal)
@@ -69,10 +71,10 @@ class MapWindow(QWindow):
     self.month_list.setMinimumWidth(200)
     self.month_list.currentIndexChanged.connect(self.month_list_change)
 
-    # self.addButton = QPushButton('+', self.window)
-    # self.addButton.setMinimumHeight(30)
-    # self.addButton.setMaximumWidth(40)
-    # self.addButton.clicked.connect(self.addLine)
+    self.addButton = QPushButton('+', self.window)
+    self.addButton.setMinimumHeight(30)
+    self.addButton.setMaximumWidth(40)
+    self.addButton.clicked.connect(self.addLine)
     # self.deleteButton = QPushButton('-')
     # self.deleteButton.setMinimumHeight(30)
     # self.deleteButton.setMaximumWidth(40)
@@ -83,7 +85,7 @@ class MapWindow(QWindow):
     self.mapItButton.setMaximumWidth(150)
     self.mapItButton.clicked.connect(self.genMap)
     
-    # self.controls.addWidget(self.addButton)
+    self.controls.addWidget(self.addButton)
     # self.controls.addWidget(self.deleteButton)
 
     self.controls.addWidget(self.mapItButton)
@@ -108,11 +110,11 @@ class MapWindow(QWindow):
 
     #Data table
     self.data_tree = QTreeView()
-    self.data_table = QStandardItemModel(0,3)
+    self.data_table = QStandardItemModel(0,4)
     self.data_table.setHeaderData(0, Qt.Horizontal, "State")
     self.data_table.setHeaderData(1, Qt.Horizontal, "County Name")
-    #self.data_table.setHeaderData(2, Qt.Horizontal, "County FIPS")
-    self.data_table.setHeaderData(2, Qt.Horizontal, "Country")
+    self.data_table.setHeaderData(2, Qt.Horizontal, "County FIPS")
+    self.data_table.setHeaderData(3, Qt.Horizontal, "Country")
     self.data_tree.setModel(self.data_table)
     self.data_tree.setMaximumHeight(200)
     self.echo.addWidget(self.data_tree)
@@ -134,14 +136,6 @@ class MapWindow(QWindow):
     self.county_boxes.append(self.county_list.currentText())
     self.state_boxes = list(set(self.state_boxes))
     self.county_boxes = list(set(self.county_boxes))
-    model = self.data_tree.model()
-    
-    #match = model.findItems(self.county_list.currentText(), Qt.MatchExactly, column=1)
-    #if len(match) == 0:
-    model.insertRow(0)
-    model.setData(model.index(0, 0), self.state_list.currentText())
-    model.setData(model.index(0, 1), self.county_list.currentText())
-    model.setData(model.index(0, 2), "US")
     print(self.state_boxes)
     print(self.county_boxes)
 
@@ -206,10 +200,10 @@ class MapWindow(QWindow):
     if not self.state_boxes:
       self.state_boxes = ['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY']
     if not self.county_boxes:
-      df = database.get_map_data_for_states(self.state_boxes, 'US', [self.dataType], [self.curr_month], self.curr_year, self.curr_year)
+      self.df = database.get_map_data_for_states(self.state_boxes, 'US', [self.dataType], [self.curr_month], self.curr_year, self.curr_year)
     else:
-      df = database.get_map_data_for_counties(self.state_boxes, self.county_boxes, 'US', [self.dataType], [self.curr_month], self.curr_year, self.curr_year)
-    print(df)
+      self.df = database.get_map_data_for_counties(self.state_boxes, self.county_boxes, 'US', [self.dataType], [self.curr_month], self.curr_year, self.curr_year)
+    print(self.df)
     with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
       counties = json.load(response)
     
@@ -219,10 +213,10 @@ class MapWindow(QWindow):
     if self.dataType == 'precip':
       colorscale = 'dense'
       range = (0,15)
-    cli_map = px.choropleth(df, geojson=counties, locations='fips_code', color=self.dataType+"_"+self.curr_month, color_continuous_scale=colorscale, range_color=range, scope='usa', hover_name='county_name', hover_data=['state'])
-    cli_map.update_layout(title='Climate Data')
+    self.mapFig = px.choropleth(self.df, geojson=counties, locations='fips_code', color=self.dataType+"_"+self.curr_month, color_continuous_scale=colorscale, range_color=range, scope='usa', hover_name='county_name', hover_data=['state'])
+    self.mapFig.update_layout(title='Climate Data')
     # cli_map.update_geos(fitbounds='locations', visible=True) <-- Causes break when Aleutians West, AK is selected... 
-    cli_map.write_html('HTML/map_fig.html')
+    self.mapFig.write_html('HTML/map_fig.html')
     self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/map_fig.html')))
 
   #Used to open blank map of US
@@ -231,19 +225,9 @@ class MapWindow(QWindow):
 
   #Button control for adding a new line
   def addLine(self):
-      self.addNavbar = QHBoxLayout()
-      self.state_list = QComboBox()
-      self.state_list.addItems(['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
-      self.state_list.setMinimumHeight(30)
-      self.state_boxes.append(self.state_list)
-      self.date = QLineEdit()
-      self.date.setMinimumHeight(30)
-      self.date.setMaximumWidth(250)
-      self.addNavbar.addWidget(self.state_list)
-      self.addNavbar.addWidget(self.date)
-      self.layout.addLayout(self.addNavbar)
-      self.lines.append(self.addNavbar)
-      self.date_boxes.append(self.date)
+    self.yearSlider.setValue(self.yearSlider.value()+1)
+    self.genMap()
+    return
  
  #Button control to remove a line
   def removeLine(self):
