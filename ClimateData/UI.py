@@ -173,7 +173,8 @@ class graphPage(tk.Frame):
                 month = str(monthNum).zfill(2)
                 months.append(month_dict[month])
 
-            monthly_split = self.monthly_check_var.get()
+            monthly_split   = self.monthly_check_var.get()
+            plot_points     = self.plot_points_var.get()
             polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
             derivitive_degree = None if self.ent2 == None else int(self.ent2.get())
             double_plot_diff = None if self.ent3 == None else int(self.ent3.get())
@@ -225,6 +226,7 @@ class graphPage(tk.Frame):
 
             counties = list(chain(*counties))
             fig = plotting.plot(plot_type, df_list, {'process_type': process_type, 'double_plot_diff': double_plot_diff,
+                                                     'plot_points': plot_points,
                                                      'begin_month': monthsIdx[begin_month], 'end_month': monthsIdx[end_month],
                                                      'degree': polynomial_degree, 'deriv_degree': derivitive_degree,
                                                      'plots_per_graph' : len(df_list), 'names' : counties})
@@ -379,6 +381,11 @@ class graphPage(tk.Frame):
         self.monthly_check_var = tk.IntVar()
         self.monthly_check = TTK.Checkbutton(self.frame_right, text='Split Months', variable=self.monthly_check_var)
         self.monthly_check.grid(row=4, column=1,  padx=(450, 0), pady=(0, 0))
+
+        # Monthly Split checkbox
+        self.plot_points_var = tk.IntVar()
+        self.plot_points = TTK.Checkbutton(self.frame_right, text='Plot Points', variable=self.plot_points_var)
+        self.plot_points.grid(row=4, column=1,  padx=(650, 0), pady=(0, 0))
 
         self.sub_btn = tkboot.Button(
             self.frame_right,

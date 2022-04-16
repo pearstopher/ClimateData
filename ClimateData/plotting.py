@@ -52,7 +52,9 @@ def plot(ptype, df_list, plot_vars_map):
         return plot_poly_deriv(x_data_list, y_data_list, plot_vars_map['degree'], plot_vars_map['deriv_degree'], 
                                plot_vars_map['plots_per_graph'], plot_vars_map['names'])
     elif ptype == 'scatter_poly':
-        return scatter_poly(x_data_list, y_data_list, plot_vars_map['degree'], plot_vars_map['plots_per_graph'], plot_vars_map['names'])
+        return scatter_poly(x_data_list, y_data_list, plot_vars_map['degree'], 
+                            plot_vars_map['plots_per_graph'], plot_vars_map['names'],
+                            plot_vars_map['plot_points'])
     elif ptype == 'us_heatmap':
         pass
     else:
@@ -137,7 +139,7 @@ def process_data(plot_vars_map, process_type, df_list):
 
     return x_data_list, y_data_list, plot_vars_map
 
-def scatter_poly(x, y, deg, plots_per_graph, counties):
+def scatter_poly(x, y, deg, plots_per_graph, counties, plot_points):
     # Example of what coeffs and fiteq do, for a 3rd degree polynomial
     #d, c, b, a = poly.polyfit(x, y, 3)
     #fiteq = lambda x: a * x ** 3 + b * x ** 2 + c * x + d
@@ -156,7 +158,8 @@ def scatter_poly(x, y, deg, plots_per_graph, counties):
         y_fit = fiteq(x_fit)
 
         lines = ax1.plot(x_fit, y_fit, color=color, alpha=0.5, label=county)
-        ax1.scatter(x, y, s=4, color=color)
+        if plot_points:
+            ax1.scatter(x, y, s=4, color=color)
 
     ax1.set_title(f'Polynomial fit deg={deg}')
     ax1.legend()
