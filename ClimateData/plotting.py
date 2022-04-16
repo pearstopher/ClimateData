@@ -90,12 +90,14 @@ def process_data(plot_vars_map, process_type, df_list):
                 y_data[m].append(j)
         return x_data, y_data
 
+    year_size = df_list[0].shape[1] - 1
     if process_type == 'normal':
         for df in df_list:
             x_data, y_data = pd_normal(df, plot_vars_map['begin_month'])
             x_data_list.append(x_data)
             y_data_list.append(y_data)
     elif process_type == 'monthly':
+        year_size = 1
         # Convert counties to months, since that's what we're plotting
         counties = plot_vars_map['names']
         newNames = []
@@ -112,7 +114,7 @@ def process_data(plot_vars_map, process_type, df_list):
             x_data_list += x_data
             y_data_list += y_data
 
-    year_size = df_list[0].shape[1] - 1
+
     # Duplicate all values but slice off 
     # diff number of years from duplicats
     if plot_vars_map['double_plot_diff'] != None:
