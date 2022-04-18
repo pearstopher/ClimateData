@@ -251,9 +251,11 @@ class graphPage(tk.Frame):
                 month = str(monthNum).zfill(2)
                 months.append(month_dict[month])
 
-            monthly_split = self.monthly_check_var.get()
+            monthly_split   = self.monthly_check_var.get()
+            plot_points     = self.plot_points_var.get()
             polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
             derivitive_degree = None if self.ent2 == None else int(self.ent2.get())
+            double_plot_diff = None if self.ent3 == None else int(self.ent3.get())
 
             plot_type = 'scatter_poly'
             if derivitive_degree != None:
@@ -299,10 +301,11 @@ class graphPage(tk.Frame):
             df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], months, int(begin_year), int(end_year))
 
             counties = list(chain(*counties))
-            fig = plotting.plot(plot_type, df_list, {'process_type': process_type, 
+            fig, x_data, y_data = plotting.plot(plot_type, df_list, {'process_type': process_type, 'double_plot_diff': double_plot_diff,
+                                                     'plot_points': plot_points,
                                                      'begin_month': monthsIdx[begin_month], 'end_month': monthsIdx[end_month],
                                                      'degree': polynomial_degree, 'deriv_degree': derivitive_degree,
-                                                     'plots_per_graph' : len(df_list), 'counties' : counties})
+                                                     'plots_per_graph' : len(df_list), 'names' : counties})
             canvas = FigureCanvasTkAgg(fig, master = master)  
             canvas.draw()
             canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
@@ -329,6 +332,16 @@ class graphPage(tk.Frame):
             #print("Countries: ")
             #print(countries)
             
+        def gen_plot_type(event=None):
+            if event.widget.get() == 'Double Curve':
+                self.ent3 = tkboot.Entry(self.frame_right, width="6", textvariable=event.widget.get())
+                self.ent3.grid(row=6, column=1, padx=(240,0), pady=(30,0))
+                year_offset = tk.Label(self.frame_right, font="10", text="Year Diff: ")
+                year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+            else:
+                self.ent3 = None
+        
+
         def gen_equation(event=None):
             if event == None:
                 degree = ''
@@ -362,7 +375,7 @@ class graphPage(tk.Frame):
                     degree = event.widget.get()
                     print("Degree of equation is: ")
                     print(degree_dict[degree])
-
+            
         def gen_datatype_columns(event):
             print("User selected this data type: " + event.widget.get())
             print("parsing data type into correct format.... ")
@@ -503,6 +516,12 @@ class graphPage(tk.Frame):
             #Add instance to notebook button
             #self.button_notebook_add = TTK.Button(tab1, width="25", text="Add instance to notebook", bootstyle="blue")
             #self.button_notebook_add.grid(row=0, column=0, padx=(10,580), pady=(50, 20))
+            self.plot_type = TTK.Combobox(self.tab, font="Helvetica 12")
+            self.plot_type.set('Select data type...')
+            self.plot_type['state'] = 'readonly'
+            self.plot_type['values'] = ['Curve', 'Double Curve', 'Line']
+            self.plot_type.bind('<<ComboboxSelected>>', gen_plot_type)
+            self.plot_type.grid(row=6, column=1,  padx=(0, 190), pady=(30, 0))
 
             #Dropdown Widget for equation selection
             self.dropdown_equations = TTK.Combobox(self.tab, font="Helvetica 12")
@@ -549,9 +568,15 @@ class graphPage(tk.Frame):
         tab1 = widgets(frame)
         frame.add(tab1, text = "Main") 
 
+        # Monthly Split checkbox
         self.monthly_check_var = tk.IntVar()
         self.monthly_check = TTK.Checkbutton(self.tab, text='Split Months', variable=self.monthly_check_var)
         self.monthly_check.grid(row=4, column=1,  padx=(450, 0), pady=(0, 0))
+
+        # Monthly Split checkbox
+        self.plot_points_var = tk.IntVar()
+        self.plot_points = TTK.Checkbutton(self.tab, text='Plot Points', variable=self.plot_points_var)
+        self.plot_points.grid(row=4, column=1,  padx=(650, 0), pady=(0, 0))
 
         self.sub_btn = tkboot.Button(
             self.tab,

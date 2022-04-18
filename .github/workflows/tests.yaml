@@ -1,0 +1,45 @@
+name: tests
+
+on: 
+  workflow_dispatch:
+  push:
+  pull_request:
+
+jobs:
+
+  action-pytest:
+    runs-on: ubuntu-latest
+
+    # Service containers to run with `container-job`
+    services:
+      # Label used to access the service container
+      postgres:
+        # Docker Hub image
+        image: postgres
+        # Provide the password for postgres
+        env:
+          POSTGRES_DB: postgres
+          POSTGRES_PASSWORD: PASSWORD
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Python 3
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.10'
+    - name: Install dependencies
+      run: |
+        cd ClimateData
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Run tests with pytest
+      run: |
+        cd ClimateData
+        echo '{ "Database": { "Host": "postgres", "Name": "postgres", "User": "postgres", "Password": "PASSWORD" } }' > config.json
+        pytest

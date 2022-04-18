@@ -25,7 +25,6 @@
   <ItemGroup>
     <Compile Include="ClimateData.py" />
     <Compile Include="database.py" />
-    <Compile Include="MapUI.py" />
     <Compile Include="plotting.py" />
     <Compile Include="preprocess.py">
       <SubType>Code</SubType>
@@ -62,9 +61,6 @@
     <Content Include="data\raw\drought\drought-readme.txt" />
     <Content Include="HTML\default_fig.html" />
     <Content Include="HTML\map_fig.html" />
-  </ItemGroup>
-  <ItemGroup>
-    <InterpreterReference Include="Global|PythonCore|3.8" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|PythonCore|3.8" />
