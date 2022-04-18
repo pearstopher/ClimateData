@@ -72,6 +72,8 @@ from https://www.nrcs.usda.gov/wps/portal/nrcs/detail/national/home/?cid=nrcs143
 02020	Anchorage	AK
 02050	Bethel	AK
 02060	Bristol Bay	AK
+02063	Chugach Census Area	AK
+02066	Copper River Census Area	AK
 02068	Denali	AK
 02070	Dillingham	AK
 02090	Fairbanks North Star	AK
@@ -1219,6 +1221,7 @@ from https://www.nrcs.usda.gov/wps/portal/nrcs/detail/national/home/?cid=nrcs143
 24045	Wicomico	MD
 24047	Worcester	MD
 24510	Baltimore City	MD
+24511	County 511	MD
 25001	Barnstable	MA
 25003	Berkshire	MA
 25005	Bristol	MA
