@@ -20,6 +20,28 @@ Params
 TODO at end make sure to rearrange alphabetically by state
 '''
 
+def get_xy_data_for_year(df):
+    month = 12
+    x_dates_format = []
+    x_data = []
+    start_year = int(str(df['id'].iloc[0])[7:])
+    end_year = int(str(df['id'].iloc[-1])[7:])
+
+    # range(start_year, end_year) == df.shape[0] (num of rows)
+    # Append date formatted
+    for i in range(start_year, end_year + 1):
+        for j in range(1, month + 1):
+            x_dates_format.append(str(i)[-4:] + '-' + str(j))
+            x_data.append(int(str(i)[-4:]) + (j - 1) / 12)
+
+    # Append temp/precip values
+    y_data = []
+    for i, row in df.iterrows():
+        for j in row[1:month + 1]:
+            y_data.append(j)
+
+    return [x_data, y_data, x_dates_format]
+
 def get_xy_data_for_months(df, start_year, end_year, month=12):
     x_dates_format = []
     x_data = []
@@ -36,7 +58,7 @@ def get_xy_data_for_months(df, start_year, end_year, month=12):
 
     return [x_data, y_data, x_dates_format]
 
-def export_csv(df_list, state_dict, date_range, data_type, deg, deriv):
+def export_csv_split_months(df_list, state_dict, date_range, data_type, deg, deriv):
     months_indicies = {'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5, 'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9,
                        'nov': 10, 'dec': 11}
     months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
@@ -104,6 +126,69 @@ def export_csv(df_list, state_dict, date_range, data_type, deg, deriv):
     # Create df
     df = pd.DataFrame(data_rows, columns=cols)
     return df
+
+def export_csv_year(df_list, state_dict, deg, deriv):
+    print(f'Degree {deg} Polynomial')
+
+    if deg < 1:
+        logging.error('Please enter polynomial degree greater than 0')
+        quit(1)
+
+    # Concatenate all column names
+    cols = []
+    if deriv > 0:
+        cols = np.hstack(['State', 'County', coeff_cols[:deg+1], [letter + "'" for letter in coeff_cols[:deg]]])
+    else:
+        cols = np.hstack(['State', 'County', coeff_cols[:deg+1]])
+
+    # cols = np.hstack(['State', 'County', coeff_cols[:deg + 1]])
+
+    county_index = 0
+    county_df_list = []
+    for state, counties in state_dict.items():
+        for county in counties:
+            county_df = df_list[county_index]
+
+            # Get data sorted
+            [x, y, x_dates] = get_xy_data_for_year(county_df)
+
+            # Drop Id
+            county_df['id'] = county_df['id'].str[7:]
+
+            # Get polynomial coefficients
+            # Format ax^deg + bx^deg-1 + cx^deg-2 + ... + z
+            coeffs = poly.polyfit(x, y, deg)
+
+            # Check deriv
+            coeffs_df = None
+            if deriv > 0:
+                deriv_coeffs = np.polyder(coeffs[::-1], deriv)
+                coeffs_df = pd.DataFrame([np.hstack([state, county, coeffs[::-1], deriv_coeffs])], columns=cols)
+            else:
+                coeffs_df = pd.DataFrame([np.hstack([state, county, coeffs[::-1]])], columns=cols)
+
+            # Concat
+            temp_full_df = pd.concat([coeffs_df, county_df])
+
+            # Get rid of first rows NaNs, then drop new last Nan
+            temp_full_df.loc[:,'id':] = temp_full_df.loc[:,'id':].shift(-1)
+            temp_full_df.drop(temp_full_df.tail(1).index, inplace=True)
+
+            # Drop id, rename year and put in different place
+            year_column = temp_full_df.pop('id')
+            temp_full_df.insert(2, 'Year', year_column)
+            county_df_list.append(temp_full_df)
+            county_index += 1
+
+    df = pd.concat(county_df_list)
+    df = df.replace(np.nan, '', regex=True)
+    return df
+
+def export_csv(process_type, df_list, state_dict, date_range, data_type, deg, deriv):
+    if process_type == 'monthly':
+        return export_csv_split_months(df_list, state_dict, date_range, data_type, deg, deriv)
+    else: # Only else condition currently
+        return export_csv_year(df_list, state_dict, deg, deriv)
 
 if __name__ == '__main__':
     pass

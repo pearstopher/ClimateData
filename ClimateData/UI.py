@@ -244,11 +244,12 @@ class graphPage(tk.Frame):
             canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
 
             # Build csv df with data and coefficients
-            self.export_csv_df = export_csv(df_list=df_list, state_dict=temp_dict,
-                                            date_range={'begin_month': begin_month, 'begin_year': begin_year,
+            # If monthly_split true or process_type == monthly
+            self.export_csv_df = export_csv(process_type=process_type, df_list=df_list, state_dict=temp_dict,
+                                                         date_range={'begin_month': begin_month, 'begin_year': begin_year,
                                                         'end_month': end_month, 'end_year': end_year},
-                                            data_type=data_type, deg=polynomial_degree,
-                                            deriv=(0 if derivitive_degree is None else derivitive_degree))
+                                                         data_type=data_type, deg=polynomial_degree,
+                                                         deriv=(0 if derivitive_degree is None else derivitive_degree))
             #print("\nHere is the data that the user entered: ")
             #print("Begin date month: ")
             #print(begin_month)
