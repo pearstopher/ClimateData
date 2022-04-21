@@ -81,7 +81,6 @@ class MapWindow(QWindow):
     self.month_list.addItems(['Select month...', 'January','February','March','April','May','June','July','August','September','October','November','December'])
     self.month_list.setMinimumWidth(200)
     self.month_list.currentIndexChanged.connect(self.month_list_change)
-
     self.addButton = QPushButton('+', self.window)
     self.addButton.setMinimumHeight(30)
     self.addButton.setMaximumWidth(40)
@@ -90,15 +89,15 @@ class MapWindow(QWindow):
     # self.deleteButton.setMinimumHeight(30)
     # self.deleteButton.setMaximumWidth(40)
     # self.deleteButton.clicked.connect(self.removeLine)
-
     self.mapItButton = QPushButton('Map it!', self.window)
     self.mapItButton.setMinimumHeight(30)
     self.mapItButton.setMaximumWidth(150)
     self.mapItButton.clicked.connect(self.genMap)
-    
+    self.yearSliderBox.setStyleSheet('background-color: #2F2F2F; color: white; font-weight: bold')
+    self.month_list.setStyleSheet('background-color: #555555; color: white; font-weight: bold')
+    self.mapItButton.setStyleSheet('background-color: #00BC8C; color: white; font-weight:bold')
     self.controls.addWidget(self.addButton)
     # self.controls.addWidget(self.deleteButton)
-
     self.controls.addWidget(self.mapItButton)
     self.controls.addWidget(self.month_list)
     self.controls.addWidget(self.yearSlider)
@@ -114,6 +113,9 @@ class MapWindow(QWindow):
     self.dataType_list = QComboBox()
     self.dataType_list.addItems(['Select Data Type...', 'Maximum Temperature', 'Minimum Temperature', 'Average Temperature', 'Precipitation'])
     self.dataType_list.activated.connect(self.dataType_list_change)
+    self.state_list.setStyleSheet('background-color: #555555; color: white; font-weight: bold;')
+    self.county_list.setStyleSheet('background-color: #555555; color: white; font-weight: bold;')
+    self.dataType_list.setStyleSheet('background-color: #555555; color: white; font-weight: bold;')
     self.selection.addWidget(self.state_list)
     self.selection.addWidget(self.county_list)
     self.selection.addWidget(self.dataType_list)
@@ -127,6 +129,7 @@ class MapWindow(QWindow):
     self.data_table.setHeaderData(2, Qt.Horizontal, "Country")
     self.data_tree.setModel(self.data_table)
     self.data_tree.setMaximumHeight(200)
+    self.data_tree.setStyleSheet('background-color: #2F2F2F; font-weight: bold;')
     self.echo.addWidget(self.data_tree)
 
     #Set title and add widgets and layouts to main window. 
@@ -139,6 +142,7 @@ class MapWindow(QWindow):
     self.layout.addLayout(self.echo)
     self.layout.addLayout(self.navbar)
     self.window.setLayout(self.layout)
+    self.window.setStyleSheet('background-color: #222222;')
     self.window.show()
 
   def county_list_change(self):
