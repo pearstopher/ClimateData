@@ -182,6 +182,8 @@ class graphPage(tk.Frame):
             plot_type = 'scatter_poly'
             if derivitive_degree != None:
                 plot_type = 'poly_deriv'
+            elif self.connected:
+                plot_type = 'connected'
 
             process_type = 'normal'
             if monthly_split:
@@ -257,13 +259,15 @@ class graphPage(tk.Frame):
             #print(countries)
             
         def gen_plot_type(event=None):
-            if event.widget.get() == 'Double Curve':
+            self.connected = False
+            self.ent3 = None
+            if event.widget.get() == 'Yearly Offset':
                 self.ent3 = tkboot.Entry(self.frame_right, width="6", textvariable=event.widget.get())
                 self.ent3.grid(row=6, column=1, padx=(240,0), pady=(30,0))
                 year_offset = tk.Label(self.frame_right, font="10", text="Year Diff: ")
                 year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
-            else:
-                self.ent3 = None
+            elif event.widget.get() == 'Connected':
+                self.connected = True
 
         def gen_equation(event=None):
             if event == None:
@@ -442,7 +446,7 @@ class graphPage(tk.Frame):
         self.plot_type = TTK.Combobox(self.frame_right, font="Helvetica 12")
         self.plot_type.set('Select data type...')
         self.plot_type['state'] = 'readonly'
-        self.plot_type['values'] = ['Curve', 'Double Curve', 'Line']
+        self.plot_type['values'] = ['Curve', 'Yearly Offset', 'Connected']
         self.plot_type.bind('<<ComboboxSelected>>', gen_plot_type)
         self.plot_type.grid(row=6, column=1,  padx=(0, 190), pady=(30, 0))
 
