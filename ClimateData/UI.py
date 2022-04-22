@@ -172,12 +172,6 @@ class graphPage(tk.Frame):
             end_month = month_dict[end_month_num]
             months = []
 
-            # Enable export_csv_button.
-            self.export_csv_button = TTK.Button(self.frame_left, width="16", command=save_csv_file,
-                                                text="Export data to CSV", bootstyle="blue")
-            # TODO change padding
-            self.export_csv_button.grid(row=0, column=0, pady=(0, 50))
-
             for monthNum in range(int(begin_month_num), int(end_month_num)+1):
                 month = str(monthNum).zfill(2)
                 months.append(month_dict[month])
@@ -250,6 +244,11 @@ class graphPage(tk.Frame):
                                                         'end_month': end_month, 'end_year': end_year},
                                                          data_type=data_type, deg=polynomial_degree,
                                                          deriv=(0 if derivitive_degree is None else derivitive_degree))
+            # Enable export_csv_button.
+            self.export_csv_button = TTK.Button(self.frame_left, width="16", command=save_csv_file,
+                                                text="Export data to CSV", bootstyle="blue")
+            # TODO change padding
+            self.export_csv_button.grid(row=0, column=0, pady=(0, 50))
             #print("\nHere is the data that the user entered: ")
             #print("Begin date month: ")
             #print(begin_month)
