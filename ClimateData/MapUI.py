@@ -35,6 +35,17 @@ month_dict = {
     "12" : "dec"
 }
 
+state_dict = {
+    "AL" : [], "AK" : [], "AZ" : [], "AR" : [], "AS" : [], "CA" : [], "CO" : [], "CT" : [],
+    "DE" : [], "DC" : [], "FL" : [], "GA" : [], "GU" : [], "HI" : [], "ID" : [], "IL" : [],
+    "IN" : [], "IA" : [], "KS" : [], "KY" : [], "LA" : [], "ME" : [], "MD" : [], "MA" : [],
+    "MI" : [], "MN" : [], "MS" : [], "MO" : [], "MT" : [], "NE" : [], "NV" : [], "NH" : [],
+    "NJ" : [], "NM" : [], "NY" : [], "NC" : [], "ND" : [], "OH" : [], "OK" : [], "OR" : [],
+    "PA" : [], "RI" : [], "SC" : [], "SD" : [], "TN" : [], "TX" : [], "UT" : [], "VT" : [], 
+    "VA" : [], "VI" : [], "WA" : [], "WV" : [], "WI" : [], "WY" : []
+}
+
+
 class MapWindow(QWindow):
 
   def __init__(self, pdDF, *args, **kwargs):
@@ -108,11 +119,10 @@ class MapWindow(QWindow):
 
     #Data table
     self.data_tree = QTreeView()
-    self.data_table = QStandardItemModel(0,4)
+    self.data_table = QStandardItemModel(0,3)
     self.data_table.setHeaderData(0, Qt.Horizontal, "State")
     self.data_table.setHeaderData(1, Qt.Horizontal, "County Name")
-    self.data_table.setHeaderData(2, Qt.Horizontal, "County FIPS")
-    self.data_table.setHeaderData(3, Qt.Horizontal, "Country")
+    self.data_table.setHeaderData(2, Qt.Horizontal, "Country")
     self.data_tree.setModel(self.data_table)
     self.data_tree.setMaximumHeight(200)
     self.echo.addWidget(self.data_tree)
@@ -134,6 +144,24 @@ class MapWindow(QWindow):
     self.county_boxes.append(self.county_list.currentText())
     self.state_boxes = list(set(self.state_boxes))
     self.county_boxes = list(set(self.county_boxes))
+    model = self.data_tree.model()
+    county = self.county_list.currentText()
+    state = self.state_list.currentText()
+    
+    match = 0
+    for countyList in state_dict[state]:
+        for item in countyList:
+            if item == county:
+                match = 1
+
+    if match == 0:
+        model.insertRow(0)
+        model.setData(model.index(0, 0), state)
+        model.setData(model.index(0, 1), county)
+        model.setData(model.index(0, 2), "US")
+        state_dict[state].append([county])
+
+
     print(self.state_boxes)
     print(self.county_boxes)
 

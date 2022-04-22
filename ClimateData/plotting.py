@@ -13,7 +13,7 @@ from matplotlib.pyplot import cm
 import math
 import datetime as dt
 
-matplotlib.use("TkAgg")
+matplotlib.use("TkAgg", force= False)
 '''
 TODO
 functions to implement
@@ -24,32 +24,6 @@ functions to implement
 '''
 csv_path = './data/raw/climdiv-avgtmp.csv'
 headers = ['Codes', 'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-
-def get_test_data():
-    df = pd.read_csv(csv_path, delimiter=',', nrows=127, header=None)
-    df.columns = headers
-
-    print(df.head())
-
-    x_dates_format = []
-    x_data = []
-    for i in df['Codes']:
-        for j in range(1,13):
-            x_dates_format.append(str(i)[-4:] + '-' + str(j))
-            x_data.append(int(str(i)[-4:]) + (j-1) / 12)
-
-    y_data = []
-    for i, row in df.head(127).iterrows():
-        for j in row[1:]:
-            y_data.append(j)
-
-    return [x_data, y_data, x_dates_format]
- 
-
-def get_test_data_raw():
-    df = pd.read_csv(csv_path, delimiter=',', nrows=127, header=None)
-    df.columns = headers
-    return df
 
 def to_date(x_data):
     x_data_formatted = []
@@ -76,13 +50,15 @@ def plot(ptype, df_list, plot_vars_map):
         pass
     elif ptype == 'poly_deriv':
         return plot_poly_deriv(x_data_list, y_data_list, plot_vars_map['degree'], plot_vars_map['deriv_degree'], 
-                               plot_vars_map['plots_per_graph'], plot_vars_map['counties'])
+                               plot_vars_map['plots_per_graph'], plot_vars_map['names'])
     elif ptype == 'scatter_poly':
-        return scatter_poly(x_data_list, y_data_list, plot_vars_map['degree'], plot_vars_map['plots_per_graph'], plot_vars_map['counties'])
+        return scatter_poly(x_data_list, y_data_list, plot_vars_map['degree'], 
+                            plot_vars_map['plots_per_graph'], plot_vars_map['names'],
+                            plot_vars_map['plot_points'])
     elif ptype == 'us_heatmap':
         pass
     else:
-        return 'Invalid plot type!'
+        print('Invalid plot type!')
 
 def process_data(plot_vars_map, process_type, df_list):
     x_data_list = []
@@ -114,22 +90,24 @@ def process_data(plot_vars_map, process_type, df_list):
                 y_data[m].append(j)
         return x_data, y_data
 
+    year_size = df_list[0].shape[1] - 1
     if process_type == 'normal':
         for df in df_list:
             x_data, y_data = pd_normal(df, plot_vars_map['begin_month'])
             x_data_list.append(x_data)
             y_data_list.append(y_data)
     elif process_type == 'monthly':
-        # Convert conties to months, since that's what we're plotting
-        counties = plot_vars_map['counties']
-        newCounties = []
+        year_size = 1
+        # Convert counties to months, since that's what we're plotting
+        counties = plot_vars_map['names']
+        newNames = []
         for i in range(len(counties)):
             for j in range(plot_vars_map['begin_month'], plot_vars_map['end_month']+1):
                 name = headers[1:][j]
                 if len(counties) > 1:
                     name = counties[i] + '-' + name
-                newCounties.append(name)
-        plot_vars_map['counties'] = newCounties
+                newNames.append(name)
+        plot_vars_map['names'] = newNames
 
         for df in df_list:
             x_data, y_data = pd_monthly(df, plot_vars_map['begin_month'], plot_vars_map['end_month'])
@@ -137,9 +115,33 @@ def process_data(plot_vars_map, process_type, df_list):
             y_data_list += y_data
 
 
+    # Duplicate all values but slice off 
+    # diff number of years from duplicats
+    if plot_vars_map['double_plot_diff'] != None:
+        new_x_vals = []
+        new_y_vals = []
+        diff = plot_vars_map['double_plot_diff']
+        vals_to_cut = diff * year_size
+
+        for xarr, yarr in zip(x_data_list, y_data_list):
+            new_x = xarr[:-vals_to_cut]
+            new_y = yarr[:-vals_to_cut]
+            new_x_vals.append(new_x)
+            new_y_vals.append(new_y)
+
+        x_data_list += new_x_vals
+        y_data_list += new_y_vals
+
+        # Add new names for these lines
+        names = plot_vars_map['names']
+        newNames = []
+        for n in names:
+            newNames.append(n + '_diff')
+        plot_vars_map['names'] = names + newNames
+
     return x_data_list, y_data_list, plot_vars_map
 
-def scatter_poly(x, y, deg, plots_per_graph, counties):
+def scatter_poly(x, y, deg, plots_per_graph, counties, plot_points):
     # Example of what coeffs and fiteq do, for a 3rd degree polynomial
     #d, c, b, a = poly.polyfit(x, y, 3)
     #fiteq = lambda x: a * x ** 3 + b * x ** 2 + c * x + d
@@ -158,7 +160,8 @@ def scatter_poly(x, y, deg, plots_per_graph, counties):
         y_fit = fiteq(x_fit)
 
         lines = ax1.plot(x_fit, y_fit, color=color, alpha=0.5, label=county)
-        ax1.scatter(x, y, s=4, color=color)
+        if plot_points:
+            ax1.scatter(x, y, s=4, color=color)
 
     ax1.set_title(f'Polynomial fit deg={deg}')
     ax1.legend()
@@ -169,10 +172,12 @@ def scatter_poly(x, y, deg, plots_per_graph, counties):
     #plt.text(15, 3.4, 'Coefficients', size=12)
     cursor = mplcursors.cursor()
     #plt.show()
-    return fig
+    return fig, x, y
 
 def plot_poly_deriv(x, y, deg, deriv_deg, plots_per_graph, counties):
     
+    new_x = []
+    new_y = []
     fig, ax1 = plt.subplots()
     colors = cm.rainbow(np.linspace(0, 1, len(counties)))
     for x, y, county, color in zip(x, y, counties, colors):
@@ -186,6 +191,8 @@ def plot_poly_deriv(x, y, deg, deriv_deg, plots_per_graph, counties):
 
         x_fit = np.array(x)
         y_fit = fiteq(x_fit)
+        new_x.append(x_fit)
+        new_y.append(y_fit)
 
         lines = ax1.plot(x_fit, y_fit, color=color, alpha=0.5, label=county)
         #ax1.scatter(x, y, s=4, color=color)
@@ -193,7 +200,7 @@ def plot_poly_deriv(x, y, deg, deriv_deg, plots_per_graph, counties):
     ax1.set_title(f'Derivitive deg={deriv_deg} of polynomial fit deg={deg}')
     ax1.legend()
     cursor = mplcursors.cursor()
-    return fig
+    return fig, new_x, new_y
 
 def tkinter_scatter_poly(x, y, deg):
     coeffs = poly.polyfit(x, y, deg)
