@@ -5,6 +5,7 @@ import ttkbootstrap as tkboot
 from ttkbootstrap import ttk as TTK
 from ttkbootstrap import font as tkfont
 from ttkbootstrap.constants import *
+from tkinter.filedialog import asksaveasfilename
 import psycopg2
 from database import *
 import plotting
@@ -13,6 +14,7 @@ from itertools import chain
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 import MapUI
 from PyQt5.QtWidgets import *                   #pip install PyQt5
+from export_csv import export_csv
 
 # Dictionaries
 degree_dict = {
@@ -202,6 +204,8 @@ class graphPage(tk.Frame):
         self.end_date = tkboot.StringVar(value="")
         self.n_degree = tkboot.StringVar(value="")
 
+        self.export_csv_df = None
+
         def on_submit():
             #user input is invalid, call validate_dates function
             if validate_dates(self.begin_year.get(), self.end_year.get()) == False:    
@@ -235,15 +239,7 @@ class graphPage(tk.Frame):
             [begin_month_num, begin_year] = self.begin_year.get().split('/')
             [end_month_num, end_year] = self.end_year.get().split('/')
             months = []
-            #Coefficient Button
 
-            self.button_coeff = TTK.Button(self.tab, width="15", text="View Coefficients", bootstyle="blue")
-            self.button_coeff.grid(row=9, column=1, padx=(220,0), pady=(50, 0))
-
-            self.button_coeff = TTK.Button(self.tab, width="16", text="Export data to CSV", bootstyle="blue")
-            self.button_coeff.grid(row=9, column=1, padx=(537,0), pady=(50, 0))
-
-            
             polynomial_degree = degree_dict[self.dropdown_equations.get()]
             begin_month = month_dict[begin_month_num]
             end_month = month_dict[end_month_num]
@@ -311,6 +307,19 @@ class graphPage(tk.Frame):
             canvas.draw()
             canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
 
+            #Coefficient Button
+
+            self.button_coeff = TTK.Button(self.tab, width="15", text="View Coefficients", bootstyle="blue")
+            self.button_coeff.grid(row=9, column=1, padx=(220,0), pady=(50, 0))
+
+            self.export_csv_df = export_csv(process_type=process_type, df_list=df_list, state_dict=temp_dict,
+                                                         date_range={'begin_month': begin_month, 'begin_year': begin_year,
+                                                        'end_month': end_month, 'end_year': end_year},
+                                                         data_type=data_type, deg=polynomial_degree,
+                                                         deriv=(0 if derivitive_degree is None else derivitive_degree))
+
+            self.export_csv_button = TTK.Button(self.tab, command=save_csv_file ,width="16", text="Export data to CSV", bootstyle="blue")
+            self.export_csv_button.grid(row=9, column=1, padx=(537,0), pady=(50, 0))
             #print("\nHere is the data that the user entered: ")
             #print("Begin date month: ")
             #print(begin_month)
@@ -561,7 +570,12 @@ class graphPage(tk.Frame):
             gen_table()
             return self.tab
 
-        
+        # Exporting data to csv
+        def save_csv_file():
+            if self.export_csv_df is not None:
+                file_name = asksaveasfilename(filetypes=[("CSV files", "*.csv")],
+                                              defaultextension='.csv')
+                self.export_csv_df.to_csv(file_name, sep=',', encoding='utf-8', index=False)
 
         frame = ttk.Notebook(self)
         frame.pack(fill='both', pady=10, expand=True)
