@@ -166,6 +166,7 @@ class App(tk.Tk):
 
     def open_map(self, df):
       window = MapUI.MapWindow(df)
+      self.app.setStyleSheet("QHeaderView::section { background-color: #2F2F2F; color: white }")
       self.app.exec_()
 
 class StartPage(tk.Frame):

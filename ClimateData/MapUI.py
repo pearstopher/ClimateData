@@ -67,6 +67,8 @@ class MapWindow(QWindow):
     self.controls = QHBoxLayout()
     self.selection = QHBoxLayout()
     self.echo = QHBoxLayout()
+    self.mapFig = None
+    self.df = None
 
     #Map Controls
     self.yearSlider = QSlider(Qt.Horizontal)
@@ -79,24 +81,25 @@ class MapWindow(QWindow):
     self.month_list.addItems(['Select month...', 'January','February','March','April','May','June','July','August','September','October','November','December'])
     self.month_list.setMinimumWidth(200)
     self.month_list.currentIndexChanged.connect(self.month_list_change)
-
-    # self.addButton = QPushButton('+', self.window)
-    # self.addButton.setMinimumHeight(30)
-    # self.addButton.setMaximumWidth(40)
-    # self.addButton.clicked.connect(self.addLine)
+    self.addButton = QPushButton('+', self.window)
+    self.addButton.setMinimumHeight(30)
+    self.addButton.setMaximumWidth(40)
+    self.addButton.clicked.connect(self.addLine)
     # self.deleteButton = QPushButton('-')
     # self.deleteButton.setMinimumHeight(30)
     # self.deleteButton.setMaximumWidth(40)
     # self.deleteButton.clicked.connect(self.removeLine)
-
     self.mapItButton = QPushButton('Map it!', self.window)
     self.mapItButton.setMinimumHeight(30)
     self.mapItButton.setMaximumWidth(150)
     self.mapItButton.clicked.connect(self.genMap)
-    
-    # self.controls.addWidget(self.addButton)
+    self.yearSliderBox.setStyleSheet('background-color: #2F2F2F; color: white;')
+    self.month_list.setStyleSheet('background-color: #555555; color: white;')
+    self.mapItButton.setStyleSheet('background-color: #00BC8C; color: white;')
+    self.addButton.setStyleSheet('background-color: #375A7F; color: white;')
+    self.yearSlider.setStyleSheet('QSlider::handle:horizontal {background-color: #375a7f;}')
+    self.controls.addWidget(self.addButton)
     # self.controls.addWidget(self.deleteButton)
-
     self.controls.addWidget(self.mapItButton)
     self.controls.addWidget(self.month_list)
     self.controls.addWidget(self.yearSlider)
@@ -112,6 +115,9 @@ class MapWindow(QWindow):
     self.dataType_list = QComboBox()
     self.dataType_list.addItems(['Select Data Type...', 'Maximum Temperature', 'Minimum Temperature', 'Average Temperature', 'Precipitation'])
     self.dataType_list.activated.connect(self.dataType_list_change)
+    self.state_list.setStyleSheet('background-color: #555555; color: white;')
+    self.county_list.setStyleSheet('background-color: #555555; color: white;')
+    self.dataType_list.setStyleSheet('background-color: #555555; color: white;')
     self.selection.addWidget(self.state_list)
     self.selection.addWidget(self.county_list)
     self.selection.addWidget(self.dataType_list)
@@ -119,12 +125,13 @@ class MapWindow(QWindow):
 
     #Data table
     self.data_tree = QTreeView()
-    self.data_table = QStandardItemModel(0,3)
+    self.data_table = QStandardItemModel(0,4)
     self.data_table.setHeaderData(0, Qt.Horizontal, "State")
     self.data_table.setHeaderData(1, Qt.Horizontal, "County Name")
     self.data_table.setHeaderData(2, Qt.Horizontal, "Country")
     self.data_tree.setModel(self.data_table)
     self.data_tree.setMaximumHeight(200)
+    self.data_tree.setStyleSheet('background-color: #2F2F2F;')
     self.echo.addWidget(self.data_tree)
 
     #Set title and add widgets and layouts to main window. 
@@ -137,6 +144,7 @@ class MapWindow(QWindow):
     self.layout.addLayout(self.echo)
     self.layout.addLayout(self.navbar)
     self.window.setLayout(self.layout)
+    self.window.setStyleSheet('background-color: #222222;')
     self.window.show()
 
   def county_list_change(self):
@@ -224,12 +232,12 @@ class MapWindow(QWindow):
       print("You must select a data type!")
       return  
     if not self.state_boxes:
-      self.state_boxes = ['AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY']
+      self.state_boxes = ['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY']
     if not self.county_boxes:
-      df = database.get_map_data_for_states(self.state_boxes, 'US', [self.dataType], [self.curr_month], self.curr_year, self.curr_year)
+      self.df = database.get_map_data_for_states(self.state_boxes, 'US', [self.dataType], [self.curr_month], self.curr_year, self.curr_year)
     else:
-      df = database.get_map_data_for_counties(self.state_boxes, self.county_boxes, 'US', [self.dataType], [self.curr_month], self.curr_year, self.curr_year)
-    print(df)
+      self.df = database.get_map_data_for_counties(self.state_boxes, self.county_boxes, 'US', [self.dataType], [self.curr_month], self.curr_year, self.curr_year)
+    print(self.df)
     with urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json') as response:
       counties = json.load(response)
     
@@ -239,10 +247,10 @@ class MapWindow(QWindow):
     if self.dataType == 'precip':
       colorscale = 'dense'
       range = (0,15)
-    cli_map = px.choropleth(df, geojson=counties, locations='fips_code', color=self.dataType+"_"+self.curr_month, color_continuous_scale=colorscale, range_color=range, scope='usa', hover_name='county_name', hover_data=['state'])
-    cli_map.update_layout(title='Climate Data')
-    cli_map.update_geos(fitbounds='locations', visible=True)
-    cli_map.write_html('HTML/map_fig.html')
+    self.mapFig = px.choropleth(self.df, geojson=counties, locations='fips_code', color=self.dataType+"_"+self.curr_month, color_continuous_scale=colorscale, range_color=range, scope='usa', hover_name='county_name', hover_data=['state'])
+    self.mapFig.update_layout(title='Climate Data')
+    # cli_map.update_geos(fitbounds='locations', visible=True) <-- Causes break when Aleutians West, AK is selected... 
+    self.mapFig.write_html('HTML/map_fig.html')
     self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/map_fig.html')))
 
   #Used to open blank map of US
@@ -251,19 +259,9 @@ class MapWindow(QWindow):
 
   #Button control for adding a new line
   def addLine(self):
-      self.addNavbar = QHBoxLayout()
-      self.state_list = QComboBox()
-      self.state_list.addItems(['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
-      self.state_list.setMinimumHeight(30)
-      self.state_boxes.append(self.state_list)
-      self.date = QLineEdit()
-      self.date.setMinimumHeight(30)
-      self.date.setMaximumWidth(250)
-      self.addNavbar.addWidget(self.state_list)
-      self.addNavbar.addWidget(self.date)
-      self.layout.addLayout(self.addNavbar)
-      self.lines.append(self.addNavbar)
-      self.date_boxes.append(self.date)
+    self.yearSlider.setValue(self.yearSlider.value()+1)
+    self.genMap()
+    return
  
  #Button control to remove a line
   def removeLine(self):
@@ -296,4 +294,5 @@ class MapWindow(QWindow):
 if __name__ == "__main__":
   app = QApplication([])
   window = MapWindow('TODO:')
+  app.setStyleSheet("QHeaderView::section { background-color: #2F2F2F; color: white }")
   app.exec_()
