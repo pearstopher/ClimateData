@@ -335,7 +335,7 @@ class graphPage(tk.Frame):
             #print(countries)
             
         def gen_plot_type(event=None):
-            if event.widget.get() == 'Double Curve':
+            if event.widget.get() == 'Connected':
                 self.ent3 = tkboot.Entry(self.frame_right, width="6", textvariable=event.widget.get())
                 self.ent3.grid(row=6, column=1, padx=(240,0), pady=(30,0))
                 year_offset = tk.Label(self.frame_right, font="10", text="Year Diff: ")
@@ -385,6 +385,11 @@ class graphPage(tk.Frame):
             columns = event.widget.get()
             #Data type 'columns' for database function 'get_data_for_counties_dataset'
             print("Data type in correct format is: " + datatype_dict[columns])
+
+        def delete_from_table():
+            selected_item = self.data_table.selection()[0]
+            self.data_table.delete(selected_item)
+            
 
         def gen_counties(event=None):
             if event == None:
@@ -456,6 +461,7 @@ class graphPage(tk.Frame):
 
             self.end_date_label = tkboot.Label(self.tab, font="10", text="Date range end: ", bootstyle="inverse-dark")
 
+            """
             self.end_date_label.grid(row=5, column=1, padx=(0, 265), pady=(0,0))
             self.specific_months = TTK.Combobox(self.tab, font="Helvetica 12")
             self.specific_months.set('Select months')
@@ -463,6 +469,7 @@ class graphPage(tk.Frame):
             self.specific_months['values'] = ('All months', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December') 
             self.specific_months.bind('<<ComboboxSelected>>', gen_specific_date_table) 
             self.specific_months.grid(row=5, column=1, padx=(400, 0))
+            """
             
 
             # Initialize Table Widget
@@ -478,6 +485,9 @@ class graphPage(tk.Frame):
             self.data_table.heading('county_name', text="County Name")
             self.data_table.heading('county_code', text="County Code")
             self.data_table.heading('country', text="Country")
+
+            delete_btn = tkboot.Button(self.tab, text="Delete row", command=delete_from_table)
+            delete_btn.grid(row=2, column=1, padx=(550,0), pady=(0,160))
 
             #Table widget for specific dates
             self.date_table = TTK.Treeview(self.tab, height=5)
@@ -505,17 +515,19 @@ class graphPage(tk.Frame):
             #Home button
             #self.button_back = TTK.Button(self.tab, width="15", text="Back to home", bootstyle="blue", command=lambda: controller.show_frame("StartPage"))
             #self.button_back.grid(row=0, column=1, padx=(0,250), pady=(50, 10))
-            self.button2 = TTK.Button(self.tab, text = "Map", width="15", bootstyle="secondary", command=lambda: controller.open_map("TODO:"))
+            self.button2 = TTK.Button(self.tab, text = "Open map", width="15", bootstyle="secondary", command=lambda: controller.open_map("TODO:"))
             self.button2.grid(row=0, column=1, padx=(0,250), pady=(50, 10))
             #Add instance to notebook button
             #self.button_notebook_add = TTK.Button(tab1, width="25", text="Add instance to notebook", bootstyle="blue")
             #self.button_notebook_add.grid(row=0, column=0, padx=(10,580), pady=(50, 20))
             self.plot_type = TTK.Combobox(self.tab, font="Helvetica 12")
-            self.plot_type.set('Select data type...')
+            self.plot_type.set('Select plot type...')
             self.plot_type['state'] = 'readonly'
-            self.plot_type['values'] = ['Curve', 'Double Curve', 'Line']
+            self.plot_type['values'] = ['Curve', 'Connected', 'Line']
             self.plot_type.bind('<<ComboboxSelected>>', gen_plot_type)
-            self.plot_type.grid(row=6, column=1,  padx=(0, 190), pady=(30, 0))
+            self.plot_type.grid(row=6, column=1,  padx=(0, 200), pady=(30, 0))
+            datatypeTip = Hovertip(self.plot_type, 'Select plot type')
+
 
             #Dropdown Widget for equation selection
             self.dropdown_equations = TTK.Combobox(self.tab, font="Helvetica 12")
@@ -524,11 +536,8 @@ class graphPage(tk.Frame):
             self.dropdown_equations['values'] = ['Linear', 'Quadratic', 'Cubic', 'Derivative', 'n-degree..']
             self.dropdown_equations.bind('<<ComboboxSelected>>', gen_equation)
             self.dropdown_equations.grid(row=7, column=1,  padx=(0, 200), pady=(10, 0))
+            equationTip = Hovertip(self.dropdown_equations, 'Select which type of equation to plot data with')
 
-            #TODO: add functionality to this checkbox
-            #Scatter plot option checkbox
-            self.scatter_checkbox = tkboot.Checkbutton(self.tab, text="Enable scatter plotting", command=on_checkbox)
-            self.scatter_checkbox.grid(row=7, column=1, padx=(0, 230), pady=(80,0))
 
             #Dropdown for datatype selection
             self.dropdown_graphs = TTK.Combobox(self.tab, font="Helvetica 12")
@@ -537,6 +546,7 @@ class graphPage(tk.Frame):
             self.dropdown_graphs['values'] = ["Minimum temperature", "Maximum temperature", "Average temperature", "Precipitation"]
             self.dropdown_graphs.bind('<<ComboboxSelected>>', gen_datatype_columns)
             self.dropdown_graphs.grid(row=8, column=1,  padx=(0, 200), pady=(40, 0))
+            datatypeTip = Hovertip(self.dropdown_graphs, 'Select which type of weather data to graph')
 
 
             #Button for submitting all that the user has entered
@@ -554,7 +564,6 @@ class graphPage(tk.Frame):
             gen_table()
             return self.tab
 
-        
 
         frame = ttk.Notebook(self)
         frame.pack(fill='both', pady=10, expand=True)
@@ -570,18 +579,10 @@ class graphPage(tk.Frame):
 
         # Monthly Split checkbox
         self.plot_points_var = tk.IntVar()
-        self.plot_points = TTK.Checkbutton(self.tab, text='Plot Points', variable=self.plot_points_var)
-        self.plot_points.grid(row=4, column=1,  padx=(650, 0), pady=(0, 0))
+        self.plot_points = TTK.Checkbutton(self.tab, text='Enable Scatter Plotting', variable=self.plot_points_var)
+        self.plot_points.grid(row=6, column=1,  padx=(210, 0), pady=(10, 0))
+        scatterTip = Hovertip(self.plot_points, 'Check to enable scatter plotting on graph')
 
-        self.sub_btn = tkboot.Button(
-            self.tab,
-            text="Submit dates",
-            command=on_submit,
-            bootstyle="blue",
-            width=12,
-        )
-        self.sub_btn.grid(row=5, column=1, padx=(450, 0), pady=(0,0))
-        self.sub_btn.focus_set()
         
 # WIDGETS ----------------------------------------------------------------------------       
         
