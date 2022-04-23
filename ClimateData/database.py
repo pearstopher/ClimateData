@@ -15,23 +15,23 @@ password = 'PASSWORD'
 outputDir = './data/processed/'
 debug = False
 
-state_dict = {
-    101:"AL", 102:"AZ", 103:"AR", 
-    104:"CA", 105:"CO", 106:"CT", 
-    107:"DE", 108:"FL", 109:"GA",
-    110:"ID", 111:"IL", 112:"IN",          
-    113:"IA", 114:"KS", 115:"KY", 
-    116:"LA", 117:"ME", 118:"MD", 
-    119:"MA", 120:"MI", 121:"MN", 
-    122:"MS", 123:"MO", 124:"MT", 
-    125:"NE", 126:"NV", 127:"NH", 
-    128:"NJ", 129:"NM", 130:"NY",
-    131:"NC", 132:"ND", 133:"OH",
-    134:"OK", 135:"OR", 136:"PA",
-    137:"RI", 138:"SC", 139:"SD",
-    140:"TN", 141:"TX", 142:"UT",
-    143:"VT", 144:"VA", 145:"WA",
-    146:"WV", 147:"WI", 148:"WY"
+states_id_dict = {
+    "AL":101, "AZ":102, "AR":103, 
+    "CA":104, "CO":105, "CT":106, 
+    "DE":107, "FL":108, "GA":109,
+    "ID":110, "IL":111, "IN":112,          
+    "IA":113, "KS":114, "KY":115, 
+    "LA":116, "ME":117, "MD":118, 
+    "MA":119, "MI":120, "MN":121, 
+    "MS":122, "MO":123, "MT":124, 
+    "NE":125, "NV":126, "NH":127, 
+    "NJ":128, "NM":129, "NY":130,
+    "NC":131, "ND":132, "OH":133,
+    "OK":134, "OR":135, "PA":136,
+    "RI":137, "SC":138, "SD":139,
+    "TN":140, "TX":141, "UT":142,
+    "VT":143, "VA":144, "WA":145,
+    "WV":146, "WI":147, "WY":148
 }
 
 #INTERNAL CALLS---------------------------------------------------------------------
@@ -334,16 +334,15 @@ def get_weather_data(columnList, idList, startYear, endYear):
     columnString = defaultColumns + columnString
     
     columnName = columnList[0][:-4]
-    print("******** COLUMN NAME: " + columnName)
 
     if columnName == 'tmp_avg' or columnName == 'tmp_min' or columnName == 'tmp_max' or columnName == 'precip':
         table = "weather"
     else:
         table = "drought"
-    print("**********TABLE: " + table)
+    
     for year in range(startYear, endYear+1):
         for dataId in idList:
-            idYearList.append(dataId+str(year))
+            idYearList.append(str(dataId)+str(year))
 
     idString = ", ".join(idYearList)
 
@@ -641,10 +640,22 @@ def get_data_for_counties_dataset(states, counties, country, columns, months, st
             to_add = column + '_' + month.lower()
             columnList.append(to_add)
 
-    for index, state in enumerate(states):
-        for county in counties[index]:
-            next_set = get_data_for_single_county(columnList, county, state, country, startYear, endYear)
-            results.append(next_set)
+    
+    columnName = columnList[0][:-4]
+    stateIds = []
+
+    if columnName == 'tmp_avg' or columnName == 'tmp_min' or columnName == 'tmp_max' or columnName == 'precip':
+        for index, state in enumerate(states):
+            for county in counties[index]:
+                next_set = get_data_for_single_county(columnList, county, state, country, startYear, endYear)
+                results.append(next_set)
+    else:
+        for state in states:
+            stateIds.append(states_id_dict[state])
+            print(states_id_dict[state])
+        results = get_weather_data(columnList, stateIds, startYear, endYear)
+    
+
     return results
 
 def get_data_for_states_dataset(states, country, columns, months, startYear, endYear):
@@ -737,14 +748,14 @@ def get_selected_counties_for_state(state, county):
 
 
 
-setup_database()
+#setup_database()
 tartMonth = 'jan'
 #convertedStartMonth = Months[startMonth.upper()].value
 #print(convertedStartMonth)
 endMonth = 'jun'
 #for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
 #    print(Months(i).name.lower())
-columns = ["phdist"]
+columns = ["tmp_avg"]
 idList = ["0101001", "0101005"]
 startYear = 1900
 endYear = 2020
@@ -761,11 +772,11 @@ counties.append(alabama)
 counties.append(oregon)
 counties.append(washington)
 months = ['jan', 'feb']
-#results = get_data_for_counties_dataset(states, counties, country, columns, months, startYear, endYear)
+results = get_data_for_counties_dataset(states, counties, country, columns, months, startYear, endYear)
 #results =get_data_for_states_dataset(states, country, columns, startMonth, endMonth, startYear, endYear)
 #results = get_data_for_countries_dataset(countries, columns, startMonth, endMonth, startYear, endYear)
 #results = get_map_data_for_counties(states, counties, country, columns, startMonth, endMonth, startYear, endYear)
 #results = get_map_data_for_states(states, country, columns, startMonth, endMonth, startYear, endYear)
 #results = get_map_data_for_countries(countries, columns, startMonth, endMonth, startYear, endYear)
-#for result in results:
-#    print(results)
+for result in results:
+    print(results)
