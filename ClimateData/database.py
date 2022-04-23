@@ -377,11 +377,6 @@ def get_weather_data(columnList, idList, startYear, endYear):
     df.id = df.id.apply('{:0>11}'.format).astype(str)
     return df
 
-
-
-
-
-
 def get_map_weather_data(columnList, idList, startYear, endYear):
     results = None
     cols = []
@@ -667,9 +662,18 @@ def get_data_for_states_dataset(states, country, columns, months, startYear, end
             to_add = column + '_' + month.lower()
             columnList.append(to_add)
 
-    for state in states:
-        next_set = get_data_for_state(columnList, state, country, startYear, endYear)
-        results.append(next_set)
+    columnName = columnList[0][:-4]
+    stateIds = []
+
+    if columnName == 'tmp_avg' or columnName == 'tmp_min' or columnName == 'tmp_max' or columnName == 'precip':
+        for state in states:
+            next_set = get_data_for_state(columnList, state, country, startYear, endYear)
+            results.append(next_set)
+    else:
+        for state in states:
+            stateIds.append(states_id_dict[state])
+        results = get_weather_data(columnList, stateIds, startYear, endYear)
+
     return results
 
 def get_data_for_countries_dataset(countries, columns, months, startYear, endYear):
@@ -743,40 +747,6 @@ def get_selected_counties_for_state(state, county):
     
     return results
 
-#if __name__ == "__main__":
-#    setup_database()
+if __name__ == "__main__":
+    setup_database()
 
-
-
-#setup_database()
-tartMonth = 'jan'
-#convertedStartMonth = Months[startMonth.upper()].value
-#print(convertedStartMonth)
-endMonth = 'jun'
-#for i in range(Months[startMonth.upper()].value, Months[endMonth.upper()].value+1):
-#    print(Months(i).name.lower())
-columns = ["tmp_avg"]
-idList = ["0101001", "0101005"]
-startYear = 1900
-endYear = 2020
-county = "Baldwin"
-state = "AL"
-country = "US"
-countries = ["US"]
-states = ["AL", "OR", "WA"]
-counties = []
-alabama = ["Baldwin", "Bibb", "Calhoun"]
-oregon = ["Linn", "Lane", "Multnomah"]
-washington = ["Clark", "Cowlitz", "Grant"]
-counties.append(alabama)
-counties.append(oregon)
-counties.append(washington)
-months = ['jan', 'feb']
-results = get_data_for_counties_dataset(states, counties, country, columns, months, startYear, endYear)
-#results =get_data_for_states_dataset(states, country, columns, startMonth, endMonth, startYear, endYear)
-#results = get_data_for_countries_dataset(countries, columns, startMonth, endMonth, startYear, endYear)
-#results = get_map_data_for_counties(states, counties, country, columns, startMonth, endMonth, startYear, endYear)
-#results = get_map_data_for_states(states, country, columns, startMonth, endMonth, startYear, endYear)
-#results = get_map_data_for_countries(countries, columns, startMonth, endMonth, startYear, endYear)
-for result in results:
-    print(results)
