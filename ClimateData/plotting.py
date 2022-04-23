@@ -56,8 +56,8 @@ def plot(ptype, df_list, plot_vars_map):
                             plot_vars_map['plots_per_graph'], plot_vars_map['names'],
                             plot_vars_map['plot_points'])
     elif ptype == 'connected':
-        return connected_scatter(x_data_list, y_data_list,  plot_vars_map['plots_per_graph'], 
-                                 plot_vars_map['names'], plot_vars_map['plot_points'])
+        return connected_scatter(x_data_list, y_data_list, plot_vars_map['degree'], plot_vars_map['plots_per_graph'], 
+                                 plot_vars_map['names'], plot_vars_map['plot_points'], plot_vars_map['connected_curve'])
     else:
         print('Invalid plot type!')
 
@@ -142,12 +142,21 @@ def process_data(plot_vars_map, process_type, df_list):
 
     return x_data_list, y_data_list, plot_vars_map
 
-def connected_scatter(x, y, plots_per_graph, names, plot_points):
+def connected_scatter(x, y, deg, plots_per_graph, names, plot_points, connected_curve):
     fig, ax1 = plt.subplots()
 
     colors = cm.rainbow(np.linspace(0, 1, len(names)))
     for x, y, county, color in zip(x, y, names, colors):
         x_fit = np.array(x)
+        if connected_curve:
+            coeffs = poly.polyfit(x, y, deg)
+            def fiteq(x, idx=0):
+                if idx == deg:
+                    return coeffs[idx] * x ** (idx)
+                else:
+                    return coeffs[idx] * x ** (idx) + fiteq(x, idx+1)
+            lines = ax1.plot(x_fit, fiteq(x_fit), color=color, linestyle='-', alpha=0.5)
+        
 
         lines = ax1.plot(x_fit, y, color=color, linestyle='-', alpha=0.5, label=county)
         if plot_points:
