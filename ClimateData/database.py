@@ -425,6 +425,61 @@ def get_map_weather_data(columnList, idList, startYear, endYear):
     df.fips_code = df.fips_code.apply('{:0>5}'.format).astype(str)
     return df
 
+
+def get_map_drought_data(columnList, idList, startYear, endYear):
+    results = None
+    cols = []
+    matchString = "|| '%'"
+    defaultColumns = "id, "
+    columnString = ", ".join(columnList)
+    idYearList = []
+    columnString = defaultColumns + columnString
+
+    columnName = columnList[0][:-4]
+
+    for year in range(startYear, endYear+1):
+        for dataId in idList:
+            idYearList.append(str(dataId)+str(year))
+
+    idString = ", ".join(idYearList)
+
+    try:
+        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+    except OperationalError as error:
+        print_psycopg2_exception(error)
+        conn = None
+
+    if conn != None:
+        cur = conn.cursor()
+
+        try:
+            cur.execute("""
+            SELECT %s FROM drought WHERE id in (%s) ORDER BY id ASC;
+            """,
+            [AsIs(columnString), AsIs(idString)])
+            conn.commit()
+            results = cur.fetchall()
+        except Exception as error:
+            print_psycopg2_exception(error)
+
+        if results is not None:
+            for item in cur.description:
+                cols.append(item[0])
+        else:
+            print("No data found for given columns, ids and years")
+        cur.close()
+        conn.close()
+
+    df = pd.DataFrame(data=results, columns=cols)
+    return df
+
+def get_key(val):
+    for key, value in states_id_dict.items():
+         if int(val) == value:
+             return key
+ 
+    return "No key found"
+
 def get_map_data_for_single_county(columnList, county, state, country, startYear, endYear):
         idList = []
         idList.append(get_id_by_county(county, state, country))
@@ -584,11 +639,27 @@ def get_map_data_for_counties(states, counties, country, columns, months, startY
             to_add = column + '_' + month.lower()
             columnList.append(to_add)
 
-    for index, state in enumerate(states):
-        for county in counties:
-            idList.append(get_id_by_county(county, state, country))
+    columnName = columnList[0][:-4]
+    stateIds = []
+    stateAbreviations = []
+
+    if columnName == 'tmp_avg' or columnName == 'tmp_min' or columnName == 'tmp_max' or columnName == 'precip':
+        for index, state in enumerate(states):
+            for county in counties:
+                #idList.append(get_id_by_county(county, state, country))
+                print("COUNTY: " + county + " STATE: " + state + " COUNTRY: " +country)
+        #results = get_map_weather_data(columnList, idList, startYear, endYear)
+    else:
+        for state in states:
+            stateIds.append(states_id_dict[state])
+        results = get_map_drought_data(columnList, stateIds, startYear, endYear)
+        
+        for index, row in results.iterrows():
+            val = str(int(row['id']))[:-4]
+            stateAbreviations.append(get_key(val))
+        results['state'] = stateAbreviations
+        del results['id']
     
-    results = get_map_weather_data(columnList, idList, startYear, endYear)
     return results
 
 def get_map_data_for_states(states, country, columns, months, startYear, endYear):
@@ -747,6 +818,39 @@ def get_selected_counties_for_state(state, county):
     
     return results
 
-if __name__ == "__main__":
-    setup_database()
+#if __name__ == "__main__":
+#    setup_database()
+
+
+
+
+
+
+#columns = ["pdsist"]
+columns = ["tmp_avg"]
+idList = ["0101001", "0101005"]
+startYear = 1900
+endYear = 2020
+county = "Baldwin"
+state = "AL"
+country = "US"
+countries = ["US"]
+states = ["AL", "OR", "WA"]
+counties = []
+alabama = ["Baldwin", "Bibb", "Calhoun"]
+oregon = ["Linn", "Lane", "Multnomah"]
+washington = ["Clark", "Cowlitz", "Grant"]
+counties.append(alabama)
+counties.append(oregon)
+counties.append(washington)
+months = ["jan", "feb"]
+#results = get_data_for_counties_dataset(states, counties, country, columns, startMonth, endMonth, startYear, endYear)
+#results =get_data_for_states_dataset(states, country, columns, startMonth, endMonth, startYear, endYear)
+#results = get_data_for_countries_dataset(countries, columns, startMonth, endMonth, startYear, endYear)
+#results = get_map_data_for_counties(states, counties, country, columns, startMonth, endMonth, startYear, endYear)
+#results = get_map_data_for_states(states, country, columns, startMonth, endMonth, startYear, endYear)
+results = get_map_data_for_counties(states, counties, country, columns, months, startYear, endYear)
+for result in results:
+    print(results)
+
 
