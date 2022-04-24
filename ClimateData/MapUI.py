@@ -87,7 +87,7 @@ class MapWindow(QWindow):
     self.addButton = QPushButton('+', self.window)
     self.addButton.setMinimumHeight(30)
     self.addButton.setMaximumWidth(40)
-    self.addButton.clicked.connect(self.addLine)
+    self.addButton.clicked.connect(self.addYear)
     # self.deleteButton = QPushButton('-')
     # self.deleteButton.setMinimumHeight(30)
     # self.deleteButton.setMaximumWidth(40)
@@ -134,7 +134,7 @@ class MapWindow(QWindow):
     self.data_table.setHeaderData(2, Qt.Horizontal, "Country")
     self.data_tree.setModel(self.data_table)
     self.data_tree.setMaximumHeight(200)
-    self.data_tree.setStyleSheet('background-color: #2F2F2F;')
+    self.data_tree.setStyleSheet('background-color: #2F2F2F; color: white;')
     self.echo.addWidget(self.data_tree)
 
     #Set title and add widgets and layouts to main window. 
@@ -264,7 +264,7 @@ class MapWindow(QWindow):
       self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/default_fig.html')))
 
   #Button control for adding a new line
-  def addLine(self):
+  def addYear(self):
     if self.genMapFlag == False:
       return 
     self.yearSlider.setValue(int(self.yearSliderBox.text())+1)
