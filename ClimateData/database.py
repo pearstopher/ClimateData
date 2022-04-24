@@ -422,6 +422,7 @@ def get_map_weather_data(columnList, idList, startYear, endYear):
         conn.close()
 
     df = pd.DataFrame(data=results, columns=cols)
+    df.id = df.id.apply('{:0>11}'.format).astype(str)
     df.fips_code = df.fips_code.apply('{:0>5}'.format).astype(str)
     return df
 
@@ -645,10 +646,9 @@ def get_map_data_for_counties(states, counties, country, columns, months, startY
 
     if columnName == 'tmp_avg' or columnName == 'tmp_min' or columnName == 'tmp_max' or columnName == 'precip':
         for index, state in enumerate(states):
-            for county in counties:
-                #idList.append(get_id_by_county(county, state, country))
-                print("COUNTY: " + county + " STATE: " + state + " COUNTRY: " +country)
-        #results = get_map_weather_data(columnList, idList, startYear, endYear)
+            for county in counties[index]:
+                idList.append(get_id_by_county(county, state, country))
+        results = get_map_weather_data(columnList, idList, startYear, endYear)
     else:
         for state in states:
             stateIds.append(states_id_dict[state])
