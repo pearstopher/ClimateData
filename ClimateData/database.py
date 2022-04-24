@@ -672,11 +672,26 @@ def get_map_data_for_states(states, country, columns, months, startYear, endYear
         for month in months:
             to_add = column + '_' + month.lower()
             columnList.append(to_add)
+    
+    columnName = columnList[0][:-4]
+    stateIds = []
+    stateAbreviations = []
 
-    for state in states:
-        ids = ids + get_ids_by_state(state, country)
+    if columnName == 'tmp_avg' or columnName == 'tmp_min' or columnName == 'tmp_max' or columnName == 'precip':
+        for state in states:
+            ids = ids + get_ids_by_state(state, country)
         
-    results = get_map_weather_data(columnList, ids, startYear, endYear)
+        results = get_map_weather_data(columnList, ids, startYear, endYear)
+    else:
+        for state in states:
+            stateIds.append(states_id_dict[state])
+        results = get_map_drought_data(columnList, stateIds, startYear, endYear)
+
+        for index, row in results.iterrows():
+            val = str(int(row['id']))[:-4]
+            stateAbreviations.append(get_key(val))
+        results['state'] = stateAbreviations
+        del results['id']
 
     return results
 
