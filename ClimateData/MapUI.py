@@ -1,4 +1,6 @@
+from time import sleep
 from tkinter import HORIZONTAL
+from matplotlib.pyplot import legend
 import pandas as pd                             #pip install pandas
 import plotly.express as px                     #pip install plotly   
 import psycopg2                                 #pip install psycopg2-binary
@@ -69,6 +71,7 @@ class MapWindow(QWindow):
     self.echo = QHBoxLayout()
     self.mapFig = None
     self.df = None
+    self.genMapFlag = False
 
     #Map Controls
     self.yearSlider = QSlider(Qt.Horizontal)
@@ -84,7 +87,7 @@ class MapWindow(QWindow):
     self.addButton = QPushButton('+', self.window)
     self.addButton.setMinimumHeight(30)
     self.addButton.setMaximumWidth(40)
-    self.addButton.clicked.connect(self.addLine)
+    self.addButton.clicked.connect(self.addYear)
     # self.deleteButton = QPushButton('-')
     # self.deleteButton.setMinimumHeight(30)
     # self.deleteButton.setMaximumWidth(40)
@@ -95,15 +98,15 @@ class MapWindow(QWindow):
     self.mapItButton.clicked.connect(self.genMap)
     self.yearSliderBox.setStyleSheet('background-color: #2F2F2F; color: white;')
     self.month_list.setStyleSheet('background-color: #555555; color: white;')
-    self.mapItButton.setStyleSheet('background-color: #00BC8C; color: white;')
+    self.mapItButton.setStyleSheet('background-color: #375A7F; color: white;')
     self.addButton.setStyleSheet('background-color: #375A7F; color: white;')
     self.yearSlider.setStyleSheet('QSlider::handle:horizontal {background-color: #375a7f;}')
-    self.controls.addWidget(self.addButton)
     # self.controls.addWidget(self.deleteButton)
     self.controls.addWidget(self.mapItButton)
     self.controls.addWidget(self.month_list)
     self.controls.addWidget(self.yearSlider)
     self.controls.addWidget(self.yearSliderBox)
+    self.controls.addWidget(self.addButton)
     
     #State/County Selection
     self.state_list = QComboBox()
@@ -131,7 +134,7 @@ class MapWindow(QWindow):
     self.data_table.setHeaderData(2, Qt.Horizontal, "Country")
     self.data_tree.setModel(self.data_table)
     self.data_tree.setMaximumHeight(200)
-    self.data_tree.setStyleSheet('background-color: #2F2F2F;')
+    self.data_tree.setStyleSheet('background-color: #2F2F2F; color: white;')
     self.echo.addWidget(self.data_tree)
 
     #Set title and add widgets and layouts to main window. 
@@ -248,20 +251,31 @@ class MapWindow(QWindow):
       colorscale = 'dense'
       range = (0,15)
     self.mapFig = px.choropleth(self.df, geojson=counties, locations='fips_code', color=self.dataType+"_"+self.curr_month, color_continuous_scale=colorscale, range_color=range, scope='usa', hover_name='county_name', hover_data=['state'])
-    self.mapFig.update_layout(title='Climate Data')
+    self.mapFig.update_layout(title=dict(text='Climate Data'), margin=dict(l=0,r=0,b=0))
+    self.mapFig.update_geos(resolution=50)
+    self.mapFig.update_traces(name='Data', selector=dict(type='choropleth'))
     # cli_map.update_geos(fitbounds='locations', visible=True) <-- Causes break when Aleutians West, AK is selected... 
     self.mapFig.write_html('HTML/map_fig.html')
     self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/map_fig.html')))
+    self.genMapFlag = True
 
   #Used to open blank map of US
   def openDefaultMap(self): 
       self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/default_fig.html')))
 
   #Button control for adding a new line
-  def addLine(self):
-    self.yearSlider.setValue(self.yearSlider.value()+1)
-    self.genMap()
-    return
+  def addYear(self):
+    if self.genMapFlag == False:
+      return 
+    self.yearSlider.setValue(int(self.yearSliderBox.text())+1)
+    if not self.county_boxes:
+      df = database.get_map_data_for_states(self.state_boxes, 'US', [self.dataType], [self.curr_month], self.curr_year, self.curr_year)
+    else:
+      df = database.get_map_data_for_counties(self.state_boxes, self.county_boxes, 'US', [self.dataType], [self.curr_month], self.curr_year, self.curr_year)
+    li = df[self.dataType+"_"+self.curr_month].tolist()
+    self.mapFig.update_traces(z=li)
+    self.mapFig.write_html('HTML/map_fig.html')
+    self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/map_fig.html')))
  
  #Button control to remove a line
   def removeLine(self):
