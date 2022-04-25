@@ -308,8 +308,7 @@ class graphPage(tk.Frame):
             canvas.draw()
             canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
 
-            #Coefficient Button
-
+            # Coefficient Button
             self.button_coeff = TTK.Button(self.tab, width="15", text="View Coefficients", bootstyle="blue")
             self.button_coeff.grid(row=9, column=1, padx=(220,0), pady=(50, 0))
 
@@ -319,6 +318,7 @@ class graphPage(tk.Frame):
                                                          data_type=data_type, deg=polynomial_degree,
                                                          deriv=(0 if derivitive_degree is None else derivitive_degree))
 
+            # Export CSV Button
             self.export_csv_button = TTK.Button(self.tab, command=save_csv_file ,width="16", text="Export data to CSV", bootstyle="blue")
             self.export_csv_button.grid(row=9, column=1, padx=(537,0), pady=(50, 0))
             #print("\nHere is the data that the user entered: ")
