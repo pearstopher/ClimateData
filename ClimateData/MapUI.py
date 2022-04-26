@@ -13,6 +13,7 @@ from PyQt5.QtWebEngineWidgets import *          #pip install PyQtWebEngine
 import database
 import os
 import re
+import config
 
 datatype_dict = {
     "Maximum Temperature" : "tmp_max",
@@ -51,7 +52,7 @@ state_dict = {
 class MapWindow(QWindow):
 
   def __init__(self, pdDF, *args, **kwargs):
-    self.conn = psycopg2.connect("host=localhost dbname=postgres user=postgres password=PASSWORD")
+    self.conn = psycopg2.connect(config.config_get_db_connection_string())
     self.cur = self.conn.cursor()
     super(MapWindow, self).__init__(*args, **kwargs)
     path = QDir.current().filePath('HTML/map_fig.html')
