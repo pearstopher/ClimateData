@@ -3,6 +3,7 @@ import csv
 import sys
 import os
 import pandas as pd
+import config
 from os import listdir
 from psycopg2.extensions import AsIs
 from psycopg2 import connect
@@ -10,15 +11,14 @@ from psycopg2 import OperationalError, errorcodes, errors
 from psycopg2 import __version__ as psycopg2_version
 from enum import Enum
 
-#Put your postgres password here if different
-password = 'PASSWORD'
+
 outputDir = './data/processed/'
 debug = False
 
 #INTERNAL CALLS---------------------------------------------------------------------
 def setup_database():
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -73,7 +73,7 @@ def setup_coordinates_table():
     print("Creating table: county_coords")
     csv.field_size_limit(2147483647)
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -123,7 +123,7 @@ def find_csv_filenames(path_to_dir, suffix=".csv"):
 
 def drop_table(tableName):
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -148,7 +148,7 @@ def drop_table(tableName):
         
 def drop_all_tables():
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -179,7 +179,7 @@ def drop_all_tables():
 def get_postal(county, state, country):
     results = None
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -210,7 +210,7 @@ def get_postal(county, state, country):
 def get_id_by_county(county, state, country):
     results = None
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -243,7 +243,7 @@ def get_ids_by_state(state, country):
     results = None
     
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -275,7 +275,7 @@ def get_ids_by_country(country):
     formatted_results = []
     results = None
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -324,7 +324,7 @@ def get_weather_data(columnList, idList, startYear, endYear):
     idString = ", ".join(idYearList)
 
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -371,7 +371,7 @@ def get_map_weather_data(columnList, idList, startYear, endYear):
     idString = ", ".join(idYearList)
 
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -438,7 +438,7 @@ def get_coordinates(countyId):
     results = None
 
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -649,7 +649,7 @@ def get_data_for_countries_dataset(countries, columns, months, startYear, endYea
 def get_counties_for_state(state):
     results = None
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -678,7 +678,7 @@ def get_counties_for_state(state):
 def get_counties_for_state_all_data(state):
     results = None
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -707,7 +707,7 @@ def get_counties_for_state_all_data(state):
 def get_selected_counties_for_state(state, county):
     results = None
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
