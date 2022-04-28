@@ -48,6 +48,15 @@ state_dict = {
     "VA" : [], "VI" : [], "WA" : [], "WV" : [], "WI" : [], "WY" : []
 }
 
+state_dict2 = {
+    "AL" : [[]], "AK" : [[]], "AZ" : [[]], "AR" : [[]], "AS" : [[]], "CA" : [[]], "CO" : [[]], "CT" : [[]],
+    "DE" : [[]], "DC" : [[]], "FL" : [[]], "GA" : [[]], "GU" : [[]], "HI" : [[]], "ID" : [[]], "IL" : [[]],
+    "IN" : [[]], "IA" : [[]], "KS" : [[]], "KY" : [[]], "LA" : [[]], "ME" : [[]], "MD" : [[]], "MA" : [[]],
+    "MI" : [[]], "MN" : [[]], "MS" : [[]], "MO" : [[]], "MT" : [[]], "NE" : [[]], "NV" : [[]], "NH" : [[]],
+    "NJ" : [[]], "NM" : [[]], "NY" : [[]], "NC" : [[]], "ND" : [[]], "OH" : [[]], "OK" : [[]], "OR" : [[]],
+    "PA" : [[]], "RI" : [[]], "SC" : [[]], "SD" : [[]], "TN" : [[]], "TX" : [[]], "UT" : [[]], "VT" : [[]], 
+    "VA" : [[]], "VI" : [[]], "WA" : [[]], "WV" : [[]], "WI" : [[]], "WY" : [[]]
+}
 
 class MapWindow(QWindow):
 
@@ -88,7 +97,7 @@ class MapWindow(QWindow):
     self.addButton = QPushButton('+', self.window)
     self.addButton.setMinimumHeight(30)
     self.addButton.setMaximumWidth(40)
-    self.addButton.clicked.connect(self.addYear)
+    self.addButton.clicked.connect(self.build_lists)
     # self.deleteButton = QPushButton('-')
     # self.deleteButton.setMinimumHeight(30)
     # self.deleteButton.setMaximumWidth(40)
@@ -152,8 +161,8 @@ class MapWindow(QWindow):
     self.window.show()
 
   def county_list_change(self):
-    self.state_boxes.append(self.state_list.currentText())
-    self.county_boxes.append(self.county_list.currentText())
+    # self.state_boxes.append(self.state_list.currentText())
+    # self.county_boxes.append(self.county_list.currentText())
     self.state_boxes = list(set(self.state_boxes))
     self.county_boxes = list(set(self.county_boxes))
     model = self.data_tree.model()
@@ -173,10 +182,26 @@ class MapWindow(QWindow):
         model.setData(model.index(0, 2), "US")
         state_dict[state].append([county])
 
+    state_dict2[state][0].append(county)
+    state_dict2[state][0] = list(set(state_dict2[state][0]))
 
+    print(state_dict2)
+  #Builds State/County lists for genMap
+  def build_lists(self):
+    self.state_boxes = list(set(self.state_boxes))
+    self.county_boxes = list(set(self.county_boxes))
+    for state in state_dict2:
+      if state_dict2[state][0]:
+        self.state_boxes.append(state)
+    
+    for state in self.state_boxes:
+      self.county_boxes.append(state_dict2[state][0])
+
+    
+    print('States: ')
     print(self.state_boxes)
+    print('Counties: ')
     print(self.county_boxes)
-
   #Month List Change
   def month_list_change(self):
     monthDict = {
