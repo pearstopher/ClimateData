@@ -110,8 +110,10 @@ class App(tk.Tk):
         tab5 = tk.Frame(container, width=1920, height=1080)
         container.add(tab5, text ='Notebook tab 5')
         container.grid(row=0, column=0)
-        container.grid_rowconfigure(0, weight=1)
-        container.grid_columnconfigure(0, weight=1)
+        container.grid_rowconfigure(0, weight=0)
+        container.grid_columnconfigure(0, weight=3)
+        container.grid_rowconfigure(1, weight=0)
+        container.grid_columnconfigure(1, weight=0)
         tabs = [tab1,tab2,tab3,tab4,tab5]
 
 
@@ -140,23 +142,23 @@ class App(tk.Tk):
         for F in (StartPage, graphPage):
             frame = F(parent=tab1, controller=self, master=tab1)
             self.frames[data[loop]] = frame
-            frame.grid(row=0, column=0, sticky="nsew")
+            frame.grid(row=0, column=0)
             
             frame2 = F(parent=tab2, controller=self, master=tab2)
             self.frames2[data2[loop]] = frame2
-            frame2.grid(row=0, column=0, sticky="nsew")
+            frame2.grid(row=0, column=0)
 
             frame3 = F(parent=tab3, controller=self, master=tab3)
             self.frames3[data2[loop]] = frame3
-            frame3.grid(row=0, column=0, sticky="nsew")
+            frame3.grid(row=0, column=0)
 
             frame4 = F(parent=tab4, controller=self, master=tab4)
             self.frames4[data2[loop]] = frame4
-            frame4.grid(row=0, column=0, sticky="nsew")
+            frame4.grid(row=0, column=0)
 
             frame5 = F(parent=tab5, controller=self, master=tab5)
             self.frames5[data2[loop]] = frame5
-            frame5.grid(row=0, column=0, sticky="nsew")
+            frame5.grid(row=0, column=0)
             loop += 1
         #self.show_frame("StartPage")
         
@@ -178,17 +180,6 @@ class StartPage(tk.Frame):
         button2 = TTK.Button(self, text = "Map", width="15", bootstyle="secondary", command=lambda: controller.open_map("TODO:"))
         button1.grid(row=0, column=1, padx=(100,0), pady=(100,500))
         button2.grid(row=0, column=2, padx=(10,0), pady=(100,500))
-
-        # Photo Widget for Start Page
-        '''
-         # TODO remove picture and add either:
-         # Empty canvas
-         # Pre-populated canvas
-        '''
-        img = tk.PhotoImage(file='images/cubic_graph.png')
-        label = tk.Label(self, image=img)
-        label.image = img
-        label.grid(row=0, column=0, padx=(20,10), pady=(100,20))
 
 
  
@@ -255,13 +246,22 @@ class graphPage(tk.Frame):
 
             monthly_split   = self.monthly_check_var.get()
             plot_points     = self.plot_points_var.get()
-            polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
-            derivitive_degree = None if self.ent2 == None else int(self.ent2.get())
-            double_plot_diff = None if self.ent3 == None else int(self.ent3.get())
+            drop_down = self.dropdown_equations.get()
 
-            plot_type = 'scatter_poly'
-            if derivitive_degree != None:
-                plot_type = 'poly_deriv'
+            connected_curve = None
+            derivitive_degree = None
+            if 'Connected' in drop_down:
+                plot_type = 'connected'
+                polynomial_degree = None
+                connected_curve = 'Curve' in drop_down
+            else:
+                derivitive_degree = None if self.ent2 == None else int(self.ent2.get())
+                plot_type = 'scatter_poly'
+                if derivitive_degree != None:
+                    plot_type = 'poly_deriv'
+
+            polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
+            double_plot_diff = None if self.ent3 == None else int(self.ent3.get())
 
             process_type = 'normal'
             if monthly_split:
@@ -304,7 +304,7 @@ class graphPage(tk.Frame):
 
             counties = list(chain(*counties))
             fig, x_data, y_data = plotting.plot(plot_type, df_list, {'process_type': process_type, 'double_plot_diff': double_plot_diff,
-                                                     'plot_points': plot_points,
+                                                     'plot_points': plot_points, 'connected_curve': connected_curve,
                                                      'begin_month': monthsIdx[begin_month], 'end_month': monthsIdx[end_month],
                                                      'degree': polynomial_degree, 'deriv_degree': derivitive_degree,
                                                      'plots_per_graph' : len(df_list), 'names' : counties})
@@ -341,7 +341,6 @@ class graphPage(tk.Frame):
                 self.ent3.grid(row=6, column=1, padx=(240,0), pady=(30,0))
                 year_offset = tk.Label(self.tab, font="10", text="Year Diff: ")
                 year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
-        
 
         def gen_equation(event=None):
             if event == None:
@@ -352,30 +351,26 @@ class graphPage(tk.Frame):
                     self.deg_ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
                     degree_label = tk.Label(self.tab, font="10", text="Degree: ")
                     degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
-                    sub_btn = tkboot.Button(
-                        self.tab,
-                        text="Submit degree",
-                        command=on_submit_degree,
-                        bootstyle="blue",
-                        width=12
-                    )
-                    sub_btn.grid(row=7, column=1, padx=(450, 0), pady=(30,0))
-                    sub_btn.focus_set()
                 elif event.widget.get() == 'n-degree derivative':
                     self.ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                     self.ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
                     degree_label = tk.Label(self.tab, font="10", text="Degree: ")
                     degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                     self.ent2 = tkboot.Entry(self.tab, width="6")
-                    self.ent2.grid(row=7, column=1, padx=(240,0), pady=(30,0))
+                    self.ent2.grid(row=8, column=1, padx=(240,0), pady=(0,80))
                     deriv_label = tk.Label(self.tab, font="10", text="Derivitive: ")
-                    deriv_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
+                    deriv_label.grid(row=8, column=1, padx=(100, 0), pady=(30,0))
+                elif event.widget.get() == "Connected-Curve":
+                    self.ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
+                    self.ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
+                    degree_label = tk.Label(self.tab, font="10", text="Degree: ")
+                    degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                 else:
                     self.ent = None
                     self.ent2 = None
                     degree = event.widget.get()
-                    print("Degree of equation is: ")
-                    print(degree_dict[degree])
+                    #print("Degree of equation is: ")
+                    #print(degree_dict[degree])
             
         def gen_datatype_columns(event):
             print("User selected this data type: " + event.widget.get())
@@ -442,11 +437,6 @@ class graphPage(tk.Frame):
 
         def widgets(frame):
             self.tab = tk.Frame(frame, width=1920, height=1080)
-            #print(tabs[values])
-            #loop[count] = tk.Frame(frame, width=1920, height=1080)
-            #Notebook   
-            self.notebook_label = tk.Label(self.tab, font="12", text="Notebook:")
-            self.notebook_label.grid(row=1, column=0, padx=(10, 500), pady=10)
 
             #Date range widgets
             self.begin_date_ent = tkboot.Entry(self.tab, textvariable=self.begin_year, width=10)
@@ -513,28 +503,15 @@ class graphPage(tk.Frame):
             self.dropdown_county.bind('<<ComboboxSelected>>', gen_table)
             self.dropdown_county.grid(row=1, column=1, padx=(290, 0), pady=(20, 20))
 
-            #Home button
-            #self.button_back = TTK.Button(self.tab, width="15", text="Back to home", bootstyle="blue", command=lambda: controller.show_frame("StartPage"))
-            #self.button_back.grid(row=0, column=1, padx=(0,250), pady=(50, 10))
             self.button2 = TTK.Button(self.tab, text = "Open map", width="15", bootstyle="secondary", command=lambda: controller.open_map("TODO:"))
             self.button2.grid(row=0, column=1, padx=(0,250), pady=(50, 10))
-            #Add instance to notebook button
-            #self.button_notebook_add = TTK.Button(tab1, width="25", text="Add instance to notebook", bootstyle="blue")
-            #self.button_notebook_add.grid(row=0, column=0, padx=(10,580), pady=(50, 20))
-            self.plot_type = TTK.Combobox(self.tab, font="Helvetica 12")
-            self.plot_type.set('Select plot type...')
-            self.plot_type['state'] = 'readonly'
-            self.plot_type['values'] = ['Curve', 'Yearly Offset', 'Connected']
-            self.plot_type.bind('<<ComboboxSelected>>', gen_plot_type)
-            self.plot_type.grid(row=6, column=1,  padx=(0, 200), pady=(30, 0))
-            datatypeTip = Hovertip(self.plot_type, 'Select plot type')
 
 
             #Dropdown Widget for equation selection
             self.dropdown_equations = TTK.Combobox(self.tab, font="Helvetica 12")
             self.dropdown_equations.set('Select equation...')
             self.dropdown_equations['state'] = 'readonly'
-            self.dropdown_equations['values'] = ['Linear', 'Quadratic', 'Cubic', 'Derivative', 'n-degree..']
+            self.dropdown_equations['values'] = ['Connected', 'Connected-Curve', 'Linear', 'Quadratic', 'Cubic', 'n-degree..', 'n-degree derivative']
             self.dropdown_equations.bind('<<ComboboxSelected>>', gen_equation)
             self.dropdown_equations.grid(row=7, column=1,  padx=(0, 200), pady=(10, 0))
             equationTip = Hovertip(self.dropdown_equations, 'Select which type of equation to plot data with')
@@ -558,8 +535,7 @@ class graphPage(tk.Frame):
                 text="Graph it!", 
                 bootstyle=DEFAULT
             )
-            self.data_submit.grid(row=9, column=1, padx=(0,173), pady=(50,0))
-            self.data_submit.focus_set()
+            self.data_submit.grid(row=9, column=1, padx=(0,185), pady=(50,0))
 
             # Generate Table Rows
             gen_table()
@@ -583,6 +559,50 @@ class graphPage(tk.Frame):
         self.plot_points = TTK.Checkbutton(self.tab, text='Enable Scatter Plotting', variable=self.plot_points_var)
         self.plot_points.grid(row=5, column=1,  padx=(365, 0), pady=(10, 0))
         scatterTip = Hovertip(self.plot_points, 'Check to enable scatter plotting on graph')
+
+        # Initialize Table Widget
+        self.data_table = TTK.Treeview(self.tab)
+        self.data_table['columns'] = ('state', 'county_name', 'county_code', 'country')
+        self.data_table.column('#0', width=0, stretch=tk.NO)
+        self.data_table.column('state', width=110)
+        self.data_table.column('county_name', width=110)
+        self.data_table.column('county_code', width=110)
+        self.data_table.column('country', width=80)
+        self.data_table.heading('#0', text="", anchor=tk.CENTER)
+        self.data_table.heading('state', text="State")
+        self.data_table.heading('county_name', text="County Name")
+        self.data_table.heading('county_code', text="County Code")
+        self.data_table.heading('country', text="Country")
+
+        # Initialize State Dropdown Widget
+        self.dropdown_state = TTK.Combobox(self.tab, font="Helvetica 12")
+        self.dropdown_state.set('Select state...')
+        self.dropdown_state['state'] = 'readonly'
+        self.dropdown_state['values'] = (['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN',
+                                          'KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE',
+                                          'NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX',
+                                          'UT','VA','VT','WA','WI','WV','WY'])
+        self.dropdown_state.bind('<<ComboboxSelected>>', gen_counties)
+        self.dropdown_state.grid(row=1, column=1, padx=(0, 190), pady=(20, 20))
+
+        # Initialize Counties Dropdown Widget
+        self.dropdown_county = TTK.Combobox(self.tab, font="Helvetica 12")
+        self.dropdown_county.set('Select county...')
+        self.dropdown_county['state'] = 'readonly'
+        self.dropdown_county.bind('<<ComboboxSelected>>', gen_table)
+        self.dropdown_county.grid(row=1, column=1, padx=(290, 0), pady=(20, 20))
+
+        #Dropdown for plot type  selection
+        self.plot_type = TTK.Combobox(self.tab, font="Helvetica 12")
+        self.plot_type.set('Select plot type...')
+        self.plot_type['state'] = 'readonly'
+        self.plot_type['values'] = ['Line', 'Yearly Offset']
+        self.plot_type.bind('<<ComboboxSelected>>', gen_plot_type)
+        self.plot_type.grid(row=6, column=1,  padx=(0, 200), pady=(30, 0))
+        datatypeTip = Hovertip(self.plot_type, 'Select plot type')
+
+        # Generate Table Rows
+        gen_table()
 
         
 # WIDGETS ----------------------------------------------------------------------------       
