@@ -48,15 +48,6 @@ state_dict = {
     "VA" : [], "VI" : [], "WA" : [], "WV" : [], "WI" : [], "WY" : []
 }
 
-state_dict2 = {
-    "AL" : [[]], "AK" : [[]], "AZ" : [[]], "AR" : [[]], "AS" : [[]], "CA" : [[]], "CO" : [[]], "CT" : [[]],
-    "DE" : [[]], "DC" : [[]], "FL" : [[]], "GA" : [[]], "GU" : [[]], "HI" : [[]], "ID" : [[]], "IL" : [[]],
-    "IN" : [[]], "IA" : [[]], "KS" : [[]], "KY" : [[]], "LA" : [[]], "ME" : [[]], "MD" : [[]], "MA" : [[]],
-    "MI" : [[]], "MN" : [[]], "MS" : [[]], "MO" : [[]], "MT" : [[]], "NE" : [[]], "NV" : [[]], "NH" : [[]],
-    "NJ" : [[]], "NM" : [[]], "NY" : [[]], "NC" : [[]], "ND" : [[]], "OH" : [[]], "OK" : [[]], "OR" : [[]],
-    "PA" : [[]], "RI" : [[]], "SC" : [[]], "SD" : [[]], "TN" : [[]], "TX" : [[]], "UT" : [[]], "VT" : [[]], 
-    "VA" : [[]], "VI" : [[]], "WA" : [[]], "WV" : [[]], "WI" : [[]], "WY" : [[]]
-}
 
 class MapWindow(QWindow):
 
@@ -163,8 +154,6 @@ class MapWindow(QWindow):
   def county_list_change(self):
     # self.state_boxes.append(self.state_list.currentText())
     # self.county_boxes.append(self.county_list.currentText())
-    self.state_boxes = list(set(self.state_boxes))
-    self.county_boxes = list(set(self.county_boxes))
     model = self.data_tree.model()
     county = self.county_list.currentText()
     state = self.state_list.currentText()
@@ -182,26 +171,24 @@ class MapWindow(QWindow):
         model.setData(model.index(0, 2), "US")
         state_dict[state].append([county])
 
-    state_dict2[state][0].append(county)
-    state_dict2[state][0] = list(set(state_dict2[state][0]))
-
-    print(state_dict2)
+    print(state_dict)
   #Builds State/County lists for genMap
   def build_lists(self):
-    self.state_boxes = list(set(self.state_boxes))
-    self.county_boxes = list(set(self.county_boxes))
-    for state in state_dict2:
-      if state_dict2[state][0]:
+    self.state_boxes = []
+    self.county_boxes = []
+    counties = []
+    for state in state_dict:
+      if state_dict[state]:
+        print(state)
         self.state_boxes.append(state)
     
     for state in self.state_boxes:
-      self.county_boxes.append(state_dict2[state][0])
+      for county in state_dict[state]:
+        print(county[0])
+        counties.append(county[0])
+      self.county_boxes.append(counties)
+      counties = []
 
-    
-    print('States: ')
-    print(self.state_boxes)
-    print('Counties: ')
-    print(self.county_boxes)
   #Month List Change
   def month_list_change(self):
     monthDict = {
@@ -251,6 +238,8 @@ class MapWindow(QWindow):
 
   #Generates the map using pandas dataframe
   def genMap(self):
+    self.build_lists()
+    print(self.state_boxes)
     if self.curr_month == None:
       print("A month must be selected!")
       return
