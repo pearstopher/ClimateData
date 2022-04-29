@@ -339,6 +339,10 @@ class graphPage(tk.Frame):
                 self.ent3 = tkboot.Entry(self.frame_right, width="6", textvariable=event.widget.get())
                 self.ent3.grid(row=6, column=1, padx=(240,0), pady=(30,0))
                 year_offset = tk.Label(self.frame_right, font="10", text="Year Diff: ")
+            if event.widget.get() == 'Yearly Offset':
+                self.ent3 = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
+                self.ent3.grid(row=6, column=1, padx=(250,0), pady=(30,0))
+                year_offset = tk.Label(self.tab, font="10", text="Year Diff: ")
                 year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
             else:
                 self.ent3 = None
@@ -350,9 +354,9 @@ class graphPage(tk.Frame):
             else:
                 if event.widget.get() == "n-degree..":
                     self.deg_ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
-                    self.deg_ent.grid(row=6, column=1, padx=(240,0), pady=(30,0))
+                    self.deg_ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
                     degree_label = tk.Label(self.tab, font="10", text="Degree: ")
-                    degree_label.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+                    degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                     sub_btn = tkboot.Button(
                         self.tab,
                         text="Submit degree",
@@ -360,13 +364,13 @@ class graphPage(tk.Frame):
                         bootstyle="blue",
                         width=12
                     )
-                    sub_btn.grid(row=6, column=1, padx=(450, 0), pady=(30,0))
+                    sub_btn.grid(row=7, column=1, padx=(450, 0), pady=(30,0))
                     sub_btn.focus_set()
                 elif event.widget.get() == 'n-degree derivative':
                     self.ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
-                    self.ent.grid(row=6, column=1, padx=(240,0), pady=(30,0))
+                    self.ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
                     degree_label = tk.Label(self.tab, font="10", text="Degree: ")
-                    degree_label.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+                    degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                     self.ent2 = tkboot.Entry(self.tab, width="6")
                     self.ent2.grid(row=7, column=1, padx=(240,0), pady=(30,0))
                     deriv_label = tk.Label(self.tab, font="10", text="Derivitive: ")
@@ -387,8 +391,8 @@ class graphPage(tk.Frame):
             print("Data type in correct format is: " + datatype_dict[columns])
 
         def delete_from_table():
-            selected_item = self.data_table.selection()[0]
-            self.data_table.delete(selected_item)
+            for row in self.data_table.selection():
+                self.data_table.delete(row)
             
 
         def gen_counties(event=None):
@@ -486,7 +490,9 @@ class graphPage(tk.Frame):
             self.data_table.heading('county_code', text="County Code")
             self.data_table.heading('country', text="Country")
 
-            delete_btn = tkboot.Button(self.tab, text="Delete row", command=delete_from_table)
+            delete_btn = tkboot.Button(self.tab, text="Delete row(s)", command=delete_from_table)
+            delete_btnTip = Hovertip(delete_btn, 'Delete selected row(s) from table')
+
             delete_btn.grid(row=2, column=1, padx=(550,0), pady=(0,160))
 
             #Table widget for specific dates
@@ -580,7 +586,7 @@ class graphPage(tk.Frame):
         # Monthly Split checkbox
         self.plot_points_var = tk.IntVar()
         self.plot_points = TTK.Checkbutton(self.tab, text='Enable Scatter Plotting', variable=self.plot_points_var)
-        self.plot_points.grid(row=6, column=1,  padx=(210, 0), pady=(10, 0))
+        self.plot_points.grid(row=5, column=1,  padx=(365, 0), pady=(10, 0))
         scatterTip = Hovertip(self.plot_points, 'Check to enable scatter plotting on graph')
 
         
