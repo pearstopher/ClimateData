@@ -88,7 +88,7 @@ class MapWindow(QWindow):
     self.addButton = QPushButton('+', self.window)
     self.addButton.setMinimumHeight(30)
     self.addButton.setMaximumWidth(40)
-    self.addButton.clicked.connect(self.build_lists)
+    self.addButton.clicked.connect(self.addYear)
     # self.deleteButton = QPushButton('-')
     # self.deleteButton.setMinimumHeight(30)
     # self.deleteButton.setMaximumWidth(40)
@@ -170,8 +170,7 @@ class MapWindow(QWindow):
         model.setData(model.index(0, 1), county)
         model.setData(model.index(0, 2), "US")
         state_dict[state].append([county])
-
-    print(state_dict)
+    print(model.data(model.index(0,0)))
   #Builds State/County lists for genMap
   def build_lists(self):
     self.state_boxes = []
@@ -179,12 +178,10 @@ class MapWindow(QWindow):
     counties = []
     for state in state_dict:
       if state_dict[state]:
-        print(state)
         self.state_boxes.append(state)
     
     for state in self.state_boxes:
       for county in state_dict[state]:
-        print(county[0])
         counties.append(county[0])
       self.county_boxes.append(counties)
       counties = []
