@@ -88,7 +88,7 @@ class MapWindow(QWindow):
     self.addButton = QPushButton('+', self.window)
     self.addButton.setMinimumHeight(30)
     self.addButton.setMaximumWidth(40)
-    self.addButton.clicked.connect(self.addYear)
+    self.addButton.clicked.connect(self.remove_selected)
     # self.deleteButton = QPushButton('-')
     # self.deleteButton.setMinimumHeight(30)
     # self.deleteButton.setMaximumWidth(40)
@@ -151,13 +151,36 @@ class MapWindow(QWindow):
     self.window.setStyleSheet('background-color: #222222;')
     self.window.show()
 
+  def get_selected(self):
+    model = self.data_tree.model()
+    index = self.data_tree.selectedIndexes()
+    state = model.data(index[0])
+    county = model.data(index[1])
+    return(state, county)
+
+  def remove_selected(self):
+    try:
+        state, county = self.get_selected()
+        for c in state_dict[state]:
+          if c[0] == county:
+            state_dict[state].remove(c)
+
+        model = self.data_tree.model()
+        indices = self.data_tree.selectionModel().selectedRows()
+        for idx in sorted(indices):
+          model.removeRow(idx.row())
+    except:
+      print('error removing line')
+      return
+    
+
   def county_list_change(self):
     # self.state_boxes.append(self.state_list.currentText())
     # self.county_boxes.append(self.county_list.currentText())
     model = self.data_tree.model()
     county = self.county_list.currentText()
     state = self.state_list.currentText()
-    
+
     match = 0
     for countyList in state_dict[state]:
         for item in countyList:
