@@ -13,6 +13,7 @@ from PyQt5.QtWebEngineWidgets import *          #pip install PyQtWebEngine
 import database
 import os
 import re
+import config
 
 datatype_dict = {
     "Maximum Temperature" : "tmp_max",
@@ -51,7 +52,7 @@ state_dict = {
 class MapWindow(QWindow):
 
   def __init__(self, pdDF, *args, **kwargs):
-    self.conn = psycopg2.connect("host=localhost dbname=postgres user=postgres password=PASSWORD")
+    self.conn = psycopg2.connect(config.config_get_db_connection_string())
     self.cur = self.conn.cursor()
     super(MapWindow, self).__init__(*args, **kwargs)
     path = QDir.current().filePath('HTML/map_fig.html')
@@ -88,10 +89,10 @@ class MapWindow(QWindow):
     self.addButton.setMinimumHeight(30)
     self.addButton.setMaximumWidth(40)
     self.addButton.clicked.connect(self.addYear)
-    # self.deleteButton = QPushButton('-')
-    # self.deleteButton.setMinimumHeight(30)
-    # self.deleteButton.setMaximumWidth(40)
-    # self.deleteButton.clicked.connect(self.removeLine)
+    self.deleteButton = QPushButton('-')
+    self.deleteButton.setMinimumHeight(30)
+    self.deleteButton.setMaximumWidth(40)
+    self.deleteButton.clicked.connect(self.remove_selected)
     self.mapItButton = QPushButton('Map it!', self.window)
     self.mapItButton.setMinimumHeight(30)
     self.mapItButton.setMaximumWidth(150)
@@ -100,8 +101,8 @@ class MapWindow(QWindow):
     self.month_list.setStyleSheet('background-color: #555555; color: white;')
     self.mapItButton.setStyleSheet('background-color: #375A7F; color: white;')
     self.addButton.setStyleSheet('background-color: #375A7F; color: white;')
+    self.deleteButton.setStyleSheet('background-color: #375A7F; color: white;')
     self.yearSlider.setStyleSheet('QSlider::handle:horizontal {background-color: #375a7f;}')
-    # self.controls.addWidget(self.deleteButton)
     self.controls.addWidget(self.mapItButton)
     self.controls.addWidget(self.month_list)
     self.controls.addWidget(self.yearSlider)
@@ -136,6 +137,7 @@ class MapWindow(QWindow):
     self.data_tree.setMaximumHeight(200)
     self.data_tree.setStyleSheet('background-color: #2F2F2F; color: white;')
     self.echo.addWidget(self.data_tree)
+    self.echo.addWidget(self.deleteButton)
 
     #Set title and add widgets and layouts to main window. 
     self.window.setWindowTitle("Climate Data")
@@ -150,15 +152,36 @@ class MapWindow(QWindow):
     self.window.setStyleSheet('background-color: #222222;')
     self.window.show()
 
+  def get_selected(self):
+    model = self.data_tree.model()
+    index = self.data_tree.selectedIndexes()
+    state = model.data(index[0])
+    county = model.data(index[1])
+    return(state, county)
+
+  def remove_selected(self):
+    try:
+        state, county = self.get_selected()
+        for c in state_dict[state]:
+          if c[0] == county:
+            state_dict[state].remove(c)
+
+        model = self.data_tree.model()
+        indices = self.data_tree.selectionModel().selectedRows()
+        for idx in sorted(indices):
+          model.removeRow(idx.row())
+    except:
+      print('error removing line')
+      return
+    
+
   def county_list_change(self):
-    self.state_boxes.append(self.state_list.currentText())
-    self.county_boxes.append(self.county_list.currentText())
-    self.state_boxes = list(set(self.state_boxes))
-    self.county_boxes = list(set(self.county_boxes))
+    # self.state_boxes.append(self.state_list.currentText())
+    # self.county_boxes.append(self.county_list.currentText())
     model = self.data_tree.model()
     county = self.county_list.currentText()
     state = self.state_list.currentText()
-    
+
     match = 0
     for countyList in state_dict[state]:
         for item in countyList:
@@ -171,10 +194,21 @@ class MapWindow(QWindow):
         model.setData(model.index(0, 1), county)
         model.setData(model.index(0, 2), "US")
         state_dict[state].append([county])
-
-
-    print(self.state_boxes)
-    print(self.county_boxes)
+    print(model.data(model.index(0,0)))
+  #Builds State/County lists for genMap
+  def build_lists(self):
+    self.state_boxes = []
+    self.county_boxes = []
+    counties = []
+    for state in state_dict:
+      if state_dict[state]:
+        self.state_boxes.append(state)
+    
+    for state in self.state_boxes:
+      for county in state_dict[state]:
+        counties.append(county[0])
+      self.county_boxes.append(counties)
+      counties = []
 
   #Month List Change
   def month_list_change(self):
@@ -225,6 +259,8 @@ class MapWindow(QWindow):
 
   #Generates the map using pandas dataframe
   def genMap(self):
+    self.build_lists()
+    print(self.state_boxes)
     if self.curr_month == None:
       print("A month must be selected!")
       return
