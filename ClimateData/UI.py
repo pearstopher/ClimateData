@@ -349,6 +349,8 @@ class graphPage(tk.Frame):
                 year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
 
         def gen_equation(event=None):
+            self.ent = None
+            self.ent2 = None
             if event == None:
                 degree = ''
             else:
@@ -372,8 +374,7 @@ class graphPage(tk.Frame):
                     degree_label = tk.Label(self.tab, font="10", text="Degree: ")
                     degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                 else:
-                    self.ent = None
-                    self.ent2 = None
+
                     degree = event.widget.get()
                     #print("Degree of equation is: ")
                     #print(degree_dict[degree])
