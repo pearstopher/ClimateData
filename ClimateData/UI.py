@@ -265,7 +265,8 @@ class graphPage(tk.Frame):
                 if derivitive_degree != None:
                     plot_type = 'poly_deriv'
 
-            polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
+            if connected_curve or not ('Connected' in drop_down):
+                polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
             double_plot_diff = None if self.ent3 == None else int(self.ent3.get())
 
             process_type = 'normal'
