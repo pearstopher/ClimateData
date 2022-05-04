@@ -1,6 +1,3 @@
-from time import sleep
-from tkinter import HORIZONTAL
-from matplotlib.pyplot import legend
 import pandas as pd                             #pip install pandas
 import plotly.express as px                     #pip install plotly   
 import psycopg2                                 #pip install psycopg2-binary
@@ -12,8 +9,8 @@ from PyQt5.QtCore import *
 from PyQt5.QtWebEngineWidgets import *          #pip install PyQtWebEngine
 import database
 import os
-import re
 import config
+from datetime import date
 
 datatype_dict = {
     "Maximum Temperature" : "tmp_max",
@@ -78,7 +75,7 @@ class MapWindow(QWindow):
     self.yearSlider = QSlider(Qt.Horizontal)
     self.yearSliderBox = QLineEdit()
     self.yearSlider.setMinimum(1895)
-    self.yearSlider.setMaximum(2022)
+    self.yearSlider.setMaximum(date.today().year)
     self.yearSlider.valueChanged.connect(self.yearSlideValChange)
     self.yearSliderBox.returnPressed.connect(self.yearSlideBoxChange)
     self.month_list = QComboBox()
@@ -133,6 +130,7 @@ class MapWindow(QWindow):
     self.data_table.setHeaderData(0, Qt.Horizontal, "State")
     self.data_table.setHeaderData(1, Qt.Horizontal, "County Name")
     self.data_table.setHeaderData(2, Qt.Horizontal, "Country")
+    self.data_table.setHeaderData(3, Qt.Horizontal, "Data")
     self.data_tree.setModel(self.data_table)
     self.data_tree.setMaximumHeight(200)
     self.data_tree.setStyleSheet('background-color: #2F2F2F; color: white;')
@@ -152,6 +150,18 @@ class MapWindow(QWindow):
     self.window.setStyleSheet('background-color: #222222;')
     self.window.show()
 
+  def fill_data(self):
+    model = self.data_tree.model()
+    count = model.rowCount(self.data_tree.rootIndex())
+    states = self.df['state'].tolist()
+    counties = self.df['county_name'].tolist()
+    dlist = self.df[self.dataType+"_"+self.curr_month].tolist()
+    
+    for idx in range(count):
+      model.setData(model.index(idx,0), states[idx])
+      model.setData(model.index(idx,1), counties[idx])
+      model.setData(model.index(idx,3), dlist[idx])
+    
   def get_selected(self):
     model = self.data_tree.model()
     index = self.data_tree.selectedIndexes()
@@ -294,6 +304,7 @@ class MapWindow(QWindow):
     self.mapFig.write_html('HTML/map_fig.html')
     self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/map_fig.html')))
     self.genMapFlag = True
+    self.fill_data()
 
   #Used to open blank map of US
   def openDefaultMap(self): 
