@@ -180,6 +180,7 @@ class MapWindow(QWindow):
         indices = self.data_tree.selectionModel().selectedRows()
         for idx in sorted(indices):
           model.removeRow(idx.row())
+        self.update_map()
     except:
       print('error removing line')
       return
@@ -300,7 +301,9 @@ class MapWindow(QWindow):
     self.mapFig.update_layout(title=dict(text='Climate Data'), margin=dict(l=0,r=0,b=0))
     self.mapFig.update_geos(resolution=50)
     self.mapFig.update_traces(name='Data', selector=dict(type='choropleth'))
-    # cli_map.update_geos(fitbounds='locations', visible=True) <-- Causes break when Aleutians West, AK is selected... 
+    if not state_dict['AK']:
+      self.mapFig.update_geos(fitbounds='locations', visible=True) 
+      
     self.mapFig.write_html('HTML/map_fig.html')
     self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/map_fig.html')))
     self.genMapFlag = True
@@ -315,15 +318,23 @@ class MapWindow(QWindow):
     if self.genMapFlag == False:
       return 
     self.yearSlider.setValue(int(self.yearSliderBox.text())+1)
+    self.update_map()
+    self.fill_data()
+ 
+  def update_map(self):
+    self.build_lists()
+    if len(self.state_boxes) == 0:
+      self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/default_fig.html')))
+      return
     if not self.county_boxes:
-      df = database.get_map_data_for_states(self.state_boxes, 'US', [self.dataType], [self.curr_month], self.curr_year, self.curr_year)
+      self.df = database.get_map_data_for_states(self.state_boxes, 'US', [self.dataType], [self.curr_month], self.curr_year, self.curr_year)
     else:
-      df = database.get_map_data_for_counties(self.state_boxes, self.county_boxes, 'US', [self.dataType], [self.curr_month], self.curr_year, self.curr_year)
-    li = df[self.dataType+"_"+self.curr_month].tolist()
+      self.df = database.get_map_data_for_counties(self.state_boxes, self.county_boxes, 'US', [self.dataType], [self.curr_month], self.curr_year, self.curr_year)
+    li = self.df[self.dataType+"_"+self.curr_month].tolist()
     self.mapFig.update_traces(z=li)
     self.mapFig.write_html('HTML/map_fig.html')
     self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/map_fig.html')))
- 
+
  #Button control to remove a line
   def removeLine(self):
       try:
