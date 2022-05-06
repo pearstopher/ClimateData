@@ -10,11 +10,14 @@ import urllib.error
 import json
 import datetime
 import re
+import zipfile
+import shutil
 from preprocess_data import *
 
 datadir = './data/raw/'
 droughtDir = f'{datadir}drought/'
 weatherDir = f'{datadir}weather/'
+featuresDir = f'{datadir}features/'
 outputDir = './data/processed/'
 order = ['min', 'avg', 'max', 'precip']
 months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
@@ -24,10 +27,11 @@ droughtFileName = 'drought.csv'
 countyCodesName = 'county_codes.csv'
 countyCoordsName = 'county_coords.csv'
 populationName = 'population.csv'
+featuresName = 'features.csv'
 
 
 #
-def download(url, save_path, skip_download_if_save_file_exists = False):
+def download(url, save_path, skip_download_if_save_file_exists = False, read = True):
 
   delete_file = False
   download_contents = None
@@ -53,8 +57,9 @@ def download(url, save_path, skip_download_if_save_file_exists = False):
     print('')
   
   # read contents from file
-  with open(save_path, 'r') as f:
-    download_contents = f.read()
+  if read:
+    with open(save_path, 'r') as f:
+      download_contents = f.read()
 
   # delete file
   if delete_file:
@@ -265,6 +270,8 @@ def build_drought_table(skip_download_if_save_file_exists):
     print('Succesful merge!')
 
 def build_population_table(skip_download_if_save_file_exists):
+  global allStatesCounties
+
   # https://data.nber.org/census/pop/cencounts.csv 1900-1990
   # https://api.census.gov/data/2000/dec/sf1?get=P001001,NAME&for=county:*
 
@@ -368,13 +375,70 @@ def build_population_table(skip_download_if_save_file_exists):
 
       year += 10
 
+def build_features_table(skip_download_if_save_file_exists):
+  # https://geonames.usgs.gov/docs/stategaz/NationalFile.zip
+
+  # get dataset
+  download("https://geonames.usgs.gov/docs/stategaz/NationalFile.zip", f'{datadir}features.zip', read= False, skip_download_if_save_file_exists= skip_download_if_save_file_exists)
+
+  # delete existing zip extraction
+  if os.path.exists(featuresDir):
+    shutil.rmtree(featuresDir)
+
+  # unzip dataset
+  with zipfile.ZipFile(f'{datadir}features.zip', 'r') as zip_ref:
+    zip_ref.extractall(featuresDir)
+
+  # get extracted filename
+  dataset_file = os.listdir(featuresDir)[0]
+  
+  # converts features csv
+  with open(f'{featuresDir}{dataset_file}', 'r', encoding='utf-8') as r:
+    lines = r.readlines()
+    
+    with open(f'{outputDir}{featuresName}', 'w', encoding='utf-8') as w:
+      # this csv contains very large fields so
+      # we must increase the field size limit to something larger
+      csv.field_size_limit(0x1000000)
+      reader = csv.reader(lines, delimiter='|')
+      columns = next(reader)
+
+      # header
+      w.write('id INTEGER PRIMARY KEY,county_code INTEGER,feature_type VARCHAR(50),feature_name VARCHAR(200),elevation_ft INTEGER\n')
+
+      # iterate lines
+      id = 1
+      for row in reader:
+        if len(row) == 20:
+          name = row[1]
+          feature_type = row[2]
+          state_code = row[3]
+          fips = f'{row[4]}{row[6]}'
+          elevation = row[16]
+          ncdc = None
+          skip = False
+
+          if state_code in allStatesCounties:
+            ncdc = f'{allStatesCounties[state_code]["StateCode"]}{row[6]}'
+          else:
+            skip = True
+            print(f'skipping feature {name} {feature_type} {state_code} {fips}')
+
+          if not skip:
+            # prepend '01' to code, indicating county is from united states
+            w.write(f'{id},01{ncdc},{feature_type},{name},{elevation}\n')
+            id += 1
+
+
+
 def process_files(force_data_redownload = True):
     # process county codes and test the output
-    #build_drought_table(not force_data_redownload)
-    #build_weather_table(not force_data_redownload)
-    #convert_countycodes(not force_data_redownload)
-    #convert_county_coords(not force_data_redownload)
+    build_drought_table(not force_data_redownload)
+    build_weather_table(not force_data_redownload)
+    convert_countycodes(not force_data_redownload)
+    convert_county_coords(not force_data_redownload)
     build_population_table(not force_data_redownload)
+    build_features_table(not force_data_redownload)
 
 def create_working_directory():
     if not os.path.exists(outputDir):
@@ -386,5 +450,5 @@ def create_working_directory():
 
 if __name__ == '__main__':
     create_working_directory()
-    process_files(False)
+    process_files()
 
