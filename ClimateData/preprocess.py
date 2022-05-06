@@ -6,6 +6,7 @@ from tracemalloc import start
 import numpy as np
 import pandas as pd
 import urllib.request
+import urllib.error
 import json
 import datetime
 import re
@@ -22,6 +23,7 @@ weatherFileName = 'weather.csv'
 droughtFileName = 'drought.csv'
 countyCodesName = 'county_codes.csv'
 countyCoordsName = 'county_coords.csv'
+populationName = 'population.csv'
 
 
 #
@@ -262,12 +264,117 @@ def build_drought_table(skip_download_if_save_file_exists):
     dff.to_csv(f'{outputDir}{droughtFileName}', index=False)
     print('Succesful merge!')
 
+def build_population_table(skip_download_if_save_file_exists):
+  # https://data.nber.org/census/pop/cencounts.csv 1900-1990
+  # https://api.census.gov/data/2000/dec/sf1?get=P001001,NAME&for=county:*
+
+  # get historical data
+  pop_1900_to_1990 = download("https://data.nber.org/census/pop/cencounts.csv", f'{datadir}pop-1900-1990.csv', skip_download_if_save_file_exists= skip_download_if_save_file_exists)
+
+  # generates population csv
+  with open(f'{outputDir}{populationName}', 'w') as w:
+    reader = csv.reader(pop_1900_to_1990.split('\n'), delimiter=',')
+    columns = next(reader)
+    us_total_pop = next(reader)
+    id = 1
+
+    # header
+    w.write('id INTEGER PRIMARY KEY,county_code INTEGER,year INTEGER,population INTEGER\n')
+
+    # iterate historical data
+    for row in reader:
+      if len(row) == 12:
+
+        # name is state code then name
+        # some rows are aggregate state data
+        # valid county name is "AL Autauga County"
+        # agg state name is "AL Alabama"
+        name = row[11]
+        state_code = name[:2]
+        name = name[3:]
+        fips = row[10]
+        county = None
+        skip = False
+
+        if fips[2:] == '000':
+          # fips code of 000 means its the state/country
+          # not the county
+          skip = True
+        elif state_code in allStatesCounties:
+          counties = allStatesCounties[state_code]["Counties"]
+          filtered_counties = list(filter(lambda x: x["Fips"] == fips, counties))
+          if len(filtered_counties) == 1:
+            county = filtered_counties[0]
+          else:
+            skip = True
+            print(f'skipping 1900-1990 population for {state_code} {name} {fips}')
+        else:
+          skip = True
+          print(f'skipping 1900-1990 population for {state_code} {name} {fips}')
+
+        if not skip:
+          
+          for i in range(10):
+            # prepend '01' to code, indicating county is from united states
+            value = row[i]
+            if value == '.':
+              value = '-1'
+            w.write(f'{id},01{county["Ncdc"]},{1900 + (i * 10)},{value}\n')
+            id += 1
+
+    # iterate new data until we can't
+    year = 2000
+    while True:
+
+      # try and download data
+      # download will throw exception on 404
+      # which happens when we reach the end of the available data
+      pop_data = None
+      try:
+        pop_data_json = download(f"https://api.census.gov/data/{year}/dec/sf1?get=P001001,NAME&for=county:*", f'{datadir}pop-{year}.csv', skip_download_if_save_file_exists= skip_download_if_save_file_exists)
+        pop_data = json.loads(pop_data_json)
+      except:
+        break
+      
+
+      # first row is header
+      for row in pop_data[1:]:
+        population = row[0]
+        name = row[1] # "county name, state name"
+        state_id = row[2]
+        county_fips = row[3] # just county fips, no state id
+        fips = f'{state_id}{county_fips}'
+        state_name = name.split(',')[1].strip()
+        skip = False
+        county = None
+        
+        state_code = next((s for s in allStatesCounties if allStatesCounties[s]["FullName"] == state_name), None)
+        if state_code is None:
+          skip = True
+          print(f'skipping {year} population for {name} {state_id} {county_fips}')
+        else:
+          state = allStatesCounties[state_code]
+          county = next((c for c in state["Counties"] if c["Fips"] == fips), None)
+          if county is None:
+            skip = True
+            print(f'skipping {year} population for {name} {state_id} {county_fips}')
+
+        if not skip:
+        
+          # prepend '01' to code, indicating county is from united states
+          w.write(f'{id},01{county["Ncdc"]},{year},{population}\n')
+          id += 1
+
+
+      year += 10
+
 def process_files(force_data_redownload = True):
     # process county codes and test the output
-    build_drought_table(not force_data_redownload)
-    build_weather_table(not force_data_redownload)
-    convert_countycodes(not force_data_redownload)
-    convert_county_coords(not force_data_redownload)
+    #build_drought_table(not force_data_redownload)
+    #build_weather_table(not force_data_redownload)
+    #convert_countycodes(not force_data_redownload)
+    #convert_county_coords(not force_data_redownload)
+    build_population_table(not force_data_redownload)
 
 def create_working_directory():
     if not os.path.exists(outputDir):
@@ -279,5 +386,5 @@ def create_working_directory():
 
 if __name__ == '__main__':
     create_working_directory()
-    process_files()
+    process_files(False)
 
