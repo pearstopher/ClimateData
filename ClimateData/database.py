@@ -658,7 +658,8 @@ def get_map_data_for_counties(states, counties, country, columns, months, startY
         results = get_map_weather_data(columnList, idList, startYear, endYear)
     else:
         for state in states:
-            stateIds.append(states_id_dict[state])
+            if state != "AK":
+                stateIds.append(states_id_dict[state])
         results = get_map_drought_data(columnList, stateIds, startYear, endYear)
         
         for index, row in results.iterrows():
@@ -691,7 +692,8 @@ def get_map_data_for_states(states, country, columns, months, startYear, endYear
         results = get_map_weather_data(columnList, ids, startYear, endYear)
     else:
         for state in states:
-            stateIds.append(states_id_dict[state])
+            if state != "AK":
+                stateIds.append(states_id_dict[state])
         results = get_map_drought_data(columnList, stateIds, startYear, endYear)
 
         for index, row in results.iterrows():
@@ -739,8 +741,9 @@ def get_data_for_counties_dataset(states, counties, country, columns, months, st
                 results.append(next_set)
     else:
         for state in states:
-            stateIds.append(states_id_dict[state])
-            print(states_id_dict[state])
+            if state != "AK":
+                stateIds.append(states_id_dict[state])
+                print(states_id_dict[state])
         for stateId in stateIds:
             results.append(get_weather_data(columnList, stateId, startYear, endYear))
     
