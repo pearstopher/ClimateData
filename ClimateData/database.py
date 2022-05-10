@@ -452,7 +452,7 @@ def get_map_drought_data(columnList, idList, startYear, endYear):
     idString = ", ".join(idYearList)
 
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None

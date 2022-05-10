@@ -17,6 +17,16 @@ datatype_dict = {
     "Minimum Temperature" : "tmp_min",
     "Average Temperature" : "tmp_avg",
     "Precipitation"       : "precip",
+    "Palmer Drought Severity" : "pdsist",
+    "Palmer Hydrological Drought" : "phdist",
+    "Modified Palmer Drought Severity" : "pmdist",
+    "1-month Standardized Precipitation" : "sp01st",
+    "2-month Standardized Precipitation" : "sp02st",
+    "3-month Standardized Precipitation" : "sp03st",
+    "6-month Standardized Precipitation" : "sp06st",
+    "9-month Standardized Precipitation" : "sp09st",
+    "12-month Standardized Precipitation" : "sp12st",
+    "24-month Standardized Precipitation" : "sp24st",
     "Select Data Type..." : "",
 } 
 
@@ -114,7 +124,9 @@ class MapWindow(QWindow):
     self.county_list.addItem('Select County...')
     self.county_list.activated.connect(self.county_list_change)
     self.dataType_list = QComboBox()
-    self.dataType_list.addItems(['Select Data Type...', 'Maximum Temperature', 'Minimum Temperature', 'Average Temperature', 'Precipitation'])
+    self.dataType_list.addItems(['Select Data Type...', 'Maximum Temperature', 'Minimum Temperature', 'Average Temperature', 'Precipitation', 
+                                 "Palmer Drought Severity", "Palmer Hydrological Drought", "Modified Palmer Drought Severity", "1-month Standardized Precipitation", "2-month Standardized Precipitation",
+                                 "3-month Standardized Precipitation", "6-month Standardized Precipitation", "9-month Standardized Precipitation", "12-month Standardized Precipitation",  "24-month Standardized Precipitation" ])
     self.dataType_list.activated.connect(self.dataType_list_change)
     self.state_list.setStyleSheet('background-color: #555555; color: white;')
     self.county_list.setStyleSheet('background-color: #555555; color: white;')
@@ -250,6 +262,13 @@ class MapWindow(QWindow):
     print(self.state_boxes)
   def dataType_list_change(self):
     self.dataType = datatype_dict[self.dataType_list.currentText()]
+    if(self.dataType == 'pdsist' or self.dataType == 'phdist' or self.dataType == 'pmdist' or self.dataType == 'sp01st' or
+       self.dataType == 'sp02st' or self.dataType == 'sp03st' or self.dataType == 'sp06st' or self.dataType == 'sp09st' or
+       self.dataType == 'sp12st' or self.dataType == 'sp24st'):
+
+      self.county_list.hide()
+    else:
+      self.county_list.show()
     print(self.dataType)
   #Displays slider value
   def yearSlideBoxChange(self):
