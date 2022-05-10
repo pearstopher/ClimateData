@@ -14,6 +14,7 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationTool
 import MapUI
 from idlelib.tooltip import Hovertip
 from PyQt5.QtWidgets import *                   #pip install PyQt5
+import numpy as np
 
 # Dictionaries
 degree_dict = {
@@ -70,6 +71,9 @@ month_abbrev_to_whole = {
     "12" : "December"
 }
 
+# Array for state only data
+state_data_types = np.array(["pdsist", "phdist", "pmdist", "sp01st", "sp02st", "sp03st", "sp06st", "sp09st", "sp12st",
+                              "sp24st"])
 
 # Helper Functions --------------------------------------------------
 
@@ -323,7 +327,7 @@ class graphPage(tk.Frame):
                                                      'plot_points': plot_points, 'connected_curve': connected_curve,
                                                      'begin_month': monthsIdx[begin_month], 'end_month': monthsIdx[end_month],
                                                      'degree': polynomial_degree, 'deriv_degree': derivitive_degree,
-                                                     'plots_per_graph' : len(df_list), 'names' : counties})
+                                                     'plots_per_graph' : len(df_list), 'names' : (states if data_type in state_data_types else counties)})
             canvas = FigureCanvasTkAgg(fig, master = master)  
             canvas.draw()
             canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
