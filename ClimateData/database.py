@@ -376,7 +376,7 @@ def get_weather_data(columnList, idList, startYear, endYear):
         cur.close()
         conn.close()
 
-    if results is not none:
+    if results is not None:
         df = pd.DataFrame(data=results, columns=cols)
         df.id = df.id.apply('{:0>11}'.format).astype(str)
     else:
