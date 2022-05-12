@@ -352,11 +352,12 @@ class graphPage(tk.Frame):
             self.button_coeff = TTK.Button(self.tab, width="15", text="View Coefficients", bootstyle="blue")
             self.button_coeff.grid(row=9, column=1, padx=(220,0), pady=(50, 0))
 
-            self.export_csv_df = export_csv(process_type=process_type, df_list=df_list, state_dict=temp_dict,
-                                                         date_range={'begin_month': begin_month, 'begin_year': begin_year,
-                                                        'end_month': end_month, 'end_year': end_year},
-                                                         data_type=data_type, deg=polynomial_degree,
-                                                         deriv=(0 if derivitive_degree is None else derivitive_degree))
+            self.export_csv_df = export_csv(process_type=process_type, df_list=df_list,
+                                            state_dict=(states if data_type in state_data_types else temp_dict),
+                                            date_range={'begin_month': begin_month, 'begin_year': begin_year,
+                                            'end_month': end_month, 'end_year': end_year}, data_type=data_type,
+                                            deg=polynomial_degree, deriv=(0 if derivitive_degree is None else derivitive_degree),
+                                            drought_data=(True if data_type in state_data_types else False))
 
             # Export CSV Button
             self.export_csv_button = TTK.Button(self.tab, command=save_csv_file ,width="16", text="Export data to CSV", bootstyle="blue")
