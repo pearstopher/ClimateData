@@ -383,6 +383,10 @@ class graphPage(tk.Frame):
         def delete_from_table():
             for row in self.data_table.selection():
                 self.data_table.delete(row)
+
+        def delete_all_from_table():
+            for row in self.data_table.get_children():
+                self.data_table.delete(row)
             
 
         def gen_counties(event=None):
@@ -424,6 +428,8 @@ class graphPage(tk.Frame):
             else:
                 county_name = event.widget.get()
                 state = self.dropdown_state.get()
+            if county_name in [ self.data_table.item(x)['values'][1] for x in self.data_table.get_children()]:
+                return
             if county_name == 'All Counties':
                 data = get_counties_for_state_all_data(state)
             else:
@@ -434,9 +440,14 @@ class graphPage(tk.Frame):
                 print(row)
                 self.data_table.insert(parent='', index='end', values=row)
             self.data_table.grid(row=2, column=1, pady=(0,40), padx=(250, 235))
+            print("This: ", self.data_table.get_children())
 
         def widgets(frame):
             self.tab = tk.Frame(frame, width=1920, height=1080)
+
+            #Notebook   
+            self.notebook_label = tk.Label(self.tab, font="12")
+            self.notebook_label.grid(row=1, column=0, padx=(10, 500), pady=10)
 
             #Date range widgets
             self.begin_date_ent = tkboot.Entry(self.tab, textvariable=self.begin_year, width=10)
@@ -475,10 +486,15 @@ class graphPage(tk.Frame):
             self.data_table.heading('county_code', text="County Code")
             self.data_table.heading('country', text="Country")
 
+            #Delete selected rows from the table
             delete_btn = tkboot.Button(self.tab, text="Delete row(s)", command=delete_from_table)
             delete_btnTip = Hovertip(delete_btn, 'Delete selected row(s) from table')
+            delete_btn.grid(row=2, column=1, padx=(560,0), pady=(0,210))
 
-            delete_btn.grid(row=2, column=1, padx=(550,0), pady=(0,160))
+            #Delete every row from the table
+            delete_all_rows = tkboot.Button(self.tab, text="Delete all", command=delete_all_from_table)
+            delete_all_rows_tip = Hovertip(delete_all_rows, 'Delete all rows from table')
+            delete_all_rows.grid(row=2, column=1, padx=(535,0), pady=(0,120))
 
             #Table widget for specific dates
             self.date_table = TTK.Treeview(self.tab, height=5)
