@@ -29,6 +29,15 @@ countyCoordsName = 'county_coords.csv'
 populationName = 'population.csv'
 featuresName = 'features.csv'
 
+outputFileNames = [
+  weatherFileName,
+  droughtFileName,
+  countyCodesName,
+  countyCoordsName,
+  populationName,
+  featuresName,
+]
+
 
 #
 def download(url, save_path, skip_download_if_save_file_exists = False, read = True):
@@ -434,24 +443,60 @@ def build_features_table(skip_download_if_save_file_exists):
             # prepend '01' to code, indicating county is from united states
             w.write(f'{id},01{ncdc},{feature_type},{name},{elevation}\n')
 
+def has_processed_files():
+  for outputFileName in outputFileNames:
+    if not os.path.exists(f'{outputDir}{outputFileName}'):
+      return False
+  
+  return True
+
 def process_files(force_data_redownload = True):
-    # process county codes and test the output
+  # if not forced redownload and we've already processed everything
+  # exit
+  if not force_data_redownload:
+    if has_processed_files():
+      return
+
+  # process county codes and test the output
+  try:
     build_drought_table(not force_data_redownload)
+  except Exception as error:
+    print(error)
+
+  try:
     build_weather_table(not force_data_redownload)
+  except Exception as error:
+    print(error)
+
+  try:
     convert_countycodes(not force_data_redownload)
+  except Exception as error:
+    print(error)
+
+  try:
     convert_county_coords(not force_data_redownload)
+  except Exception as error:
+    print(error)
+
+  try:
     build_population_table(not force_data_redownload)
+  except Exception as error:
+    print(error)
+
+  try:
     build_features_table(not force_data_redownload)
+  except Exception as error:
+    print(error)
 
 def create_working_directory():
-    if not os.path.exists(outputDir):
-        os.makedirs(outputDir)
-    if not os.path.exists(droughtDir):
-        os.makedirs(droughtDir)
-    if not os.path.exists(weatherDir):
-        os.makedirs(weatherDir)
+  if not os.path.exists(outputDir):
+    os.makedirs(outputDir)
+  if not os.path.exists(droughtDir):
+    os.makedirs(droughtDir)
+  if not os.path.exists(weatherDir):
+    os.makedirs(weatherDir)
 
 if __name__ == '__main__':
-    create_working_directory()
-    process_files()
+  create_working_directory()
+  process_files()
 

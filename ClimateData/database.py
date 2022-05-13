@@ -136,6 +136,39 @@ def setup_coordinates_table():
         cur.close()
         conn.close()
 
+def is_database_setup():
+    try:
+        conn = psycopg2.connect(config.config_get_db_connection_string())
+    except OperationalError as error:
+        print_psycopg2_exception(error)
+        return False
+
+    cur = conn.cursor()
+    filenames = find_csv_filenames(f'{outputDir}')
+    for fileName in filenames:
+        tableName  = os.path.basename(fileName).split(".")[0]
+        print(f"Checking table: {tableName}...", end=' ')
+        try:
+            cur.execute("""
+            SELECT to_regclass('%s')
+            """,
+            [AsIs(tableName)])
+            r = cur.fetchone()
+            if r is None or len(r) == 0 or r[0] is None:
+                print('not found')
+                return False
+        except Exception as error:
+            if debug == True:
+                print_psycopg2_exception(error)
+            print('not found')
+            return False
+        print('found')
+
+    cur.close()
+    conn.close()
+    
+    return True
+
 def find_csv_filenames(path_to_dir, suffix=".csv"):
     filenames = listdir(path_to_dir)
     return [ filename for filename in filenames if filename.endswith( suffix ) ]
