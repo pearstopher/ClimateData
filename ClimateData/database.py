@@ -13,7 +13,7 @@ from enum import Enum
 
 
 outputDir = './data/processed/'
-debug = True
+debug = False
 
 states_id_dict = {
     "AL":101, "AZ":102, "AR":103, 
