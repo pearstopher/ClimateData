@@ -13,7 +13,7 @@ from enum import Enum
 
 
 outputDir = './data/processed/'
-debug = False
+debug = True
 
 states_id_dict = {
     "AL":101, "AZ":102, "AR":103, 
@@ -554,7 +554,76 @@ def print_psycopg2_exception(error):
     print ("pgcode:", error.pgcode, "\n")
     
 
+def get_population_averages(idList, startYear, endYear):
+    cols = []
+    results = None
+    idString = ", ".join(idList)
+    
+    try:
+        conn = psycopg2.connect(config.config_get_db_connection_string())
+    except OperationalError as error:
+        print_psycopg2_exception(error)
+        conn = None
 
+    if conn != None:
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+            SELECT county_code, TRUNC(AVG(population)) as population FROM population
+            where county_code IN (%s) 
+            AND year BETWEEN %s and %s
+            GROUP BY county_code;
+            """,
+            [AsIs(idString), AsIs(startYear), AsIs(endYear)])
+            conn.commit()
+            results = cur.fetchall()
+        except Exception as error:
+            print_psycopg2_exception(error)
+
+        if results is not None:
+            for item in cur.description:
+                cols.append(item[0])
+        cur.close()
+        conn.close()
+    
+    df = pd.DataFrame(data=results, columns=cols)
+    return df
+
+def get_elevations(idList):
+    cols = []
+    results = None
+    idString = ", ".join(idList)
+
+    try:
+        conn = psycopg2.connect(config.config_get_db_connection_string())
+    except OperationalError as error:
+        print_psycopg2_exception(error)
+        conn = None
+
+    if conn != None:
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+            SELECT county_code, TRUNC(AVG(elevation_ft)) AS elevation_ft
+            FROM features WHERE feature_type = 'Populated Place'
+            AND county_code IN
+            (%s)
+            GROUP BY county_code;
+            """,
+            [AsIs(idString)])
+            conn.commit()
+            results = cur.fetchall()
+        except Exception as error:
+            print_psycopg2_exception(error)
+
+        if results is not None:
+            for item in cur.description:
+                cols.append(item[0])
+        cur.close()
+        conn.close()
+
+    df = pd.DataFrame(data=results, columns=cols)
+    return df
 
 
 #EXTERNAL CALLS---------------------------------------------------------------------
@@ -861,6 +930,24 @@ def get_selected_counties_for_state(state, county):
         results = ""
     
     return results
+
+def get_population(counties, states, country, startYear, endYear):
+    idList = []
+
+    for index, state in enumerate(states):
+        for county in counties[index]:
+            idList.append(get_id_by_county(county, state, country))
+    return get_population_averages(idList, startYear, endYear)
+
+
+def get_elevation(counties, states, country):
+    idList = []
+
+    for index, state in enumerate(states):
+        for county in counties[index]:
+            idList.append(get_id_by_county(county, state, country))
+    return get_elevations(idList)
+    
 
 if __name__ == "__main__":
     setup_database()

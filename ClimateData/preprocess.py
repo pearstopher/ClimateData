@@ -408,9 +408,11 @@ def build_features_table(skip_download_if_save_file_exists):
 
       # iterate lines
       id = 1
+
       for row in reader:
         if len(row) == 20:
           name = row[1]
+          name = name.replace(",","")
           feature_type = row[2]
           state_code = row[3]
           fips = f'{row[4]}{row[6]}'
@@ -424,12 +426,13 @@ def build_features_table(skip_download_if_save_file_exists):
             skip = True
             print(f'skipping feature {name} {feature_type} {state_code} {fips}')
 
+          if not elevation:
+            skip = True
+            print(f'skipping feature {name} {feature_type} {state_code} {fips} FOR MISSING ELEVATION')
+
           if not skip:
             # prepend '01' to code, indicating county is from united states
             w.write(f'{id},01{ncdc},{feature_type},{name},{elevation}\n')
-            id += 1
-
-
 
 def process_files(force_data_redownload = True):
     # process county codes and test the output
