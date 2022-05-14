@@ -221,6 +221,10 @@ class graphPage(tk.Frame):
 
         self.export_csv_df = None
 
+        # Yearly Offset Input Selection
+        self.ent3 = None
+        self.year_offset = None
+
         def on_submit():
             #user input is invalid, call validate_dates function
             if validate_dates(self.begin_year.get(), self.end_year.get()) == False:    
@@ -385,12 +389,17 @@ class graphPage(tk.Frame):
             #print(countries)
             
         def gen_plot_type(event=None):
-            self.ent3 = None
             if event.widget.get() == 'Yearly Offset':
                 self.ent3 = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                 self.ent3.grid(row=6, column=1, padx=(240,0), pady=(30,0))
-                year_offset = tk.Label(self.tab, font="10", text="Year Diff: ")
-                year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+                self.year_offset = tk.Label(self.tab, font="10", text="Year Diff: ")
+                self.year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+            else:
+                if self.ent3 is not None:
+                    self.ent3.destroy()
+                    self.ent3 = None
+                    self.year_offset.destroy()
+                    self.year_offset = None
 
         def gen_equation(event=None):
             self.ent = None
