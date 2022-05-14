@@ -225,6 +225,12 @@ class graphPage(tk.Frame):
         self.ent3 = None
         self.year_offset = None
 
+        # Degree inputs and labels
+        self.ent = None
+        self.degree_label = None
+        self.ent2 = None
+        self.deriv_label = None
+
         def on_submit():
             #user input is invalid, call validate_dates function
             if validate_dates(self.begin_year.get(), self.end_year.get()) == False:    
@@ -402,32 +408,47 @@ class graphPage(tk.Frame):
                     self.year_offset = None
 
         def gen_equation(event=None):
-            self.ent = None
-            self.ent2 = None
+            # self.ent = None
+            # self.ent2 = None
             if event == None:
                 degree = ''
             else:
                 if event.widget.get() == "n-degree..":
+                    if self.ent2 is not None:
+                        self.ent2.destroy()
+                        self.ent2 = None
+                        self.deriv_label.destroy()
+                        self.deriv_label = None
+
                     self.ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                     self.ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
-                    degree_label = tk.Label(self.tab, font="10", text="Degree: ")
-                    degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
+                    self.degree_label = tk.Label(self.tab, font="10", text="Degree: ")
+                    self.degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                 elif event.widget.get() == 'n-degree derivative':
                     self.ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                     self.ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
-                    degree_label = tk.Label(self.tab, font="10", text="Degree: ")
-                    degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
+                    self.degree_label = tk.Label(self.tab, font="10", text="Degree: ")
+                    self.degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                     self.ent2 = tkboot.Entry(self.tab, width="6")
                     self.ent2.grid(row=8, column=1, padx=(240,0), pady=(0,80))
-                    deriv_label = tk.Label(self.tab, font="10", text="Derivitive: ")
-                    deriv_label.grid(row=8, column=1, padx=(100, 0), pady=(0,80))
+                    self.deriv_label = tk.Label(self.tab, font="10", text="Derivitive: ")
+                    self.deriv_label.grid(row=8, column=1, padx=(100, 0), pady=(0,80))
                 elif event.widget.get() == "Connected-Curve":
                     self.ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                     self.ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
-                    degree_label = tk.Label(self.tab, font="10", text="Degree: ")
-                    degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
+                    self.degree_label = tk.Label(self.tab, font="10", text="Degree: ")
+                    self.degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                 else:
-
+                    if self.ent is not None:
+                        self.ent.destroy()
+                        self.ent = None
+                        self.degree_label.destroy()
+                        self.degree_label = None
+                    if self.ent2 is not None:
+                        self.ent2.destroy()
+                        self.ent2 = None
+                        self.deriv_label.destroy()
+                        self.deriv_label = None
                     degree = event.widget.get()
                     #print("Degree of equation is: ")
                     #print(degree_dict[degree])
