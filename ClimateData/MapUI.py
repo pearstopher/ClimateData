@@ -267,6 +267,7 @@ class MapWindow(QWindow):
        self.dataType == 'sp12st' or self.dataType == 'sp24st'):
 
       self.county_list.hide()
+      self.county_boxes = []
     else:
       self.county_list.show()
     print(self.dataType)
@@ -290,7 +291,6 @@ class MapWindow(QWindow):
   #Generates the map using pandas dataframe
   def genMap(self):
     self.build_lists()
-    print(self.state_boxes)
     if self.curr_month == None:
       print("A month must be selected!")
       return
@@ -316,17 +316,24 @@ class MapWindow(QWindow):
     if self.dataType == 'precip':
       colorscale = 'dense'
       range = (0,15)
-    self.mapFig = px.choropleth(self.df, geojson=counties, locations='fips_code', color=self.dataType+"_"+self.curr_month, color_continuous_scale=colorscale, range_color=range, scope='usa', hover_name='county_name', hover_data=['state'])
+    if(self.dataType == 'pdsist' or self.dataType == 'phdist' or self.dataType == 'pmdist' or self.dataType == 'sp01st' or
+       self.dataType == 'sp02st' or self.dataType == 'sp03st' or self.dataType == 'sp06st' or self.dataType == 'sp09st' or
+       self.dataType == 'sp12st' or self.dataType == 'sp24st'):
+      range = (-10,10)
+      self.mapFig = px.choropleth(self.df, locationmode='USA-states', locations='state', color=self.dataType+"_"+self.curr_month, color_continuous_scale=colorscale, range_color=range, scope='usa', hover_name='state', hover_data=['state'])
+    else:
+      self.mapFig = px.choropleth(self.df, geojson=counties, locations='fips_code', color=self.dataType+"_"+self.curr_month, color_continuous_scale=colorscale, range_color=range, scope='usa', hover_name='county_name', hover_data=['state'])
+      if not state_dict['AK']:
+        self.mapFig.update_geos(fitbounds='locations', visible=True) 
+      self.fill_data()
+
     self.mapFig.update_layout(title=dict(text='Climate Data'), margin=dict(l=0,r=0,b=0))
     self.mapFig.update_geos(resolution=50)
     self.mapFig.update_traces(name='Data', selector=dict(type='choropleth'))
-    if not state_dict['AK']:
-      self.mapFig.update_geos(fitbounds='locations', visible=True) 
       
     self.mapFig.write_html('HTML/map_fig.html')
     self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/map_fig.html')))
     self.genMapFlag = True
-    self.fill_data()
 
   #Used to open blank map of US
   def openDefaultMap(self): 
