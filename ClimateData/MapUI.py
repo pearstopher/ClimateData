@@ -256,9 +256,21 @@ class MapWindow(QWindow):
   #State List Change
   def state_list_change(self):
     if self.droughtFlag:
-      self.state_boxes.append(self.state_list.currentText())
+      state = self.state_list.currentText()
+      model = self.data_tree.model()
+
+      found = 0
+      for sta in self.state_boxes:
+        if sta == state:
+          found = 1
+
+      if found == 0:
+        model.insertRow(0)
+        model.setData(model.index(0, 0), state)
+        model.setData(model.index(0, 2), "US")
+      self.state_boxes.append(state)
       self.state_boxes = list(set(self.state_boxes))
-      print(self.state_boxes)
+
     else:
       self.county_list.clear()
       self.county_list.addItem('Select County...')
@@ -266,6 +278,7 @@ class MapWindow(QWindow):
       data = [x[0] for x in data]
       self.county_list.addItems(data)
       self.state_boxes.append(self.state_list.currentText())
+
   def dataType_list_change(self):
     self.dataType = datatype_dict[self.dataType_list.currentText()]
     if(self.dataType == 'pdsist' or self.dataType == 'phdist' or self.dataType == 'pmdist' or self.dataType == 'sp01st' or
