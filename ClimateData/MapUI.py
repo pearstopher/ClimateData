@@ -80,6 +80,7 @@ class MapWindow(QWindow):
     self.mapFig = None
     self.df = None
     self.genMapFlag = False
+    self.droughtFlag = False
 
     #Map Controls
     self.yearSlider = QSlider(Qt.Horizontal)
@@ -218,6 +219,7 @@ class MapWindow(QWindow):
         model.setData(model.index(0, 2), "US")
         state_dict[state].append([county])
     print(model.data(model.index(0,0)))
+
   #Builds State/County lists for genMap
   def build_lists(self):
     self.state_boxes = []
@@ -253,13 +255,17 @@ class MapWindow(QWindow):
     print(self.curr_month)
   #State List Change
   def state_list_change(self):
-    self.county_list.clear()
-    self.county_list.addItem('Select County...')
-    data = database.get_counties_for_state(self.state_list.currentText())
-    data = [x[0] for x in data]
-    self.county_list.addItems(data)
-    self.state_boxes.append(self.state_list.currentText())
-    print(self.state_boxes)
+    if self.droughtFlag:
+      self.state_boxes.append(self.state_list.currentText())
+      self.state_boxes = list(set(self.state_boxes))
+      print(self.state_boxes)
+    else:
+      self.county_list.clear()
+      self.county_list.addItem('Select County...')
+      data = database.get_counties_for_state(self.state_list.currentText())
+      data = [x[0] for x in data]
+      self.county_list.addItems(data)
+      self.state_boxes.append(self.state_list.currentText())
   def dataType_list_change(self):
     self.dataType = datatype_dict[self.dataType_list.currentText()]
     if(self.dataType == 'pdsist' or self.dataType == 'phdist' or self.dataType == 'pmdist' or self.dataType == 'sp01st' or
@@ -268,8 +274,10 @@ class MapWindow(QWindow):
 
       self.county_list.hide()
       self.county_boxes = []
+      self.droughtFlag = True
     else:
       self.county_list.show()
+      self.droughtFlag = False
     print(self.dataType)
   #Displays slider value
   def yearSlideBoxChange(self):
@@ -290,7 +298,8 @@ class MapWindow(QWindow):
 
   #Generates the map using pandas dataframe
   def genMap(self):
-    self.build_lists()
+    if not self.droughtFlag:
+      self.build_lists()
     if self.curr_month == None:
       print("A month must be selected!")
       return
@@ -316,9 +325,7 @@ class MapWindow(QWindow):
     if self.dataType == 'precip':
       colorscale = 'dense'
       range = (0,15)
-    if(self.dataType == 'pdsist' or self.dataType == 'phdist' or self.dataType == 'pmdist' or self.dataType == 'sp01st' or
-       self.dataType == 'sp02st' or self.dataType == 'sp03st' or self.dataType == 'sp06st' or self.dataType == 'sp09st' or
-       self.dataType == 'sp12st' or self.dataType == 'sp24st'):
+    if(self.droughtFlag):
       range = (-10,10)
       self.mapFig = px.choropleth(self.df, locationmode='USA-states', locations='state', color=self.dataType+"_"+self.curr_month, color_continuous_scale=colorscale, range_color=range, scope='usa', hover_name='state', hover_data=['state'])
     else:
