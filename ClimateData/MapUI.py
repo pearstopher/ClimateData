@@ -167,13 +167,19 @@ class MapWindow(QWindow):
     model = self.data_tree.model()
     count = model.rowCount(self.data_tree.rootIndex())
     states = self.df['state'].tolist()
-    counties = self.df['county_name'].tolist()
     dlist = self.df[self.dataType+"_"+self.curr_month].tolist()
-    
-    for idx in range(count):
-      model.setData(model.index(idx,0), states[idx])
-      model.setData(model.index(idx,1), counties[idx])
-      model.setData(model.index(idx,3), dlist[idx])
+
+    if self.droughtFlag:
+      for idx in range(count):
+        model.setData(model.index(idx,0), states[idx])
+        model.setData(model.index(idx,3), dlist[idx])
+
+    else:
+      counties = self.df['county_name'].tolist()
+      for idx in range(count):
+        model.setData(model.index(idx,0), states[idx])
+        model.setData(model.index(idx,1), counties[idx])
+        model.setData(model.index(idx,3), dlist[idx])
     
   def get_selected(self):
     model = self.data_tree.model()
@@ -345,8 +351,8 @@ class MapWindow(QWindow):
       self.mapFig = px.choropleth(self.df, geojson=counties, locations='fips_code', color=self.dataType+"_"+self.curr_month, color_continuous_scale=colorscale, range_color=range, scope='usa', hover_name='county_name', hover_data=['state'])
       if not state_dict['AK']:
         self.mapFig.update_geos(fitbounds='locations', visible=True) 
-      self.fill_data()
-
+    
+    self.fill_data()
     self.mapFig.update_layout(title=dict(text='Climate Data'), margin=dict(l=0,r=0,b=0))
     self.mapFig.update_geos(resolution=50)
     self.mapFig.update_traces(name='Data', selector=dict(type='choropleth'))
