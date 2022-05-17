@@ -101,6 +101,10 @@ class MapWindow(QWindow):
     self.deleteButton.setMinimumHeight(20)
     self.deleteButton.setMaximumWidth(80)
     self.deleteButton.clicked.connect(self.remove_selected)
+    self.resetButton = QPushButton('Reset')
+    self.resetButton.setMinimumHeight(20)
+    self.resetButton.setMaximumWidth(80)
+    self.resetButton.clicked.connect(self.clear_data)
     self.mapItButton = QPushButton('Map it!', self.window)
     self.mapItButton.setMinimumHeight(30)
     self.mapItButton.setMaximumWidth(150)
@@ -110,6 +114,7 @@ class MapWindow(QWindow):
     self.mapItButton.setStyleSheet('background-color: #375A7F; color: white;')
     self.addButton.setStyleSheet('background-color: #375A7F; color: white;')
     self.deleteButton.setStyleSheet('background-color: #375A7F; color: white;')
+    self.resetButton.setStyleSheet('background-color: #375A7F; color: white;')
     self.yearSlider.setStyleSheet('QSlider::handle:horizontal {background-color: #375a7f;}')
     self.controls.addWidget(self.mapItButton)
     self.controls.addWidget(self.month_list)
@@ -149,6 +154,7 @@ class MapWindow(QWindow):
     self.data_tree.setStyleSheet('background-color: #2F2F2F; color: white;')
     self.echo.addWidget(self.data_tree)
     self.echo.addWidget(self.deleteButton)
+    self.echo.addWidget(self.resetButton)
 
     #Set title and add widgets and layouts to main window. 
     self.window.setWindowTitle("Climate Data")
@@ -162,6 +168,19 @@ class MapWindow(QWindow):
     self.window.setLayout(self.layout)
     self.window.setStyleSheet('background-color: #222222;')
     self.window.show()
+
+  def clear_data(self):
+    model = self.data_tree.model()
+    count = model.rowCount(self.data_tree.rootIndex())
+    print(count)
+    for idx in range(count):
+      model.removeRow(0)
+    self.state_boxes = []
+    self.county_boxes = []
+    for state in state_dict:
+      state_dict[state] = []
+
+    self.openDefaultMap()
 
   def fill_data(self):
     model = self.data_tree.model()
@@ -261,6 +280,8 @@ class MapWindow(QWindow):
     print(self.curr_month)
   #State List Change
   def state_list_change(self):
+    if self.state_list.currentText() == 'Select State...':
+      return
     if self.droughtFlag:
       state = self.state_list.currentText()
       model = self.data_tree.model()
@@ -290,13 +311,16 @@ class MapWindow(QWindow):
     if(self.dataType == 'pdsist' or self.dataType == 'phdist' or self.dataType == 'pmdist' or self.dataType == 'sp01st' or
        self.dataType == 'sp02st' or self.dataType == 'sp03st' or self.dataType == 'sp06st' or self.dataType == 'sp09st' or
        self.dataType == 'sp12st' or self.dataType == 'sp24st'):
-
+      self.clear_data()
       self.county_list.hide()
       self.county_boxes = []
       self.droughtFlag = True
+      self.state_list.removeItem(1)
     else:
       self.county_list.show()
       self.droughtFlag = False
+      self.state_list.clear()
+      self.state_list.addItems(['Select State...', 'AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA', 'HI', 'IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
     print(self.dataType)
   #Displays slider value
   def yearSlideBoxChange(self):
