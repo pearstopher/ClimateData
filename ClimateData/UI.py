@@ -420,8 +420,6 @@ class graphPage(tk.Frame):
                     self.year_offset = None
 
         def gen_equation(event=None):
-            # self.ent = None
-            # self.ent2 = None
             if event == None:
                 degree = ''
             else:
