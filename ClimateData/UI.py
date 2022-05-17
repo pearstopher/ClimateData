@@ -220,6 +220,8 @@ class graphPage(tk.Frame):
         self.n_degree = tkboot.StringVar(value="")
 
         self.export_csv_df = None
+        self.export_csv_button = None
+        self.button_coeff = None
 
         def on_submit():
             #user input is invalid, call validate_dates function
