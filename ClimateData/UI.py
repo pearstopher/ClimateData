@@ -262,13 +262,6 @@ class graphPage(tk.Frame):
                 month = str(monthNum).zfill(2)
                 months.append(month_dict[month])
 
-            #Coefficient Button
-            # self.button_coeff = TTK.Button(self.tab, width="15", text="View Coefficients", bootstyle="blue")
-            # self.button_coeff.grid(row=9, column=1, padx=(220,0), pady=(50, 0))
-            #
-            # self.button_coeff = TTK.Button(self.tab, width="16", text="Export data to CSV", bootstyle="blue")
-            # self.button_coeff.grid(row=9, column=1, padx=(537,0), pady=(50, 0))
-
             drop_down       = self.dropdown_equations.get()
             plot_points     = self.plot_points_var.get()
             monthly_split   = self.monthly_check_var.get()
