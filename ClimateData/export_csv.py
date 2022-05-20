@@ -138,7 +138,6 @@ def export_csv_split_months_by_county(df_list, state_dict, date_range, data_type
                         temperature_data_values.append(np.nan)
 
                 # Process data
-                #[x, y, x_dates] = get_xy_data_for_months(county_df, begin_year, end_year, month_cell_index)
                 [x, y, x_dates] = get_xy_data_for_months(county_df, begin_year_from_df, end_year, month_cell_index)
 
                 # Get polynomial coefficients
