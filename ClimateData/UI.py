@@ -5,6 +5,7 @@ import ttkbootstrap as tkboot
 from ttkbootstrap import ttk as TTK
 from ttkbootstrap import font as tkfont
 from ttkbootstrap.constants import *
+from tkinter.filedialog import asksaveasfilename
 import psycopg2
 from database import *
 import plotting
@@ -14,6 +15,8 @@ from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationTool
 import MapUI
 from idlelib.tooltip import Hovertip
 from PyQt5.QtWidgets import *                   #pip install PyQt5
+from export_csv import export_csv
+import numpy as np
 
 # Dictionaries
 degree_dict = {
@@ -26,7 +29,17 @@ datatype_dict = {
     "Maximum temperature" : "tmp_max",
     "Minimum temperature" : "tmp_min",
     "Average temperature" : "tmp_avg",
-    "Precipitation"       : "precip"
+    "Precipitation"       : "precip",
+    "Palmer Drought Severity" : "pdsist",
+    "Palmer Hydrological Drought" : "phdist",
+    "Modified Palmer Drought Severity" : "pmdist",
+    "1-month Standardized Precipitation" : "sp01st",
+    "2-month Standardized Precipitation" : "sp02st",
+    "3-month Standardized Precipitation" : "sp03st",
+    "6-month Standardized Precipitation" : "sp06st",
+    "9-month Standardized Precipitation" : "sp09st",
+    "12-month Standardized Precipitation" : "sp12st",
+    "24-month Standardized Precipitation" : "sp24st"
 } 
 
 month_dict = {
@@ -60,6 +73,9 @@ month_abbrev_to_whole = {
     "12" : "December"
 }
 
+# Array for state only data
+state_data_types = np.array(["pdsist", "phdist", "pmdist", "sp01st", "sp02st", "sp03st", "sp06st", "sp09st", "sp12st",
+                              "sp24st"])
 
 # Helper Functions --------------------------------------------------
 
@@ -94,6 +110,9 @@ class App(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
         self.title('Climate Data')
         self.geometry('1920x1080')
+        tk.Grid.rowconfigure(self,0,weight=1)
+        tk.Grid.columnconfigure(self,0,weight=1)
+        tk.Grid.rowconfigure(self,1,weight=1)
         tkboot.Style('darkly')
 
         self.app = QApplication([])
@@ -110,12 +129,19 @@ class App(tk.Tk):
         tab5 = tk.Frame(container, width=1920, height=1080)
         container.add(tab5, text ='Notebook tab 5')
         container.grid(row=0, column=0)
-        container.grid_rowconfigure(0, weight=0)
-        container.grid_columnconfigure(0, weight=3)
-        container.grid_rowconfigure(1, weight=0)
-        container.grid_columnconfigure(1, weight=0)
-        tabs = [tab1,tab2,tab3,tab4,tab5]
 
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
+        tab1.grid_rowconfigure(0, weight=1)
+        tab1.grid_columnconfigure(0, weight=1)
+        tab2.grid_rowconfigure(0, weight=1)
+        tab2.grid_columnconfigure(0, weight=1)
+        tab3.grid_rowconfigure(0, weight=1)
+        tab3.grid_columnconfigure(0, weight=1)
+        tab4.grid_rowconfigure(0, weight=1)
+        tab4.grid_columnconfigure(0, weight=1)
+        tab5.grid_rowconfigure(0, weight=1)
+        tab5.grid_columnconfigure(0, weight=1)
 
         """
         container = ttk.Notebook(self)
@@ -194,6 +220,20 @@ class graphPage(tk.Frame):
         self.end_date = tkboot.StringVar(value="")
         self.n_degree = tkboot.StringVar(value="")
 
+        self.export_csv_df = None
+        self.export_csv_button = None
+        self.button_coeff = None
+
+        # Yearly Offset Input Selection
+        self.ent3 = None
+        self.year_offset = None
+
+        # Degree inputs and labels
+        self.ent = None
+        self.degree_label = None
+        self.ent2 = None
+        self.deriv_label = None
+
         def on_submit():
             #user input is invalid, call validate_dates function
             if validate_dates(self.begin_year.get(), self.end_year.get()) == False:    
@@ -226,27 +266,16 @@ class graphPage(tk.Frame):
 
             [begin_month_num, begin_year] = self.begin_year.get().split('/')
             [end_month_num, end_year] = self.end_year.get().split('/')
-            months = []
-            #Coefficient Button
-
-            self.button_coeff = TTK.Button(self.tab, width="15", text="View Coefficients", bootstyle="blue")
-            self.button_coeff.grid(row=9, column=1, padx=(220,0), pady=(50, 0))
-
-            self.button_coeff = TTK.Button(self.tab, width="16", text="Export data to CSV", bootstyle="blue")
-            self.button_coeff.grid(row=9, column=1, padx=(537,0), pady=(50, 0))
-
-            
-            polynomial_degree = degree_dict[self.dropdown_equations.get()]
             begin_month = month_dict[begin_month_num]
             end_month = month_dict[end_month_num]
-
+            months = []
             for monthNum in range(int(begin_month_num), int(end_month_num)+1):
                 month = str(monthNum).zfill(2)
                 months.append(month_dict[month])
 
-            monthly_split   = self.monthly_check_var.get()
+            drop_down       = self.dropdown_equations.get()
             plot_points     = self.plot_points_var.get()
-            drop_down = self.dropdown_equations.get()
+            monthly_split   = self.monthly_check_var.get()
 
             connected_curve = None
             derivitive_degree = None
@@ -260,7 +289,8 @@ class graphPage(tk.Frame):
                 if derivitive_degree != None:
                     plot_type = 'poly_deriv'
 
-            polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
+            if connected_curve or not ('Connected' in drop_down):
+                polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
             double_plot_diff = None if self.ent3 == None else int(self.ent3.get())
 
             process_type = 'normal'
@@ -302,15 +332,52 @@ class graphPage(tk.Frame):
 
             df_list = get_data_for_counties_dataset(states, counties, 'US', [data_type], months, int(begin_year), int(end_year))
 
+            # Special case just for if Alaska is selected with drought data
+            def remove_alaska(states_list):
+                try:
+                    states_list.remove('AK')
+                except ValueError:
+                    print("ValueError caught: Alaska was not defined in state list.")
+                finally:
+                    return states_list
+
             counties = list(chain(*counties))
             fig, x_data, y_data = plotting.plot(plot_type, df_list, {'process_type': process_type, 'double_plot_diff': double_plot_diff,
                                                      'plot_points': plot_points, 'connected_curve': connected_curve,
                                                      'begin_month': monthsIdx[begin_month], 'end_month': monthsIdx[end_month],
                                                      'degree': polynomial_degree, 'deriv_degree': derivitive_degree,
-                                                     'plots_per_graph' : len(df_list), 'names' : counties})
+                                                     'plots_per_graph' : len(df_list), 'names' : (remove_alaska(states) if data_type in state_data_types else counties)})
+
+
+
             canvas = FigureCanvasTkAgg(fig, master = master)  
             canvas.draw()
             canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
+
+            # Coefficient Button
+            if drop_down == 'Connected':
+                if self.button_coeff is not None:
+                    self.button_coeff.destroy()
+                    self.button_coeff = None
+                if self.export_csv_button is not None:
+                    self.export_csv_button.destroy()
+                    self.export_csv_button = None
+                    self.export_csv_df = None
+            else:
+                self.button_coeff = TTK.Button(self.tab, width="15", text="View Coefficients", bootstyle="blue")
+                self.button_coeff.grid(row=9, column=1, padx=(220,0), pady=(50, 0))
+
+                self.export_csv_df = export_csv(process_type=process_type, df_list=df_list,
+                                                state_dict=(states if data_type in state_data_types else temp_dict),
+                                                date_range={'begin_month': begin_month, 'begin_year': begin_year,
+                                                'end_month': end_month, 'end_year': end_year}, data_type=data_type,
+                                                deg=polynomial_degree, deriv=(0 if derivitive_degree is None else derivitive_degree),
+                                                drought_data=(True if data_type in state_data_types else False))
+
+                # Export CSV Button
+                self.export_csv_button = TTK.Button(self.tab, command=save_csv_file ,width="16", text="Export data to CSV", bootstyle="blue")
+                self.export_csv_button.grid(row=9, column=1, padx=(537,0), pady=(50, 0))
+
 
             #print("\nHere is the data that the user entered: ")
             #print("Begin date month: ")
@@ -335,39 +402,54 @@ class graphPage(tk.Frame):
             #print(countries)
             
         def gen_plot_type(event=None):
-            self.ent3 = None
             if event.widget.get() == 'Yearly Offset':
                 self.ent3 = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                 self.ent3.grid(row=6, column=1, padx=(240,0), pady=(30,0))
-                year_offset = tk.Label(self.tab, font="10", text="Year Diff: ")
-                year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+                self.year_offset = tk.Label(self.tab, font="10", text="Year Diff: ")
+                self.year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+            else:
+                if self.ent3 is not None:
+                    self.ent3.destroy()
+                    self.ent3 = None
+                    self.year_offset.destroy()
+                    self.year_offset = None
 
         def gen_equation(event=None):
+            # Remove all degree / deriv boxes on click and repopulate if necessary
+            if self.ent is not None:
+                self.ent.destroy()
+                self.ent = None
+                self.degree_label.destroy()
+                self.degree_label = None
+            if self.ent2 is not None:
+                self.ent2.destroy()
+                self.ent2 = None
+                self.deriv_label.destroy()
+                self.deriv_label = None
+
             if event == None:
                 degree = ''
             else:
                 if event.widget.get() == "n-degree..":
-                    self.deg_ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
-                    self.deg_ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
-                    degree_label = tk.Label(self.tab, font="10", text="Degree: ")
-                    degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
+                    self.ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
+                    self.ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
+                    self.degree_label = tk.Label(self.tab, font="10", text="Degree: ")
+                    self.degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                 elif event.widget.get() == 'n-degree derivative':
                     self.ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                     self.ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
-                    degree_label = tk.Label(self.tab, font="10", text="Degree: ")
-                    degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
+                    self.degree_label = tk.Label(self.tab, font="10", text="Degree: ")
+                    self.degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                     self.ent2 = tkboot.Entry(self.tab, width="6")
                     self.ent2.grid(row=8, column=1, padx=(240,0), pady=(0,80))
-                    deriv_label = tk.Label(self.tab, font="10", text="Derivitive: ")
-                    deriv_label.grid(row=8, column=1, padx=(100, 0), pady=(30,0))
+                    self.deriv_label = tk.Label(self.tab, font="10", text="Derivitive: ")
+                    self.deriv_label.grid(row=8, column=1, padx=(100, 0), pady=(0,80))
                 elif event.widget.get() == "Connected-Curve":
                     self.ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                     self.ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
-                    degree_label = tk.Label(self.tab, font="10", text="Degree: ")
-                    degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
+                    self.degree_label = tk.Label(self.tab, font="10", text="Degree: ")
+                    self.degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                 else:
-                    self.ent = None
-                    self.ent2 = None
                     degree = event.widget.get()
                     #print("Degree of equation is: ")
                     #print(degree_dict[degree])
@@ -388,7 +470,6 @@ class graphPage(tk.Frame):
             for row in self.data_table.get_children():
                 self.data_table.delete(row)
             
-
         def gen_counties(event=None):
             if event == None:
                 state = ''
@@ -522,24 +603,23 @@ class graphPage(tk.Frame):
             self.button2 = TTK.Button(self.tab, text = "Open map", width="15", bootstyle="secondary", command=lambda: controller.open_map("TODO:"))
             self.button2.grid(row=0, column=1, padx=(0,250), pady=(50, 10))
 
-
             #Dropdown Widget for equation selection
             self.dropdown_equations = TTK.Combobox(self.tab, font="Helvetica 12")
             self.dropdown_equations.set('Select equation...')
             self.dropdown_equations['state'] = 'readonly'
-            self.dropdown_equations['values'] = ['Connected', 'Connected-Curve', 'Linear', 'Quadratic', 'Cubic', 'n-degree..', 'n-degree derivative']
+            self.dropdown_equations['values'] = ['Connected', 'Connected-Curve', 'Linear', 
+                                                 'Quadratic', 'Cubic', 'n-degree..', 'n-degree derivative']
             self.dropdown_equations.bind('<<ComboboxSelected>>', gen_equation)
-            self.dropdown_equations.grid(row=7, column=1,  padx=(0, 200), pady=(10, 0))
-            equationTip = Hovertip(self.dropdown_equations, 'Select which type of equation to plot data with')
+            self.dropdown_equations.grid(row=7, column=1,  padx=(0, 190), pady=(30, 0))
 
 
             #Dropdown for datatype selection
             self.dropdown_graphs = TTK.Combobox(self.tab, font="Helvetica 12")
             self.dropdown_graphs.set('Select data type...')
             self.dropdown_graphs['state'] = 'readonly'
-            self.dropdown_graphs['values'] = ["Minimum temperature", "Maximum temperature", "Average temperature", "Precipitation"]
+            self.dropdown_graphs['values'] = ["Minimum temperature", "Maximum temperature", "Average temperature", "Precipitation", "Palmer Drought Severity", "Palmer Hydrological Drought", "Modified Palmer Drought Severity", "1-month Standardized Precipitation", "2-month Standardized Precipitation", "3-month Standardized Precipitation", "6-month Standardized Precipitation", "9-month Standardized Precipitation", "12-month Standardized Precipitation", "24-month Standardized Precipitation"]
             self.dropdown_graphs.bind('<<ComboboxSelected>>', gen_datatype_columns)
-            self.dropdown_graphs.grid(row=8, column=1,  padx=(0, 200), pady=(40, 0))
+            self.dropdown_graphs.grid(row=8, column=1,  padx=(0, 190), pady=(30, 0))
             datatypeTip = Hovertip(self.dropdown_graphs, 'Select which type of weather data to graph')
 
 
@@ -557,6 +637,12 @@ class graphPage(tk.Frame):
             gen_table()
             return self.tab
 
+        # Exporting data to csv
+        def save_csv_file():
+            if self.export_csv_df is not None:
+                file_name = asksaveasfilename(filetypes=[("CSV files", "*.csv")],
+                                              defaultextension='.csv')
+                self.export_csv_df.to_csv(file_name, sep=',', encoding='utf-8', index=False)
 
         frame = ttk.Notebook(self)
         frame.pack(fill='both', pady=10, expand=True)
@@ -570,43 +656,11 @@ class graphPage(tk.Frame):
         self.monthly_check.grid(row=4, column=1,  padx=(300, 0), pady=(0, 0))
         splitTip = Hovertip(self.monthly_check, 'Plot induvidual equations for each month')
 
-        # Monthly Split checkbox
+        # Scatter Box Split checkbox
         self.plot_points_var = tk.IntVar()
         self.plot_points = TTK.Checkbutton(self.tab, text='Enable Scatter Plotting', variable=self.plot_points_var)
         self.plot_points.grid(row=5, column=1,  padx=(365, 0), pady=(10, 0))
         scatterTip = Hovertip(self.plot_points, 'Check to enable scatter plotting on graph')
-
-        # Initialize Table Widget
-        self.data_table = TTK.Treeview(self.tab)
-        self.data_table['columns'] = ('state', 'county_name', 'county_code', 'country')
-        self.data_table.column('#0', width=0, stretch=tk.NO)
-        self.data_table.column('state', width=110)
-        self.data_table.column('county_name', width=110)
-        self.data_table.column('county_code', width=110)
-        self.data_table.column('country', width=80)
-        self.data_table.heading('#0', text="", anchor=tk.CENTER)
-        self.data_table.heading('state', text="State")
-        self.data_table.heading('county_name', text="County Name")
-        self.data_table.heading('county_code', text="County Code")
-        self.data_table.heading('country', text="Country")
-
-        # Initialize State Dropdown Widget
-        self.dropdown_state = TTK.Combobox(self.tab, font="Helvetica 12")
-        self.dropdown_state.set('Select state...')
-        self.dropdown_state['state'] = 'readonly'
-        self.dropdown_state['values'] = (['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN',
-                                          'KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE',
-                                          'NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX',
-                                          'UT','VA','VT','WA','WI','WV','WY'])
-        self.dropdown_state.bind('<<ComboboxSelected>>', gen_counties)
-        self.dropdown_state.grid(row=1, column=1, padx=(0, 190), pady=(20, 20))
-
-        # Initialize Counties Dropdown Widget
-        self.dropdown_county = TTK.Combobox(self.tab, font="Helvetica 12")
-        self.dropdown_county.set('Select county...')
-        self.dropdown_county['state'] = 'readonly'
-        self.dropdown_county.bind('<<ComboboxSelected>>', gen_table)
-        self.dropdown_county.grid(row=1, column=1, padx=(290, 0), pady=(20, 20))
 
         #Dropdown for plot type  selection
         self.plot_type = TTK.Combobox(self.tab, font="Helvetica 12")
@@ -620,7 +674,6 @@ class graphPage(tk.Frame):
         # Generate Table Rows
         gen_table()
 
-        
 # WIDGETS ----------------------------------------------------------------------------       
         
 def start_ui():

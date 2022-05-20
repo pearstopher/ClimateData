@@ -3,6 +3,7 @@ import csv
 import sys
 import os
 import pandas as pd
+import config
 from os import listdir
 from psycopg2.extensions import AsIs
 from psycopg2 import connect
@@ -10,15 +11,33 @@ from psycopg2 import OperationalError, errorcodes, errors
 from psycopg2 import __version__ as psycopg2_version
 from enum import Enum
 
-#Put your postgres password here if different
-password = 'PASSWORD'
+
 outputDir = './data/processed/'
 debug = False
+
+states_id_dict = {
+    "AL":101, "AZ":102, "AR":103, 
+    "CA":104, "CO":105, "CT":106, 
+    "DE":107, "FL":108, "GA":109,
+    "ID":110, "IL":111, "IN":112,          
+    "IA":113, "KS":114, "KY":115, 
+    "LA":116, "ME":117, "MD":118, 
+    "MA":119, "MI":120, "MN":121, 
+    "MS":122, "MO":123, "MT":124, 
+    "NE":125, "NV":126, "NH":127, 
+    "NJ":128, "NM":129, "NY":130,
+    "NC":131, "ND":132, "OH":133,
+    "OK":134, "OR":135, "PA":136,
+    "RI":137, "SC":138, "SD":139,
+    "TN":140, "TX":141, "UT":142,
+    "VT":143, "VA":144, "WA":145,
+    "WV":146, "WI":147, "WY":148
+}
 
 #INTERNAL CALLS---------------------------------------------------------------------
 def setup_database():
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -73,7 +92,7 @@ def setup_coordinates_table():
     print("Creating table: county_coords")
     csv.field_size_limit(2147483647)
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -117,13 +136,46 @@ def setup_coordinates_table():
         cur.close()
         conn.close()
 
+def is_database_setup():
+    try:
+        conn = psycopg2.connect(config.config_get_db_connection_string())
+    except OperationalError as error:
+        print_psycopg2_exception(error)
+        return False
+
+    cur = conn.cursor()
+    filenames = find_csv_filenames(f'{outputDir}')
+    for fileName in filenames:
+        tableName  = os.path.basename(fileName).split(".")[0]
+        print(f"Checking table: {tableName}...", end=' ')
+        try:
+            cur.execute("""
+            SELECT to_regclass('%s')
+            """,
+            [AsIs(tableName)])
+            r = cur.fetchone()
+            if r is None or len(r) == 0 or r[0] is None:
+                print('not found')
+                return False
+        except Exception as error:
+            if debug == True:
+                print_psycopg2_exception(error)
+            print('not found')
+            return False
+        print('found')
+
+    cur.close()
+    conn.close()
+    
+    return True
+
 def find_csv_filenames(path_to_dir, suffix=".csv"):
     filenames = listdir(path_to_dir)
     return [ filename for filename in filenames if filename.endswith( suffix ) ]
 
 def drop_table(tableName):
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -148,7 +200,7 @@ def drop_table(tableName):
         
 def drop_all_tables():
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -179,7 +231,7 @@ def drop_all_tables():
 def get_postal(county, state, country):
     results = None
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -210,7 +262,7 @@ def get_postal(county, state, country):
 def get_id_by_county(county, state, country):
     results = None
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -243,7 +295,7 @@ def get_ids_by_state(state, country):
     results = None
     
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -275,7 +327,7 @@ def get_ids_by_country(country):
     formatted_results = []
     results = None
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -304,44 +356,51 @@ def get_ids_by_country(country):
     
     return formatted_results
 
-#tableName, columnList and idList must be sent in as strings or lists of strings. Years are integers. 
+
 def get_weather_data(columnList, idList, startYear, endYear):
     results = None
     cols = []
     matchString = "|| '%'"
-    defaultColumns = "w.id, cc.county_name, cc.state, cc.country, cc.fips_code, "
-    columns = ["w." + col for col in columnList]
-    columnString = ", ".join(columns)
     defaultColumns = "id, "
     columnString = ", ".join(columnList)
     idYearList = []
     columnString = defaultColumns + columnString
     
-    for year in range(startYear, endYear+1):
-        for dataId in idList:
-            idYearList.append(dataId+str(year))
-        
+    columnName = columnList[0][:-4]
+
+    if columnName == 'tmp_avg' or columnName == 'tmp_min' or columnName == 'tmp_max' or columnName == 'precip':
+        table = "weather"
+        for year in range(startYear, endYear+1):
+            for dataId in idList:
+                idYearList.append(str(dataId)+str(year))
+    else:
+        table = "drought"
+        for year in range(startYear, endYear+1):
+            idYearList.append(str(idList)+str(year))
+
+
+
     idString = ", ".join(idYearList)
 
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
 
     if conn != None:
         cur = conn.cursor()
-        
+
         try:
             cur.execute("""
-            SELECT %s FROM weather WHERE id in (%s) ORDER BY id ASC;
+            SELECT %s FROM %s WHERE id in (%s) ORDER BY id ASC;
             """,
-            [AsIs(columnString), AsIs(idString)])
+            [AsIs(columnString), AsIs(table),  AsIs(idString)])
             conn.commit()
             results = cur.fetchall()
         except Exception as error:
             print_psycopg2_exception(error)
-        
+
         if results is not None:
             for item in cur.description:
                 cols.append(item[0])
@@ -349,9 +408,13 @@ def get_weather_data(columnList, idList, startYear, endYear):
             print("No data found for given columns, ids and years")
         cur.close()
         conn.close()
-    
-    df = pd.DataFrame(data=results, columns=cols)
-    df.id = df.id.apply('{:0>11}'.format).astype(str)
+
+    if results is not None:
+        df = pd.DataFrame(data=results, columns=cols)
+        df.id = df.id.apply('{:0>11}'.format).astype(str)
+    else:
+        df = []
+
     return df
 
 def get_map_weather_data(columnList, idList, startYear, endYear):
@@ -371,7 +434,7 @@ def get_map_weather_data(columnList, idList, startYear, endYear):
     idString = ", ".join(idYearList)
 
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -399,8 +462,64 @@ def get_map_weather_data(columnList, idList, startYear, endYear):
         conn.close()
 
     df = pd.DataFrame(data=results, columns=cols)
+    df.id = df.id.apply('{:0>11}'.format).astype(str)
     df.fips_code = df.fips_code.apply('{:0>5}'.format).astype(str)
     return df
+
+
+def get_map_drought_data(columnList, idList, startYear, endYear):
+    results = None
+    cols = []
+    matchString = "|| '%'"
+    defaultColumns = "id, "
+    columnString = ", ".join(columnList)
+    idYearList = []
+    columnString = defaultColumns + columnString
+
+    columnName = columnList[0][:-4]
+
+    for year in range(startYear, endYear+1):
+        for dataId in idList:
+            idYearList.append(str(dataId)+str(year))
+
+    idString = ", ".join(idYearList)
+
+    try:
+        conn = psycopg2.connect(config.config_get_db_connection_string())
+    except OperationalError as error:
+        print_psycopg2_exception(error)
+        conn = None
+
+    if conn != None:
+        cur = conn.cursor()
+
+        try:
+            cur.execute("""
+            SELECT %s FROM drought WHERE id in (%s) ORDER BY id ASC;
+            """,
+            [AsIs(columnString), AsIs(idString)])
+            conn.commit()
+            results = cur.fetchall()
+        except Exception as error:
+            print_psycopg2_exception(error)
+
+        if results is not None:
+            for item in cur.description:
+                cols.append(item[0])
+        else:
+            print("No data found for given columns, ids and years")
+        cur.close()
+        conn.close()
+
+    df = pd.DataFrame(data=results, columns=cols)
+    return df
+
+def get_key(val):
+    for key, value in states_id_dict.items():
+         if int(val) == value:
+             return key
+ 
+    return "No key found"
 
 def get_map_data_for_single_county(columnList, county, state, country, startYear, endYear):
         idList = []
@@ -438,7 +557,7 @@ def get_coordinates(countyId):
     results = None
 
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -475,7 +594,76 @@ def print_psycopg2_exception(error):
     print ("pgcode:", error.pgcode, "\n")
     
 
+def get_population_averages(idList, startYear, endYear):
+    cols = []
+    results = None
+    idString = ", ".join(idList)
+    
+    try:
+        conn = psycopg2.connect(config.config_get_db_connection_string())
+    except OperationalError as error:
+        print_psycopg2_exception(error)
+        conn = None
 
+    if conn != None:
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+            SELECT county_code, TRUNC(AVG(population)) as population FROM population
+            where county_code IN (%s) 
+            AND year BETWEEN %s and %s
+            GROUP BY county_code;
+            """,
+            [AsIs(idString), AsIs(startYear), AsIs(endYear)])
+            conn.commit()
+            results = cur.fetchall()
+        except Exception as error:
+            print_psycopg2_exception(error)
+
+        if results is not None:
+            for item in cur.description:
+                cols.append(item[0])
+        cur.close()
+        conn.close()
+    
+    df = pd.DataFrame(data=results, columns=cols)
+    return df
+
+def get_elevations(idList):
+    cols = []
+    results = None
+    idString = ", ".join(idList)
+
+    try:
+        conn = psycopg2.connect(config.config_get_db_connection_string())
+    except OperationalError as error:
+        print_psycopg2_exception(error)
+        conn = None
+
+    if conn != None:
+        cur = conn.cursor()
+        try:
+            cur.execute("""
+            SELECT county_code, TRUNC(AVG(elevation_ft)) AS elevation_ft
+            FROM features WHERE feature_type = 'Populated Place'
+            AND county_code IN
+            (%s)
+            GROUP BY county_code;
+            """,
+            [AsIs(idString)])
+            conn.commit()
+            results = cur.fetchall()
+        except Exception as error:
+            print_psycopg2_exception(error)
+
+        if results is not None:
+            for item in cur.description:
+                cols.append(item[0])
+        cur.close()
+        conn.close()
+
+    df = pd.DataFrame(data=results, columns=cols)
+    return df
 
 
 #EXTERNAL CALLS---------------------------------------------------------------------
@@ -561,11 +749,27 @@ def get_map_data_for_counties(states, counties, country, columns, months, startY
             to_add = column + '_' + month.lower()
             columnList.append(to_add)
 
-    for index, state in enumerate(states):
-        for county in counties:
-            idList.append(get_id_by_county(county, state, country))
+    columnName = columnList[0][:-4]
+    stateIds = []
+    stateAbreviations = []
+
+    if columnName == 'tmp_avg' or columnName == 'tmp_min' or columnName == 'tmp_max' or columnName == 'precip':
+        for index, state in enumerate(states):
+            for county in counties[index]:
+                idList.append(get_id_by_county(county, state, country))
+        results = get_map_weather_data(columnList, idList, startYear, endYear)
+    else:
+        for state in states:
+            if state != "AK":
+                stateIds.append(states_id_dict[state])
+        results = get_map_drought_data(columnList, stateIds, startYear, endYear)
+        
+        for index, row in results.iterrows():
+            val = str(int(row['id']))[:-4]
+            stateAbreviations.append(get_key(val))
+        results['state'] = stateAbreviations
+        del results['id']
     
-    results = get_map_weather_data(columnList, idList, startYear, endYear)
     return results
 
 def get_map_data_for_states(states, country, columns, months, startYear, endYear):
@@ -578,11 +782,27 @@ def get_map_data_for_states(states, country, columns, months, startYear, endYear
         for month in months:
             to_add = column + '_' + month.lower()
             columnList.append(to_add)
+    
+    columnName = columnList[0][:-4]
+    stateIds = []
+    stateAbreviations = []
 
-    for state in states:
-        ids = ids + get_ids_by_state(state, country)
+    if columnName == 'tmp_avg' or columnName == 'tmp_min' or columnName == 'tmp_max' or columnName == 'precip':
+        for state in states:
+            ids = ids + get_ids_by_state(state, country)
         
-    results = get_map_weather_data(columnList, ids, startYear, endYear)
+        results = get_map_weather_data(columnList, ids, startYear, endYear)
+    else:
+        for state in states:
+            if state != "AK":
+                stateIds.append(states_id_dict[state])
+        results = get_map_drought_data(columnList, stateIds, startYear, endYear)
+
+        for index, row in results.iterrows():
+            val = str(int(row['id']))[:-4]
+            stateAbreviations.append(get_key(val))
+        results['state'] = stateAbreviations
+        del results['id']
 
     return results
 
@@ -612,10 +832,24 @@ def get_data_for_counties_dataset(states, counties, country, columns, months, st
             to_add = column + '_' + month.lower()
             columnList.append(to_add)
 
-    for index, state in enumerate(states):
-        for county in counties[index]:
-            next_set = get_data_for_single_county(columnList, county, state, country, startYear, endYear)
-            results.append(next_set)
+    
+    columnName = columnList[0][:-4]
+    stateIds = []
+
+    if columnName == 'tmp_avg' or columnName == 'tmp_min' or columnName == 'tmp_max' or columnName == 'precip':
+        for index, state in enumerate(states):
+            for county in counties[index]:
+                next_set = get_data_for_single_county(columnList, county, state, country, startYear, endYear)
+                results.append(next_set)
+    else:
+        for state in states:
+            if state != "AK":
+                stateIds.append(states_id_dict[state])
+                print(states_id_dict[state])
+        for stateId in stateIds:
+            results.append(get_weather_data(columnList, stateId, startYear, endYear))
+    
+
     return results
 
 def get_data_for_states_dataset(states, country, columns, months, startYear, endYear):
@@ -627,9 +861,18 @@ def get_data_for_states_dataset(states, country, columns, months, startYear, end
             to_add = column + '_' + month.lower()
             columnList.append(to_add)
 
-    for state in states:
-        next_set = get_data_for_state(columnList, state, country, startYear, endYear)
-        results.append(next_set)
+    columnName = columnList[0][:-4]
+    stateIds = []
+
+    if columnName == 'tmp_avg' or columnName == 'tmp_min' or columnName == 'tmp_max' or columnName == 'precip':
+        for state in states:
+            next_set = get_data_for_state(columnList, state, country, startYear, endYear)
+            results.append(next_set)
+    else:
+        for state in states:
+            stateIds.append(states_id_dict[state])
+        results = get_weather_data(columnList, stateIds, startYear, endYear)
+
     return results
 
 def get_data_for_countries_dataset(countries, columns, months, startYear, endYear):
@@ -649,7 +892,7 @@ def get_data_for_countries_dataset(countries, columns, months, startYear, endYea
 def get_counties_for_state(state):
     results = None
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -678,7 +921,7 @@ def get_counties_for_state(state):
 def get_counties_for_state_all_data(state):
     results = None
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -707,7 +950,7 @@ def get_counties_for_state_all_data(state):
 def get_selected_counties_for_state(state, county):
     results = None
     try:
-        conn = psycopg2.connect(f"host=localhost dbname=postgres user=postgres password={password}")
+        conn = psycopg2.connect(config.config_get_db_connection_string())
     except OperationalError as error:
         print_psycopg2_exception(error)
         conn = None
@@ -731,6 +974,24 @@ def get_selected_counties_for_state(state, county):
         results = ""
     
     return results
+
+def get_population(counties, states, country, startYear, endYear):
+    idList = []
+
+    for index, state in enumerate(states):
+        for county in counties[index]:
+            idList.append(get_id_by_county(county, state, country))
+    return get_population_averages(idList, startYear, endYear)
+
+
+def get_elevation(counties, states, country):
+    idList = []
+
+    for index, state in enumerate(states):
+        for county in counties[index]:
+            idList.append(get_id_by_county(county, state, country))
+    return get_elevations(idList)
+    
 
 if __name__ == "__main__":
     setup_database()
