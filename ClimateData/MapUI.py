@@ -101,6 +101,10 @@ class MapWindow(QWindow):
     self.deleteButton.setMinimumHeight(20)
     self.deleteButton.setMaximumWidth(80)
     self.deleteButton.clicked.connect(self.remove_selected)
+    self.resetButton = QPushButton('Reset')
+    self.resetButton.setMinimumHeight(20)
+    self.resetButton.setMaximumWidth(80)
+    self.resetButton.clicked.connect(self.clear_data)
     self.mapItButton = QPushButton('Map it!', self.window)
     self.mapItButton.setMinimumHeight(30)
     self.mapItButton.setMaximumWidth(150)
@@ -110,6 +114,7 @@ class MapWindow(QWindow):
     self.mapItButton.setStyleSheet('background-color: #375A7F; color: white;')
     self.addButton.setStyleSheet('background-color: #375A7F; color: white;')
     self.deleteButton.setStyleSheet('background-color: #375A7F; color: white;')
+    self.resetButton.setStyleSheet('background-color: #375A7F; color: white;')
     self.yearSlider.setStyleSheet('QSlider::handle:horizontal {background-color: #375a7f;}')
     self.controls.addWidget(self.mapItButton)
     self.controls.addWidget(self.month_list)
@@ -149,6 +154,7 @@ class MapWindow(QWindow):
     self.data_tree.setStyleSheet('background-color: #2F2F2F; color: white;')
     self.echo.addWidget(self.data_tree)
     self.echo.addWidget(self.deleteButton)
+    self.echo.addWidget(self.resetButton)
 
     #Set title and add widgets and layouts to main window. 
     self.window.setWindowTitle("Climate Data")
@@ -163,41 +169,43 @@ class MapWindow(QWindow):
     self.window.setStyleSheet('background-color: #222222;')
     self.window.show()
 
-  def fill_data(self):
+######################################################FUNCTIONS###############################################################
+
+  #Button control for adding a new line
+  def addYear(self):
+    if self.genMapFlag == False:
+      return 
+    self.yearSlider.setValue(int(self.yearSliderBox.text())+1)
+    self.update_map()
+    self.fill_data()
+ 
+  #Builds State/County lists for genMap
+  def build_lists(self):
+    self.state_boxes = []
+    self.county_boxes = []
+    counties = []
+    for state in state_dict:
+      if state_dict[state]:
+        self.state_boxes.append(state)
+    
+    for state in self.state_boxes:
+      for county in state_dict[state]:
+        counties.append(county[0])
+      self.county_boxes.append(counties)
+      counties = []
+
+  def clear_data(self):
     model = self.data_tree.model()
     count = model.rowCount(self.data_tree.rootIndex())
-    states = self.df['state'].tolist()
-    counties = self.df['county_name'].tolist()
-    dlist = self.df[self.dataType+"_"+self.curr_month].tolist()
-    
+    print(count)
     for idx in range(count):
-      model.setData(model.index(idx,0), states[idx])
-      model.setData(model.index(idx,1), counties[idx])
-      model.setData(model.index(idx,3), dlist[idx])
-    
-  def get_selected(self):
-    model = self.data_tree.model()
-    index = self.data_tree.selectedIndexes()
-    state = model.data(index[0])
-    county = model.data(index[1])
-    return(state, county)
+      model.removeRow(0)
+    self.state_boxes = []
+    self.county_boxes = []
+    for state in state_dict:
+      state_dict[state] = []
 
-  def remove_selected(self):
-    try:
-        state, county = self.get_selected()
-        for c in state_dict[state]:
-          if c[0] == county:
-            state_dict[state].remove(c)
-
-        model = self.data_tree.model()
-        indices = self.data_tree.selectionModel().selectedRows()
-        for idx in sorted(indices):
-          model.removeRow(idx.row())
-        self.update_map()
-    except:
-      print('error removing line')
-      return
-    
+    self.openDefaultMap()
 
   def county_list_change(self):
     # self.state_boxes.append(self.state_list.currentText())
@@ -220,82 +228,46 @@ class MapWindow(QWindow):
         state_dict[state].append([county])
     print(model.data(model.index(0,0)))
 
-  #Builds State/County lists for genMap
-  def build_lists(self):
-    self.state_boxes = []
-    self.county_boxes = []
-    counties = []
-    for state in state_dict:
-      if state_dict[state]:
-        self.state_boxes.append(state)
-    
-    for state in self.state_boxes:
-      for county in state_dict[state]:
-        counties.append(county[0])
-      self.county_boxes.append(counties)
-      counties = []
-
-  #Month List Change
-  def month_list_change(self):
-    monthDict = {
-    "January" : "jan",
-    "February" : "feb",
-    "March" : "mar",
-    "April" : "apr",
-    "May" : "may",
-    "June" : "jun",
-    "July" : "jul",
-    "August" : "aug",
-    "September" : "sep",
-    "October" : "oct",
-    "November" : "nov",
-    "December" : "dec"
-    }
-    self.curr_month = monthDict[self.month_list.currentText()]
-    print(self.curr_month)
-  #State List Change
-  def state_list_change(self):
-    if self.droughtFlag:
-      self.state_boxes.append(self.state_list.currentText())
-      self.state_boxes = list(set(self.state_boxes))
-      print(self.state_boxes)
-    else:
-      self.county_list.clear()
-      self.county_list.addItem('Select County...')
-      data = database.get_counties_for_state(self.state_list.currentText())
-      data = [x[0] for x in data]
-      self.county_list.addItems(data)
-      self.state_boxes.append(self.state_list.currentText())
   def dataType_list_change(self):
     self.dataType = datatype_dict[self.dataType_list.currentText()]
     if(self.dataType == 'pdsist' or self.dataType == 'phdist' or self.dataType == 'pmdist' or self.dataType == 'sp01st' or
        self.dataType == 'sp02st' or self.dataType == 'sp03st' or self.dataType == 'sp06st' or self.dataType == 'sp09st' or
        self.dataType == 'sp12st' or self.dataType == 'sp24st'):
-
+      self.clear_data()
       self.county_list.hide()
       self.county_boxes = []
       self.droughtFlag = True
+      self.state_list.removeItem(1)
     else:
       self.county_list.show()
       self.droughtFlag = False
+      self.state_list.clear()
+      self.state_list.addItems(['Select State...', 'AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA', 'HI', 'IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
     print(self.dataType)
-  #Displays slider value
-  def yearSlideBoxChange(self):
-    self.yearSlider.setValue(int(self.yearSliderBox.text()))
-    self.curr_year = int(self.yearSlider.value())
-    print(self.curr_year)
-  #Changes slider value
-  def yearSlideValChange(self):
-    self.yearSliderBox.setText(str(self.yearSlider.value()))
-    self.curr_year = int(self.yearSliderBox.text())
-    print(self.curr_year)
-  def monthSlideBoxChange(self):
-    self.monthSlider.setValue(int(self.monthSliderBox.text()))
-  #Changes slider value
-  def monthSlideValChange(self):
-    # self.monthSliderBox.setText(monthDict[str(self.monthSlider.value())])
-    return
 
+  #Helper function to remove line.
+  def deleteLayoutItems(self, layout):
+    for i in reversed(range(layout.count())): 
+      layout.itemAt(i).widget().clear()
+
+  def fill_data(self):
+    model = self.data_tree.model()
+    count = model.rowCount(self.data_tree.rootIndex())
+    states = self.df['state'].tolist()
+    dlist = self.df[self.dataType+"_"+self.curr_month].tolist()
+
+    if self.droughtFlag:
+      for idx in range(count):
+        model.setData(model.index(idx,0), states[idx])
+        model.setData(model.index(idx,3), dlist[idx])
+
+    else:
+      counties = self.df['county_name'].tolist()
+      for idx in range(count):
+        model.setData(model.index(idx,0), states[idx])
+        model.setData(model.index(idx,1), counties[idx])
+        model.setData(model.index(idx,3), dlist[idx])
+    
   #Generates the map using pandas dataframe
   def genMap(self):
     if not self.droughtFlag:
@@ -332,8 +304,8 @@ class MapWindow(QWindow):
       self.mapFig = px.choropleth(self.df, geojson=counties, locations='fips_code', color=self.dataType+"_"+self.curr_month, color_continuous_scale=colorscale, range_color=range, scope='usa', hover_name='county_name', hover_data=['state'])
       if not state_dict['AK']:
         self.mapFig.update_geos(fitbounds='locations', visible=True) 
-      self.fill_data()
-
+    
+    self.fill_data()
     self.mapFig.update_layout(title=dict(text='Climate Data'), margin=dict(l=0,r=0,b=0))
     self.mapFig.update_geos(resolution=50)
     self.mapFig.update_traces(name='Data', selector=dict(type='choropleth'))
@@ -342,20 +314,114 @@ class MapWindow(QWindow):
     self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/map_fig.html')))
     self.genMapFlag = True
 
+  def get_selected(self):
+    model = self.data_tree.model()
+    index = self.data_tree.selectedIndexes()
+    state = model.data(index[0])
+    county = model.data(index[1])
+    return(state, county)
+
+  #Gets a list of states selected for every line
+  def getStates(self):
+    states = []
+    for boxes in self.state_boxes:
+      states.append(boxes.currentText())
+    return states
+
+  #Month List Change
+  def month_list_change(self):
+    monthDict = {
+    "January" : "jan",
+    "February" : "feb",
+    "March" : "mar",
+    "April" : "apr",
+    "May" : "may",
+    "June" : "jun",
+    "July" : "jul",
+    "August" : "aug",
+    "September" : "sep",
+    "October" : "oct",
+    "November" : "nov",
+    "December" : "dec"
+    }
+    self.curr_month = monthDict[self.month_list.currentText()]
+    print(self.curr_month)
+    
+  def monthSlideBoxChange(self):
+    self.monthSlider.setValue(int(self.monthSliderBox.text()))
+
+  #Changes slider value
+  def monthSlideValChange(self):
+    # self.monthSliderBox.setText(monthDict[str(self.monthSlider.value())])
+    return
+
   #Used to open blank map of US
-  def openDefaultMap(self): 
+  def openDefaultMap(self):
+      self.genMapFlag = False
       self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/default_fig.html')))
 
-  #Button control for adding a new line
-  def addYear(self):
-    if self.genMapFlag == False:
-      return 
-    self.yearSlider.setValue(int(self.yearSliderBox.text())+1)
-    self.update_map()
-    self.fill_data()
- 
+  #Button control to remove a line
+  def removeLine(self):
+      try:
+        toDelete = self.lines.pop()
+      except:
+        return
+      self.deleteLayoutItems(toDelete)
+      self.layout.removeItem(toDelete)
+      self.state_boxes.pop()
+      self.date_boxes.pop()
+      return
+
+  def remove_selected(self):
+    try:
+        state, county = self.get_selected()
+        if self.droughtFlag:
+          self.state_boxes.remove(state)
+        else:
+          for c in state_dict[state]:
+            if c[0] == county:
+              state_dict[state].remove(c)
+
+        model = self.data_tree.model()
+        indices = self.data_tree.selectionModel().selectedRows()
+        for idx in sorted(indices):
+          model.removeRow(idx.row())
+        self.update_map()
+    except:
+      print('error removing line')
+      return
+
+  #State List Change
+  def state_list_change(self):
+    if self.state_list.currentText() == 'Select State...':
+      return
+    if self.droughtFlag:
+      state = self.state_list.currentText()
+      model = self.data_tree.model()
+
+      found = 0
+      for sta in self.state_boxes:
+        if sta == state:
+          found = 1
+
+      if found == 0:
+        model.insertRow(0)
+        model.setData(model.index(0, 0), state)
+        model.setData(model.index(0, 2), "US")
+      self.state_boxes.append(state)
+      self.state_boxes = list(set(self.state_boxes))
+
+    else:
+      self.county_list.clear()
+      self.county_list.addItem('Select County...')
+      data = database.get_counties_for_state(self.state_list.currentText())
+      data = [x[0] for x in data]
+      self.county_list.addItems(data)
+      self.state_boxes.append(self.state_list.currentText())
+
   def update_map(self):
-    self.build_lists()
+    if not self.droughtFlag:
+      self.build_lists()
     if len(self.state_boxes) == 0:
       self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/default_fig.html')))
       return
@@ -368,32 +434,19 @@ class MapWindow(QWindow):
     self.mapFig.write_html('HTML/map_fig.html')
     self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/map_fig.html')))
 
- #Button control to remove a line
-  def removeLine(self):
-      try:
-        toDelete = self.lines.pop()
-      except:
-        return
-      self.deleteLayoutItems(toDelete)
-      self.layout.removeItem(toDelete)
-      self.state_boxes.pop()
-      self.date_boxes.pop()
-      return
+  #Displays slider value
+  def yearSlideBoxChange(self):
+    self.yearSlider.setValue(int(self.yearSliderBox.text()))
+    self.curr_year = int(self.yearSlider.value())
+    print(self.curr_year)
 
-  #Helper function to remove line.
-  def deleteLayoutItems(self, layout):
-    for i in reversed(range(layout.count())): 
-      layout.itemAt(i).widget().clear()
+  #Changes slider value
+  def yearSlideValChange(self):
+    self.yearSliderBox.setText(str(self.yearSlider.value()))
+    self.curr_year = int(self.yearSliderBox.text())
+    print(self.curr_year)
 
-  #Gets a list of states selected for every line
-  def getStates(self):
-    states = []
-    for boxes in self.state_boxes:
-      states.append(boxes.currentText())
-    return states
-
- 
-  
+######################################################FUNCTIONS###############################################################
 
 
 if __name__ == "__main__":
