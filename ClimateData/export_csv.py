@@ -122,6 +122,7 @@ def export_csv_split_months_by_county(df_list, state_dict, date_range, data_type
             for month_index in range(begin_month_index, end_month_index+1):
                 temperature_data_values = []
                 month = months[month_index]
+                begin_year_from_df = 0
 
                 # Appending temp data
                 index = 0
@@ -129,13 +130,16 @@ def export_csv_split_months_by_county(df_list, state_dict, date_range, data_type
                     year = yearStr[len(yearStr) - 4:]
                     id_year = county_df.at[index, 'id']
                     if year in id_year:
+                        if index == 0:
+                            begin_year_from_df = int(year)
                         temperature_data_values.append(county_df.iat[index, month_cell_index])
                         index += 1
                     else:
                         temperature_data_values.append(np.nan)
 
                 # Process data
-                [x, y, x_dates] = get_xy_data_for_months(county_df, begin_year, end_year, month_cell_index)
+                #[x, y, x_dates] = get_xy_data_for_months(county_df, begin_year, end_year, month_cell_index)
+                [x, y, x_dates] = get_xy_data_for_months(county_df, begin_year_from_df, end_year, month_cell_index)
 
                 # Get polynomial coefficients
                 # Format ax^deg + bx^deg-1 + cx^deg-2 + ... + z
