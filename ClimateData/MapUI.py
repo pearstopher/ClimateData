@@ -210,9 +210,12 @@ class MapWindow(QWindow):
   def remove_selected(self):
     try:
         state, county = self.get_selected()
-        for c in state_dict[state]:
-          if c[0] == county:
-            state_dict[state].remove(c)
+        if self.droughtFlag:
+          self.state_boxes.remove(state)
+        else:
+          for c in state_dict[state]:
+            if c[0] == county:
+              state_dict[state].remove(c)
 
         model = self.data_tree.model()
         indices = self.data_tree.selectionModel().selectedRows()
@@ -386,7 +389,8 @@ class MapWindow(QWindow):
     self.genMapFlag = True
 
   #Used to open blank map of US
-  def openDefaultMap(self): 
+  def openDefaultMap(self):
+      self.genMapFlag = False
       self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/default_fig.html')))
 
   #Button control for adding a new line
@@ -398,7 +402,8 @@ class MapWindow(QWindow):
     self.fill_data()
  
   def update_map(self):
-    self.build_lists()
+    if not self.droughtFlag:
+      self.build_lists()
     if len(self.state_boxes) == 0:
       self.browser.setUrl(QUrl.fromLocalFile(os.path.abspath('HTML/default_fig.html')))
       return
