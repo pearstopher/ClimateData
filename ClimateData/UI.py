@@ -110,6 +110,9 @@ class App(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
         self.title('Climate Data')
         self.geometry('1920x1080')
+        tk.Grid.rowconfigure(self,0,weight=1)
+        tk.Grid.columnconfigure(self,0,weight=1)
+        tk.Grid.rowconfigure(self,1,weight=1)
         tkboot.Style('darkly')
 
         self.app = QApplication([])
@@ -128,7 +131,16 @@ class App(tk.Tk):
         container.grid(row=0, column=0)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
-        tabs = [tab1,tab2,tab3,tab4,tab5]
+        tab1.grid_rowconfigure(0, weight=1)
+        tab1.grid_columnconfigure(0, weight=1)
+        tab2.grid_rowconfigure(0, weight=1)
+        tab2.grid_columnconfigure(0, weight=1)
+        tab3.grid_rowconfigure(0, weight=1)
+        tab3.grid_columnconfigure(0, weight=1)
+        tab4.grid_rowconfigure(0, weight=1)
+        tab4.grid_columnconfigure(0, weight=1)
+        tab5.grid_rowconfigure(0, weight=1)
+        tab5.grid_columnconfigure(0, weight=1)
 
 
         """
@@ -222,6 +234,16 @@ class graphPage(tk.Frame):
         self.export_csv_df = None
         self.export_csv_button = None
         self.button_coeff = None
+
+        # Yearly Offset Input Selection
+        self.ent3 = None
+        self.year_offset = None
+
+        # Degree inputs and labels
+        self.ent = None
+        self.degree_label = None
+        self.ent2 = None
+        self.deriv_label = None
 
         def on_submit():
             #user input is invalid, call validate_dates function
@@ -391,40 +413,54 @@ class graphPage(tk.Frame):
             #print(countries)
             
         def gen_plot_type(event=None):
-            self.ent3 = None
             if event.widget.get() == 'Yearly Offset':
                 self.ent3 = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                 self.ent3.grid(row=6, column=1, padx=(240,0), pady=(30,0))
-                year_offset = tk.Label(self.tab, font="10", text="Year Diff: ")
-                year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+                self.year_offset = tk.Label(self.tab, font="10", text="Year Diff: ")
+                self.year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+            else:
+                if self.ent3 is not None:
+                    self.ent3.destroy()
+                    self.ent3 = None
+                    self.year_offset.destroy()
+                    self.year_offset = None
 
         def gen_equation(event=None):
-            self.ent = None
-            self.ent2 = None
+            # Remove all degree / deriv boxes on click and repopulate if necessary
+            if self.ent is not None:
+                self.ent.destroy()
+                self.ent = None
+                self.degree_label.destroy()
+                self.degree_label = None
+            if self.ent2 is not None:
+                self.ent2.destroy()
+                self.ent2 = None
+                self.deriv_label.destroy()
+                self.deriv_label = None
+
             if event == None:
                 degree = ''
             else:
                 if event.widget.get() == "n-degree..":
                     self.ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                     self.ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
-                    degree_label = tk.Label(self.tab, font="10", text="Degree: ")
-                    degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
+                    self.degree_label = tk.Label(self.tab, font="10", text="Degree: ")
+                    self.degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                 elif event.widget.get() == 'n-degree derivative':
                     self.ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                     self.ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
-                    degree_label = tk.Label(self.tab, font="10", text="Degree: ")
-                    degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
+                    self.degree_label = tk.Label(self.tab, font="10", text="Degree: ")
+                    self.degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                     self.ent2 = tkboot.Entry(self.tab, width="6")
                     self.ent2.grid(row=8, column=1, padx=(240,0), pady=(0,80))
-                    deriv_label = tk.Label(self.tab, font="10", text="Derivitive: ")
-                    deriv_label.grid(row=8, column=1, padx=(100, 0), pady=(0,80))
+                    self.deriv_label = tk.Label(self.tab, font="10", text="Derivitive: ")
+                    self.deriv_label.grid(row=8, column=1, padx=(100, 0), pady=(0,80))
                 elif event.widget.get() == "Connected-Curve":
                     self.ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                     self.ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
-                    degree_label = tk.Label(self.tab, font="10", text="Degree: ")
-                    degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
+                    self.degree_label = tk.Label(self.tab, font="10", text="Degree: ")
+                    self.degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                 else:
-
                     degree = event.widget.get()
                     #print("Degree of equation is: ")
                     #print(degree_dict[degree])
@@ -498,7 +534,7 @@ class graphPage(tk.Frame):
             #loop[count] = tk.Frame(frame, width=1920, height=1080)
             #Notebook   
             self.notebook_label = tk.Label(self.tab, font="12", text="Notebook:")
-            self.notebook_label.grid(row=1, column=0, padx=(10, 500), pady=10)
+            self.notebook_label.grid(row=1, column=0, padx=(10, 450), pady=0)
 
             #Date range widgets
             self.begin_date_ent = tkboot.Entry(self.tab, textvariable=self.begin_year, width=10)
@@ -565,11 +601,7 @@ class graphPage(tk.Frame):
 
             #Home button
             self.button_back = TTK.Button(self.tab, width="15", text="Back to home", bootstyle="blue", command=lambda: controller.show_frame("StartPage"))
-            self.button_back.grid(row=0, column=1, padx=(0,250), pady=(100, 10))
-
-            #Add instance to notebook button
-            self.button_notebook_add = TTK.Button(self.tab, width="25", text="Add instance to notebook", bootstyle="blue")
-            self.button_notebook_add.grid(row=0, column=0, padx=(10,580), pady=(50, 20))
+            self.button_back.grid(row=0, column=1, padx=(0,250), pady=(30, 10))
 
             #Dropdown for datatype selection
             self.plot_type = TTK.Combobox(self.tab, font="Helvetica 12")
