@@ -426,16 +426,22 @@ class graphPage(tk.Frame):
                     self.year_offset = None
 
         def gen_equation(event=None):
+            # Remove all degree / deriv boxes on click and repopulate if necessary
+            if self.ent is not None:
+                self.ent.destroy()
+                self.ent = None
+                self.degree_label.destroy()
+                self.degree_label = None
+            if self.ent2 is not None:
+                self.ent2.destroy()
+                self.ent2 = None
+                self.deriv_label.destroy()
+                self.deriv_label = None
+
             if event == None:
                 degree = ''
             else:
                 if event.widget.get() == "n-degree..":
-                    if self.ent2 is not None:
-                        self.ent2.destroy()
-                        self.ent2 = None
-                        self.deriv_label.destroy()
-                        self.deriv_label = None
-
                     self.ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                     self.ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
                     self.degree_label = tk.Label(self.tab, font="10", text="Degree: ")
@@ -455,16 +461,6 @@ class graphPage(tk.Frame):
                     self.degree_label = tk.Label(self.tab, font="10", text="Degree: ")
                     self.degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                 else:
-                    if self.ent is not None:
-                        self.ent.destroy()
-                        self.ent = None
-                        self.degree_label.destroy()
-                        self.degree_label = None
-                    if self.ent2 is not None:
-                        self.ent2.destroy()
-                        self.ent2 = None
-                        self.deriv_label.destroy()
-                        self.deriv_label = None
                     degree = event.widget.get()
                     #print("Degree of equation is: ")
                     #print(degree_dict[degree])
