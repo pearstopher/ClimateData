@@ -357,7 +357,7 @@ class MapWindow(QWindow):
   def month_list_change(self):
     month = self.month_list.currentText()
     if month == "Select month...":
-      self.curr_month = ''
+      self.curr_month = None
       return
     monthDict = {
     "January" : "jan",
