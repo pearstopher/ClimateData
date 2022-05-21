@@ -81,10 +81,13 @@ class MapWindow(QWindow):
     self.df = None
     self.genMapFlag = False
     self.droughtFlag = False
+    self.msg = QMessageBox()
+    self.msg.setWindowTitle('Error!!!')
 
     #Map Controls
     self.yearSlider = QSlider(Qt.Horizontal)
     self.yearSliderBox = QLineEdit()
+    self.yearSlider.setToolTip("Click, hold, and slide left or right")
     self.yearSlider.setMinimum(1895)
     self.yearSlider.setMaximum(date.today().year)
     self.yearSlider.valueChanged.connect(self.yearSlideValChange)
@@ -94,27 +97,31 @@ class MapWindow(QWindow):
     self.month_list.setMinimumWidth(200)
     self.month_list.currentIndexChanged.connect(self.month_list_change)
     self.addButton = QPushButton('+', self.window)
+    self.addButton.setToolTip("Adds 1 year and generates new map")
     self.addButton.setMinimumHeight(30)
     self.addButton.setMaximumWidth(40)
     self.addButton.clicked.connect(self.addYear)
     self.deleteButton = QPushButton('Remove')
+    self.deleteButton.setToolTip("Removes selected line")
     self.deleteButton.setMinimumHeight(20)
     self.deleteButton.setMaximumWidth(80)
     self.deleteButton.clicked.connect(self.remove_selected)
     self.resetButton = QPushButton('Reset')
+    self.resetButton.setToolTip("Resets map and data table")
     self.resetButton.setMinimumHeight(20)
     self.resetButton.setMaximumWidth(80)
     self.resetButton.clicked.connect(self.clear_data)
     self.mapItButton = QPushButton('Map it!', self.window)
+    self.mapItButton.setToolTip("Generates map with selected parameters")
     self.mapItButton.setMinimumHeight(30)
     self.mapItButton.setMaximumWidth(150)
     self.mapItButton.clicked.connect(self.genMap)
     self.yearSliderBox.setStyleSheet('background-color: #2F2F2F; color: white;')
     self.month_list.setStyleSheet('background-color: #555555; color: white;')
-    self.mapItButton.setStyleSheet('background-color: #375A7F; color: white;')
-    self.addButton.setStyleSheet('background-color: #375A7F; color: white;')
-    self.deleteButton.setStyleSheet('background-color: #375A7F; color: white;')
-    self.resetButton.setStyleSheet('background-color: #375A7F; color: white;')
+    self.mapItButton.setStyleSheet('QPushButton{background-color: #375A7F; color: white;}')
+    self.addButton.setStyleSheet('QPushButton{background-color: #375A7F; color: white;}')
+    self.deleteButton.setStyleSheet('QPushButton{background-color: #375A7F; color: white;}')
+    self.resetButton.setStyleSheet('QPushButton{background-color: #375A7F; color: white;}')
     self.yearSlider.setStyleSheet('QSlider::handle:horizontal {background-color: #375a7f;}')
     self.controls.addWidget(self.mapItButton)
     self.controls.addWidget(self.month_list)
@@ -273,7 +280,9 @@ class MapWindow(QWindow):
     if not self.droughtFlag:
       self.build_lists()
     if self.curr_month == None:
-      print("A month must be selected!")
+      self.msg.setText('A month must be selected!')
+      self.msg.setIcon(QMessageBox.Critical)
+      self.msg.exec_()
       return
     if self.curr_year == None:
       print("A year must be selected!")
