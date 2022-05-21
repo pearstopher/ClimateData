@@ -119,7 +119,7 @@ class App(tk.Tk):
     def gen_tab(self):
         self.tab_counter += 1
         tab = tk.Frame(self.container, width=1920, height=1080)
-        self.container.add(tab, text=f'Notebook tab {self.tab_counter}')
+        self.container.add(tab, text=f'Tab {self.tab_counter}')
         tab.grid_rowconfigure(0, weight=1)
         tab.grid_columnconfigure(0, weight=1)
         loop = 0 
