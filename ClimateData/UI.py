@@ -92,6 +92,14 @@ def validate_dates(start, end):
     if bool(begin_year < end_year) == False:
         print("First year was not before last year")
         return False
+   
+    begin_year = int(begin_year)
+    end_year = int(end_year) 
+
+    #Year before 1895
+    if bool((begin_year < 1885) or (end_year < 1895)):
+        print("Year(s) before 1895")
+        return False
 
     return True
 
@@ -106,7 +114,31 @@ def validate_degree(degree):
 
 
 class App(tk.Tk):
+
+    #Logic for generating a tab
+    def gen_tab(self):
+        self.tab_counter += 1
+        tab = tk.Frame(self.container, width=1920, height=1080)
+        self.container.add(tab, text=f'Notebook tab {self.tab_counter}')
+        tab.grid_rowconfigure(0, weight=1)
+        tab.grid_columnconfigure(0, weight=1)
+        loop = 0 
+        data = ["StartPage", "graphPage"]
+        for F in (StartPage, graphPage):
+            current_frame = F(parent=tab, controller=self, master=tab)
+            #self.frame_list.append(current_frame)
+            if loop == 0:
+                self.frames.append({})
+            self.frames[self.tab_counter - 1][data[loop]] = current_frame
+            current_frame.grid(row=0, column=0)
+            loop += 1
+
+
     def __init__(self, *args, **kwargs):
+        self.tab_counter = 0
+        self.tab_list = []
+        self.frames = []
+
         tk.Tk.__init__(self, *args, **kwargs)
         self.title('Climate Data')
         self.geometry('1920x1080')
@@ -117,85 +149,33 @@ class App(tk.Tk):
 
         self.app = QApplication([])
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
-        container = ttk.Notebook(self)
-        tab1 = tk.Frame(container, width=1920, height=1080)
-        container.add(tab1, text ='Notebook tab 1')
-        tab2 = tk.Frame(container, width=1920, height=1080)
-        container.add(tab2, text ='Notebook tab 2')
-        tab3 = tk.Frame(container, width=1920, height=1080)
-        container.add(tab3, text ='Notebook tab 3')
-        tab4 = tk.Frame(container, width=1920, height=1080)
-        container.add(tab4, text ='Notebook tab 4')
-        tab5 = tk.Frame(container, width=1920, height=1080)
-        container.add(tab5, text ='Notebook tab 5')
-        container.grid(row=0, column=0)
+        self.container = ttk.Notebook(self)
 
-        container.grid_rowconfigure(0, weight=1)
-        container.grid_columnconfigure(0, weight=1)
-        tab1.grid_rowconfigure(0, weight=1)
-        tab1.grid_columnconfigure(0, weight=1)
-        tab2.grid_rowconfigure(0, weight=1)
-        tab2.grid_columnconfigure(0, weight=1)
-        tab3.grid_rowconfigure(0, weight=1)
-        tab3.grid_columnconfigure(0, weight=1)
-        tab4.grid_rowconfigure(0, weight=1)
-        tab4.grid_columnconfigure(0, weight=1)
-        tab5.grid_rowconfigure(0, weight=1)
-        tab5.grid_columnconfigure(0, weight=1)
+        self.container.grid(row=0, column=0)
+        self.gen_tab()
+        self.container.grid_rowconfigure(0, weight=1)
+        self.container.grid_columnconfigure(0, weight=1)
 
-        """
-        container = ttk.Notebook(self)
-        container.pack(pady=10, expand=True)
-        #container = tk.Frame(self)
-        tab1 = tk.Frame(container, width=1920, height=1080)
-        tab2 = tk.Frame(container, width=1920, height=1080)
-        tab1.pack(fill='both', expand=True)
-        tab2.pack(fill='both', expand=True)
-        container.add(tab1, text ='Notebook tab 1')
-        container.add(tab2, text ='Notebook tab 2')
-        container.pack(expand = 1, fill ="both")
-        #StartPage(container,controller=self, master=self)
-        #graphPage(container,controller=self, master=self)
-        """
-        self.frames = {}
-        self.frames2 = {}
-        self.frames3 = {}
-        self.frames4 = {}
-        self.frames5 = {}
-        data = ["StartPage", "graphPage"]
-        data2 = ["StartPage", "graphPage"]
-        loop = 0
-        for F in (StartPage, graphPage):
-            frame = F(parent=tab1, controller=self, master=tab1)
-            self.frames[data[loop]] = frame
-            frame.grid(row=0, column=0)
-            
-            frame2 = F(parent=tab2, controller=self, master=tab2)
-            self.frames2[data2[loop]] = frame2
-            frame2.grid(row=0, column=0)
-
-            frame3 = F(parent=tab3, controller=self, master=tab3)
-            self.frames3[data2[loop]] = frame3
-            frame3.grid(row=0, column=0)
-
-            frame4 = F(parent=tab4, controller=self, master=tab4)
-            self.frames4[data2[loop]] = frame4
-            frame4.grid(row=0, column=0)
-
-            frame5 = F(parent=tab5, controller=self, master=tab5)
-            self.frames5[data2[loop]] = frame5
-            frame5.grid(row=0, column=0)
-            loop += 1
-        #self.show_frame("StartPage")
         
+        #Button for generating a notebook tab
+        self.new_tab = tkboot.Button(
+           self,
+           command=self.gen_tab,
+           width="10",
+           text="New tab",
+           bootstyle=DEFAULT
+        )
+        self.new_tab.grid(row=0, column=0, padx=(0,1300), pady=(0,600))
+        
+
     def show_frame(self, page_name):
         frame = self.frames[page_name]
         frame.tkraise()
 
     def open_map(self, df):
-      window = MapUI.MapWindow(df)
-      self.app.setStyleSheet("QHeaderView::section { background-color: #2F2F2F; color: white }")
-      self.app.exec_()
+        window = MapUI.MapWindow(df)
+        self.app.setStyleSheet("QHeaderView::section { background-color: #2F2F2F; color: white }")
+        self.app.exec_()
 
 class StartPage(tk.Frame):
     def __init__(self, parent, controller, master):
@@ -258,11 +238,12 @@ class graphPage(tk.Frame):
                 print("Degree is: ")
                 print(self.ent.get())
 
-        def on_checkbox():
-            return null
-
         #The data has been entered/ selected by the user. Here is it:
         def on_enter_data():
+             #user input for dates is invalid, call validate_dates function and don't send data
+            if validate_dates(self.begin_year.get(), self.end_year.get()) == False:
+                tkboot.dialogs.Messagebox.show_error(f"Invalid date entry. \nEntry rules: \n- Entry must be in form: 'month/year' \n- Years must be in chronological order \n- Years must be four digits \n- Entry example: '06/1993'\n", title='Invalid date entry')
+                return 
 
             [begin_month_num, begin_year] = self.begin_year.get().split('/')
             [end_month_num, end_year] = self.end_year.get().split('/')
@@ -378,29 +359,6 @@ class graphPage(tk.Frame):
                 self.export_csv_button = TTK.Button(self.tab, command=save_csv_file ,width="16", text="Export data to CSV", bootstyle="blue")
                 self.export_csv_button.grid(row=9, column=1, padx=(537,0), pady=(50, 0))
 
-
-            #print("\nHere is the data that the user entered: ")
-            #print("Begin date month: ")
-            #print(begin_month)
-            #print("Begin date year: ")
-            #print(begin_year)
-            #print("End date month: ")
-            #print(end_month)
-            #print("End date year: ")
-            #print(end_year)
-            #print("Polynomial degree: ")
-            #print(polynomial_degree)
-            #print("Data type to plot: ")
-            #print(data_type)
-            #print("Counties: ")
-            #print(counties)
-            #print("States: ")
-            #print(states)
-            #print("County codes: ")
-            #print(county_codes)
-            #print("Countries: ")
-            #print(countries)
-            
         def gen_plot_type(event=None):
             if event.widget.get() == 'Yearly Offset':
                 self.ent3 = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
@@ -520,7 +478,7 @@ class graphPage(tk.Frame):
             for row in data:
                 print(row)
                 self.data_table.insert(parent='', index='end', values=row)
-            self.data_table.grid(row=2, column=1, pady=(0,40), padx=(250, 235))
+            self.data_table.grid(row=2, column=1, pady=(0,83), padx=(250, 235))
             print("This: ", self.data_table.get_children())
 
         def widgets(frame):
@@ -541,6 +499,7 @@ class graphPage(tk.Frame):
             self.begin_date_label.grid(row=4, column=1, padx=(0, 250), pady=(0,0))        
 
             self.end_date_label = tkboot.Label(self.tab, font="10", text="Date range end: ", bootstyle="inverse-dark")
+            self.end_date_label.grid(row=5, column=1, padx=(0, 263), pady=(0,0))
 
             """
             self.end_date_label.grid(row=5, column=1, padx=(0, 265), pady=(0,0))
@@ -597,6 +556,7 @@ class graphPage(tk.Frame):
             self.dropdown_county = TTK.Combobox(self.tab, font="Helvetica 12")
             self.dropdown_county.set('Select county...')
             self.dropdown_county['state'] = 'readonly'
+            self.dropdown_county['values'] = (['No state selected'])
             self.dropdown_county.bind('<<ComboboxSelected>>', gen_table)
             self.dropdown_county.grid(row=1, column=1, padx=(290, 0), pady=(20, 20))
 
@@ -632,11 +592,12 @@ class graphPage(tk.Frame):
                 bootstyle=DEFAULT
             )
             self.data_submit.grid(row=9, column=1, padx=(0,185), pady=(50,0))
-
+    
             # Generate Table Rows
             gen_table()
             return self.tab
 
+                
         # Exporting data to csv
         def save_csv_file():
             if self.export_csv_df is not None:
@@ -668,7 +629,7 @@ class graphPage(tk.Frame):
         self.plot_type['state'] = 'readonly'
         self.plot_type['values'] = ['Line', 'Yearly Offset']
         self.plot_type.bind('<<ComboboxSelected>>', gen_plot_type)
-        self.plot_type.grid(row=6, column=1,  padx=(0, 200), pady=(30, 0))
+        self.plot_type.grid(row=6, column=1,  padx=(0, 190), pady=(30, 0))
         datatypeTip = Hovertip(self.plot_type, 'Select plot type')
 
         # Generate Table Rows
