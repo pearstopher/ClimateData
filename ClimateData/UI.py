@@ -132,6 +132,13 @@ class App(tk.Tk):
             self.frames[self.tab_counter - 1][data[loop]] = current_frame
             current_frame.grid(row=0, column=0)
             loop += 1
+   
+    #Logic for deleting a tab 
+    def destroy_tab(self):
+        for F in self.container.winfo_children():
+            if str(F)==self.container.select():
+                F.destroy()
+                return
 
 
     def __init__(self, *args, **kwargs):
@@ -166,6 +173,16 @@ class App(tk.Tk):
            bootstyle=DEFAULT
         )
         self.new_tab.grid(row=0, column=0, padx=(0,1300), pady=(0,600))
+
+        #Delete button for a notebook tab
+        self.delete_tab = tkboot.Button(
+            self,
+            command=self.destroy_tab,
+            width="10",
+            text="Delete tab",
+            bootstyle=DEFAULT
+        )
+        self.delete_tab.grid(row=0, column=0, padx=(0,1070), pady=(0,600))
         
 
     def show_frame(self, page_name):
@@ -345,9 +362,6 @@ class graphPage(tk.Frame):
                     self.export_csv_button = None
                     self.export_csv_df = None
             else:
-                self.button_coeff = TTK.Button(self.tab, width="15", text="View Coefficients", bootstyle="blue")
-                self.button_coeff.grid(row=9, column=1, padx=(220,0), pady=(50, 0))
-
                 self.export_csv_df = export_csv(process_type=process_type, df_list=df_list,
                                                 state_dict=(states if data_type in state_data_types else temp_dict),
                                                 date_range={'begin_month': begin_month, 'begin_year': begin_year,
@@ -357,7 +371,7 @@ class graphPage(tk.Frame):
 
                 # Export CSV Button
                 self.export_csv_button = TTK.Button(self.tab, command=save_csv_file ,width="16", text="Export data to CSV", bootstyle="blue")
-                self.export_csv_button.grid(row=9, column=1, padx=(537,0), pady=(50, 0))
+                self.export_csv_button.grid(row=9, column=1, padx=(250,0), pady=(50, 0))
 
         def gen_plot_type(event=None):
             if event.widget.get() == 'Yearly Offset':
@@ -631,6 +645,7 @@ class graphPage(tk.Frame):
         self.plot_type.bind('<<ComboboxSelected>>', gen_plot_type)
         self.plot_type.grid(row=6, column=1,  padx=(0, 190), pady=(30, 0))
         datatypeTip = Hovertip(self.plot_type, 'Select plot type')
+
 
         # Generate Table Rows
         gen_table()
