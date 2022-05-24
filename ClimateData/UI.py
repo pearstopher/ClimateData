@@ -456,7 +456,9 @@ class graphPage(tk.Frame):
                 state = event.widget.get()
             data = get_counties_for_state(state)
             if state == 'All states':
-                print("all states selected")
+                print("All states selected")
+                #logic for all states selection goes here
+                self.dropdown_county['values'] = all_counties
 
             print("Your query returned this data: ")
             data = [ x[0] for x in data ]
