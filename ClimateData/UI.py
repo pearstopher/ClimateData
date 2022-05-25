@@ -455,10 +455,11 @@ class graphPage(tk.Frame):
             else:
                 state = event.widget.get()
             data = get_counties_for_state(state)
-            if state == 'All states':
+            if state == 'All States':
                 print("All states selected")
                 #logic for all states selection goes here
-                self.dropdown_county['values'] = all_counties
+                #self.dropdown_county['values'] = all_counties
+                #data = get_all_counties()
 
             print("Your query returned this data: ")
             data = [ x[0] for x in data ]
@@ -494,7 +495,9 @@ class graphPage(tk.Frame):
                 state = self.dropdown_state.get()
             if county_name in [ self.data_table.item(x)['values'][1] for x in self.data_table.get_children()]:
                 return
-            if county_name == 'All Counties':
+            if state == 'All States':
+                data = get_all_counties_all_data()
+            elif county_name == 'All Counties':
                 data = get_counties_for_state_all_data(state)
             else:
                 data = get_selected_counties_for_state(state, county_name)
@@ -563,7 +566,7 @@ class graphPage(tk.Frame):
             self.dropdown_state = TTK.Combobox(self.tab, font="Helvetica 12")
             self.dropdown_state.set('Select state...')
             self.dropdown_state['state'] = 'readonly'
-            self.dropdown_state['values'] = (['All states', 'AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
+            self.dropdown_state['values'] = (['All States', 'AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
             self.dropdown_state.bind('<<ComboboxSelected>>', gen_counties)
             self.dropdown_state.grid(row=1, column=1, padx=(0, 190), pady=(20, 20))
 
