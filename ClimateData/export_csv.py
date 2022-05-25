@@ -58,7 +58,7 @@ def get_xy_data_for_months(df, start_year, end_year, month=12):
 
     return [x_data, y_data, x_dates_format]
 
-def export_csv_split_months_by_county(df_list, state_dict, date_range, data_type, deg, deriv):
+def export_csv_split_months_by_county(df_list, state_dict, date_range, data_type, deg, deriv, yearly_offset_diff):
     months_indicies = {'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5, 'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9,
                        'nov': 10, 'dec': 11}
     months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
@@ -157,7 +157,7 @@ def export_csv_split_months_by_county(df_list, state_dict, date_range, data_type
     return df
 
 # Export CSV only for drought data
-def export_csv_split_months_by_state(df_list, state_list, date_range, data_type, deg, deriv):
+def export_csv_split_months_by_state(df_list, state_list, date_range, data_type, deg, deriv, yearly_offset_diff):
     months_indicies = {'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5, 'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9,
                        'nov': 10, 'dec': 11}
     months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
@@ -200,10 +200,23 @@ def export_csv_split_months_by_state(df_list, state_list, date_range, data_type,
             else:
                 deriv_coeff_cols_formatted.append(f"{letter}x^{deriv_coeff_cols_size}'")
 
-        cols = np.hstack(['State', 'Month', data_cols_names, coeff_cols_formatted,
-                          deriv_coeff_cols_formatted])
+        # For if Yearly Offset
+        if yearly_offset_diff is not None:
+            cols = np.hstack(['State', 'Month', data_cols_names, coeff_cols_formatted,
+                              deriv_coeff_cols_formatted,
+                              [f'{coeff}_{yearly_offset_diff}_year_offset' for coeff in coeff_cols_formatted],
+                              [f'{coeff}_{yearly_offset_diff}_year_offset' for coeff in deriv_coeff_cols_formatted]])
+        else:
+            cols = np.hstack(['State', 'Month', data_cols_names, coeff_cols_formatted,
+                              deriv_coeff_cols_formatted])
+
     else:
-        cols = np.hstack(['State', 'Month', data_cols_names, coeff_cols_formatted])
+        # For if Yearly Offset
+        if yearly_offset_diff is not None:
+            cols = np.hstack(['State', 'Month', data_cols_names, coeff_cols_formatted,
+                              [f'{coeff}_{yearly_offset_diff}_year_offset' for coeff in coeff_cols_formatted]])
+        else:
+            cols = np.hstack(['State', 'Month', data_cols_names, coeff_cols_formatted])
 
     # Append line by line to transpose data
     data_rows = []
@@ -249,7 +262,7 @@ def export_csv_split_months_by_state(df_list, state_list, date_range, data_type,
     return df
 
 
-def export_csv_year_by_county(df_list, state_dict, deg, deriv):
+def export_csv_year_by_county(df_list, state_dict, deg, deriv, yearly_offset_diff):
     print(f'Degree {deg} Polynomial')
 
     if deg < 1:
@@ -328,7 +341,7 @@ def export_csv_year_by_county(df_list, state_dict, deg, deriv):
     return df
 
 # Export CSV (no split months) w/ drought data
-def export_csv_year_by_state(df_list, state_list, deg, deriv):
+def export_csv_year_by_state(df_list, state_list, deg, deriv, yearly_offset_diff):
     print(f'Degree {deg} Polynomial')
 
     if deg < 1:
@@ -404,18 +417,18 @@ def export_csv_year_by_state(df_list, state_list, deg, deriv):
     return df
 
 
-def export_csv(process_type, df_list, state_dict, date_range, data_type, deg, deriv, drought_data):
+def export_csv(process_type, df_list, state_dict, date_range, data_type, deg, deriv, drought_data, yearly_offset_diff):
     if drought_data == True:
         if process_type == 'monthly':
-            return export_csv_split_months_by_state(df_list, state_dict, date_range, data_type, deg, deriv)
+            return export_csv_split_months_by_state(df_list, state_dict, date_range, data_type, deg, deriv, yearly_offset_diff)
         elif process_type == 'normal':
-            return export_csv_year_by_state(df_list, state_dict, deg, deriv)
+            return export_csv_year_by_state(df_list, state_dict, deg, deriv, yearly_offset_diff)
     else:
         # Non drought data (avg, max, min, precip)
         if process_type == 'monthly':
-            return export_csv_split_months_by_county(df_list, state_dict, date_range, data_type, deg, deriv)
+            return export_csv_split_months_by_county(df_list, state_dict, date_range, data_type, deg, deriv, yearly_offset_diff)
         elif process_type == 'normal': # Only else condition currently
-            return export_csv_year_by_county(df_list, state_dict, deg, deriv)
+            return export_csv_year_by_county(df_list, state_dict, deg, deriv, yearly_offset_diff)
 
 if __name__ == '__main__':
     pass
