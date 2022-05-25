@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import string
 import pandas as pd
+from datetime import date
 
 # Predefined lists
 coeff_cols = list(string.ascii_lowercase)
@@ -59,12 +60,14 @@ def get_xy_data_for_months(df, start_year, end_year, month=12):
     return [x_data, y_data, x_dates_format]
 
 def export_csv_split_months_by_county(df_list, state_dict, date_range, data_type, deg, deriv, yearly_offset_diff):
+    valid_start_year = 1895
+    valid_end_year = int(date.today().year)
     months_indicies = {'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5, 'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9,
                        'nov': 10, 'dec': 11}
     months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
-    begin_year = int(date_range.get('begin_year'))
+    begin_year = (int(date_range.get('begin_year')) if int(date_range.get('begin_year')) >= valid_start_year else valid_start_year)
     begin_month_index = months_indicies.get(date_range.get('begin_month'))
-    end_year = int(date_range.get('end_year'))
+    end_year = (int(date_range.get('end_year')) if int(date_range.get('end_year')) <= valid_end_year else valid_end_year)
     end_month_index = months_indicies.get(date_range.get('end_month'))
     print(f'Degree {deg} Polynomial')
 
@@ -119,6 +122,7 @@ def export_csv_split_months_by_county(df_list, state_dict, date_range, data_type
             for month_index in range(begin_month_index, end_month_index+1):
                 temperature_data_values = []
                 month = months[month_index]
+                begin_year_from_df = 0
 
                 # Appending temp data
                 index = 0
@@ -126,13 +130,15 @@ def export_csv_split_months_by_county(df_list, state_dict, date_range, data_type
                     year = yearStr[len(yearStr) - 4:]
                     id_year = county_df.at[index, 'id']
                     if year in id_year:
+                        if index == 0:
+                            begin_year_from_df = int(year)
                         temperature_data_values.append(county_df.iat[index, month_cell_index])
                         index += 1
                     else:
                         temperature_data_values.append(np.nan)
 
                 # Process data
-                [x, y, x_dates] = get_xy_data_for_months(county_df, begin_year, end_year, month_cell_index)
+                [x, y, x_dates] = get_xy_data_for_months(county_df, begin_year_from_df, end_year, month_cell_index)
 
                 # Get polynomial coefficients
                 # Format ax^deg + bx^deg-1 + cx^deg-2 + ... + z
@@ -158,12 +164,15 @@ def export_csv_split_months_by_county(df_list, state_dict, date_range, data_type
 
 # Export CSV only for drought data
 def export_csv_split_months_by_state(df_list, state_list, date_range, data_type, deg, deriv, yearly_offset_diff):
+    valid_start_year = 1897
+    valid_end_year = int(date.today().year)
+
     months_indicies = {'jan': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'may': 4, 'jun': 5, 'jul': 6, 'aug': 7, 'sep': 8, 'oct': 9,
                        'nov': 10, 'dec': 11}
     months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
-    begin_year = int(date_range.get('begin_year'))
+    begin_year = (int(date_range.get('begin_year')) if int(date_range.get('begin_year')) >= valid_start_year else valid_start_year)
     begin_month_index = months_indicies.get(date_range.get('begin_month'))
-    end_year = int(date_range.get('end_year'))
+    end_year = (int(date_range.get('end_year')) if int(date_range.get('end_year')) <= valid_end_year else valid_end_year)
     end_month_index = months_indicies.get(date_range.get('end_month'))
     print(f'Degree {deg} Polynomial')
 

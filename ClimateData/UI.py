@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import tkinter as tk
-from tkinter import LEFT, ttk
+from tkinter import LEFT, ttk, Canvas
 import ttkbootstrap as tkboot
 from ttkbootstrap import ttk as TTK
 from ttkbootstrap import font as tkfont
@@ -11,12 +11,14 @@ from database import *
 import plotting
 import re
 from itertools import chain
+import matplotlib
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 import MapUI
 from idlelib.tooltip import Hovertip
 from PyQt5.QtWidgets import *                   #pip install PyQt5
 from export_csv import export_csv
 import numpy as np
+import os
 
 # Dictionaries
 degree_dict = {
@@ -92,6 +94,14 @@ def validate_dates(start, end):
     if bool(begin_year < end_year) == False:
         print("First year was not before last year")
         return False
+   
+    begin_year = int(begin_year)
+    end_year = int(end_year) 
+
+    #Year before 1895
+    if bool((begin_year < 1885) or (end_year < 1895)):
+        print("Year(s) before 1895")
+        return False
 
     return True
 
@@ -106,84 +116,87 @@ def validate_degree(degree):
 
 
 class App(tk.Tk):
+
+    #Logic for generating a tab
+    def gen_tab(self):
+        self.tab_counter += 1
+        tab = tk.Frame(self.container, width=1920, height=1080)
+        self.container.add(tab, text=f'Tab {self.tab_counter}')
+        tab.grid_rowconfigure(0, weight=1)
+        tab.grid_columnconfigure(0, weight=1)
+        loop = 0 
+        data = ["StartPage", "graphPage"]
+        for F in (StartPage, graphPage):
+            current_frame = F(parent=tab, controller=self, master=tab)
+            #self.frame_list.append(current_frame)
+            if loop == 0:
+                self.frames.append({})
+            self.frames[self.tab_counter - 1][data[loop]] = current_frame
+            current_frame.grid(row=0, column=0)
+            loop += 1
+   
+    #Logic for deleting a tab 
+    def destroy_tab(self):
+        for F in self.container.winfo_children():
+            if str(F)==self.container.select():
+                F.destroy()
+                return
+
+
     def __init__(self, *args, **kwargs):
+        self.tab_counter = 0
+        self.tab_list = []
+        self.frames = []
+
         tk.Tk.__init__(self, *args, **kwargs)
         self.title('Climate Data')
         self.geometry('1920x1080')
+        tk.Grid.rowconfigure(self,0,weight=1)
+        tk.Grid.columnconfigure(self,0,weight=1)
+        tk.Grid.rowconfigure(self,1,weight=1)
         tkboot.Style('darkly')
 
         self.app = QApplication([])
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
-        container = ttk.Notebook(self)
-        tab1 = tk.Frame(container, width=1920, height=1080)
-        container.add(tab1, text ='Notebook tab 1')
-        tab2 = tk.Frame(container, width=1920, height=1080)
-        container.add(tab2, text ='Notebook tab 2')
-        tab3 = tk.Frame(container, width=1920, height=1080)
-        container.add(tab3, text ='Notebook tab 3')
-        tab4 = tk.Frame(container, width=1920, height=1080)
-        container.add(tab4, text ='Notebook tab 4')
-        tab5 = tk.Frame(container, width=1920, height=1080)
-        container.add(tab5, text ='Notebook tab 5')
-        container.grid(row=0, column=0)
-        container.grid_rowconfigure(0, weight=1)
-        container.grid_columnconfigure(0, weight=1)
-        tabs = [tab1,tab2,tab3,tab4,tab5]
+        self.container = ttk.Notebook(self)
 
+        self.container.grid(row=0, column=0)
+        self.gen_tab()
+        self.container.grid_rowconfigure(0, weight=1)
+        self.container.grid_columnconfigure(0, weight=1)
 
-        """
-        container = ttk.Notebook(self)
-        container.pack(pady=10, expand=True)
-        #container = tk.Frame(self)
-        tab1 = tk.Frame(container, width=1920, height=1080)
-        tab2 = tk.Frame(container, width=1920, height=1080)
-        tab1.pack(fill='both', expand=True)
-        tab2.pack(fill='both', expand=True)
-        container.add(tab1, text ='Notebook tab 1')
-        container.add(tab2, text ='Notebook tab 2')
-        container.pack(expand = 1, fill ="both")
-        #StartPage(container,controller=self, master=self)
-        #graphPage(container,controller=self, master=self)
-        """
-        self.frames = {}
-        self.frames2 = {}
-        self.frames3 = {}
-        self.frames4 = {}
-        self.frames5 = {}
-        data = ["StartPage", "graphPage"]
-        data2 = ["StartPage", "graphPage"]
-        loop = 0
-        for F in (StartPage, graphPage):
-            frame = F(parent=tab1, controller=self, master=tab1)
-            self.frames[data[loop]] = frame
-            frame.grid(row=0, column=0, sticky="nsew")
-            
-            frame2 = F(parent=tab2, controller=self, master=tab2)
-            self.frames2[data2[loop]] = frame2
-            frame2.grid(row=0, column=0, sticky="nsew")
-
-            frame3 = F(parent=tab3, controller=self, master=tab3)
-            self.frames3[data2[loop]] = frame3
-            frame3.grid(row=0, column=0, sticky="nsew")
-
-            frame4 = F(parent=tab4, controller=self, master=tab4)
-            self.frames4[data2[loop]] = frame4
-            frame4.grid(row=0, column=0, sticky="nsew")
-
-            frame5 = F(parent=tab5, controller=self, master=tab5)
-            self.frames5[data2[loop]] = frame5
-            frame5.grid(row=0, column=0, sticky="nsew")
-            loop += 1
-        #self.show_frame("StartPage")
         
+        #Button for generating a notebook tab
+        self.new_tab = tkboot.Button(
+           self,
+           command=self.gen_tab,
+           width="10",
+           text="New tab",
+           bootstyle=DEFAULT
+        )
+        self.new_tab.grid(row=0, column=0, padx=(0,1300), pady=(0,600))
+        self.new_tabTip = Hovertip(self.new_tab, 'Create a new notebook tab')
+
+        #Delete button for a notebook tab
+        self.delete_tab = tkboot.Button(
+            self,
+            command=self.destroy_tab,
+            width="10",
+            text="Delete tab",
+            bootstyle=DEFAULT
+        )
+        self.delete_tab.grid(row=0, column=0, padx=(0,1070), pady=(0,600))
+        self.delete_tabTip = Hovertip(self.delete_tab, 'Delete the current notebook tab')
+
+
     def show_frame(self, page_name):
         frame = self.frames[page_name]
         frame.tkraise()
 
     def open_map(self, df):
-      window = MapUI.MapWindow(df)
-      self.app.setStyleSheet("QHeaderView::section { background-color: #2F2F2F; color: white }")
-      self.app.exec_()
+        window = MapUI.MapWindow(df)
+        self.app.setStyleSheet("QHeaderView::section { background-color: #2F2F2F; color: white }")
+        self.app.exec_()
 
 class StartPage(tk.Frame):
     def __init__(self, parent, controller, master):
@@ -194,17 +207,6 @@ class StartPage(tk.Frame):
         button2 = TTK.Button(self, text = "Map", width="15", bootstyle="secondary", command=lambda: controller.open_map("TODO:"))
         button1.grid(row=0, column=1, padx=(100,0), pady=(100,500))
         button2.grid(row=0, column=2, padx=(10,0), pady=(100,500))
-
-        # Photo Widget for Start Page
-        '''
-         # TODO remove picture and add either:
-         # Empty canvas
-         # Pre-populated canvas
-        '''
-        img = tk.PhotoImage(file='images/cubic_graph.png')
-        label = tk.Label(self, image=img)
-        label.image = img
-        label.grid(row=0, column=0, padx=(20,10), pady=(100,20))
 
 
  
@@ -222,6 +224,16 @@ class graphPage(tk.Frame):
         self.export_csv_df = None
         self.export_csv_button = None
         self.button_coeff = None
+
+        # Yearly Offset Input Selection
+        self.ent3 = None
+        self.year_offset = None
+
+        # Degree inputs and labels
+        self.ent = None
+        self.degree_label = None
+        self.ent2 = None
+        self.deriv_label = None
 
         def on_submit():
             #user input is invalid, call validate_dates function
@@ -247,11 +259,16 @@ class graphPage(tk.Frame):
                 print("Degree is: ")
                 print(self.ent.get())
 
-        def on_checkbox():
-            return null
-
         #The data has been entered/ selected by the user. Here is it:
         def on_enter_data():
+            fig_numbers = [x.num
+                for x in matplotlib._pylab_helpers.Gcf.get_all_fig_managers()]
+            print("FIG NUMBERS BEFORE: " , fig_numbers)
+
+             #user input for dates is invalid, call validate_dates function and don't send data
+            if validate_dates(self.begin_year.get(), self.end_year.get()) == False:
+                tkboot.dialogs.Messagebox.show_error(f"Invalid date entry. \nEntry rules: \n- Entry must be in form: 'month/year' \n- Years must be in chronological order \n- Years must be four digits \n- Entry example: '06/1993'\n", title='Invalid date entry')
+                return 
 
             [begin_month_num, begin_year] = self.begin_year.get().split('/')
             [end_month_num, end_year] = self.end_year.get().split('/')
@@ -338,10 +355,9 @@ class graphPage(tk.Frame):
                                                      'plots_per_graph' : len(df_list), 'names' : (remove_alaska(states) if data_type in state_data_types else counties)})
 
 
-
-            canvas = FigureCanvasTkAgg(fig, master = master)  
-            canvas.draw()
-            canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
+            image_graph = FigureCanvasTkAgg(fig, master = master)  
+            image_graph.draw()
+            image_graph.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
 
             # Coefficient Button
             if drop_down == 'Connected':
@@ -353,9 +369,6 @@ class graphPage(tk.Frame):
                     self.export_csv_button = None
                     self.export_csv_df = None
             else:
-                self.button_coeff = TTK.Button(self.tab, width="15", text="View Coefficients", bootstyle="blue")
-                self.button_coeff.grid(row=9, column=1, padx=(220,0), pady=(50, 0))
-
                 self.export_csv_df = export_csv(process_type=process_type, df_list=df_list,
                                                 state_dict=(states if data_type in state_data_types else temp_dict),
                                                 date_range={'begin_month': begin_month, 'begin_year': begin_year,
@@ -366,66 +379,57 @@ class graphPage(tk.Frame):
 
                 # Export CSV Button
                 self.export_csv_button = TTK.Button(self.tab, command=save_csv_file ,width="16", text="Export data to CSV", bootstyle="blue")
-                self.export_csv_button.grid(row=9, column=1, padx=(537,0), pady=(50, 0))
+                self.export_csv_button.grid(row=9, column=1, padx=(250,0), pady=(50, 0))
 
-
-            #print("\nHere is the data that the user entered: ")
-            #print("Begin date month: ")
-            #print(begin_month)
-            #print("Begin date year: ")
-            #print(begin_year)
-            #print("End date month: ")
-            #print(end_month)
-            #print("End date year: ")
-            #print(end_year)
-            #print("Polynomial degree: ")
-            #print(polynomial_degree)
-            #print("Data type to plot: ")
-            #print(data_type)
-            #print("Counties: ")
-            #print(counties)
-            #print("States: ")
-            #print(states)
-            #print("County codes: ")
-            #print(county_codes)
-            #print("Countries: ")
-            #print(countries)
-            
         def gen_plot_type(event=None):
-            self.ent3 = None
             if event.widget.get() == 'Yearly Offset':
                 self.ent3 = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                 self.ent3.grid(row=6, column=1, padx=(240,0), pady=(30,0))
-                year_offset = tk.Label(self.tab, font="10", text="Year Diff: ")
-                year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+                self.year_offset = tk.Label(self.tab, font="10", text="Year Diff: ")
+                self.year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+            else:
+                if self.ent3 is not None:
+                    self.ent3.destroy()
+                    self.ent3 = None
+                    self.year_offset.destroy()
+                    self.year_offset = None
 
         def gen_equation(event=None):
-            self.ent = None
-            self.ent2 = None
+            # Remove all degree / deriv boxes on click and repopulate if necessary
+            if self.ent is not None:
+                self.ent.destroy()
+                self.ent = None
+                self.degree_label.destroy()
+                self.degree_label = None
+            if self.ent2 is not None:
+                self.ent2.destroy()
+                self.ent2 = None
+                self.deriv_label.destroy()
+                self.deriv_label = None
+
             if event == None:
                 degree = ''
             else:
                 if event.widget.get() == "n-degree..":
                     self.ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                     self.ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
-                    degree_label = tk.Label(self.tab, font="10", text="Degree: ")
-                    degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
+                    self.degree_label = tk.Label(self.tab, font="10", text="Degree: ")
+                    self.degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                 elif event.widget.get() == 'n-degree derivative':
                     self.ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                     self.ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
-                    degree_label = tk.Label(self.tab, font="10", text="Degree: ")
-                    degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
+                    self.degree_label = tk.Label(self.tab, font="10", text="Degree: ")
+                    self.degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                     self.ent2 = tkboot.Entry(self.tab, width="6")
                     self.ent2.grid(row=8, column=1, padx=(240,0), pady=(0,80))
-                    deriv_label = tk.Label(self.tab, font="10", text="Derivitive: ")
-                    deriv_label.grid(row=8, column=1, padx=(100, 0), pady=(0,80))
+                    self.deriv_label = tk.Label(self.tab, font="10", text="Derivitive: ")
+                    self.deriv_label.grid(row=8, column=1, padx=(100, 0), pady=(0,80))
                 elif event.widget.get() == "Connected-Curve":
                     self.ent = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                     self.ent.grid(row=7, column=1, padx=(240,0), pady=(30,0))
-                    degree_label = tk.Label(self.tab, font="10", text="Degree: ")
-                    degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
+                    self.degree_label = tk.Label(self.tab, font="10", text="Degree: ")
+                    self.degree_label.grid(row=7, column=1, padx=(100, 0), pady=(30,0))
                 else:
-
                     degree = event.widget.get()
                     #print("Degree of equation is: ")
                     #print(degree_dict[degree])
@@ -439,16 +443,23 @@ class graphPage(tk.Frame):
             print("Data type in correct format is: " + datatype_dict[columns])
 
         def delete_from_table():
-            selected_item = self.data_table.selection()[0]
-            self.data_table.delete(selected_item)
+            for row in self.data_table.selection():
+                self.data_table.delete(row)
 
-
+        def delete_all_from_table():
+            for row in self.data_table.get_children():
+                self.data_table.delete(row)
+            
         def gen_counties(event=None):
             if event == None:
                 state = ''
             else:
                 state = event.widget.get()
             data = get_counties_for_state(state)
+            if state == 'All states':
+                print("All states selected")
+                #logic for all states selection goes here
+                self.dropdown_county['values'] = all_counties
 
             print("Your query returned this data: ")
             data = [ x[0] for x in data ]
@@ -482,6 +493,8 @@ class graphPage(tk.Frame):
             else:
                 county_name = event.widget.get()
                 state = self.dropdown_state.get()
+            if county_name in [ self.data_table.item(x)['values'][1] for x in self.data_table.get_children()]:
+                return
             if county_name == 'All Counties':
                 data = get_counties_for_state_all_data(state)
             else:
@@ -491,14 +504,15 @@ class graphPage(tk.Frame):
             for row in data:
                 print(row)
                 self.data_table.insert(parent='', index='end', values=row)
-            self.data_table.grid(row=2, column=1, pady=(0,40), padx=(250, 235))
+            self.data_table.grid(row=2, column=1, pady=(0,83), padx=(250, 235))
+            print("This: ", self.data_table.get_children())
+
 
         def widgets(frame):
             self.tab = tk.Frame(frame, width=1920, height=1080)
-            #print(tabs[values])
-            #loop[count] = tk.Frame(frame, width=1920, height=1080)
+
             #Notebook   
-            self.notebook_label = tk.Label(self.tab, font="12", text="Notebook:")
+            self.notebook_label = tk.Label(self.tab, font="12")
             self.notebook_label.grid(row=1, column=0, padx=(10, 500), pady=10)
 
             #Date range widgets
@@ -512,17 +526,7 @@ class graphPage(tk.Frame):
             self.begin_date_label.grid(row=4, column=1, padx=(0, 250), pady=(0,0))        
 
             self.end_date_label = tkboot.Label(self.tab, font="10", text="Date range end: ", bootstyle="inverse-dark")
-
-            """
-            self.end_date_label.grid(row=5, column=1, padx=(0, 265), pady=(0,0))
-            self.specific_months = TTK.Combobox(self.tab, font="Helvetica 12")
-            self.specific_months.set('Select months')
-            self.specific_months['state'] = 'readonly'
-            self.specific_months['values'] = ('All months', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December') 
-            self.specific_months.bind('<<ComboboxSelected>>', gen_specific_date_table) 
-            self.specific_months.grid(row=5, column=1, padx=(400, 0))
-            """
-            
+            self.end_date_label.grid(row=5, column=1, padx=(0, 263), pady=(0,0))
 
             # Initialize Table Widget
             self.data_table = TTK.Treeview(self.tab, height=7)
@@ -538,8 +542,15 @@ class graphPage(tk.Frame):
             self.data_table.heading('county_code', text="County Code")
             self.data_table.heading('country', text="Country")
 
-            delete_btn = tkboot.Button(self.tab, text="Delete row", command=delete_from_table)
-            delete_btn.grid(row=2, column=1, padx=(550,0), pady=(0,160))
+            #Delete selected rows from the table
+            delete_btn = tkboot.Button(self.tab, text="Delete row(s)", command=delete_from_table)
+            delete_btnTip = Hovertip(delete_btn, 'Delete selected row(s) from table')
+            delete_btn.grid(row=2, column=1, padx=(560,0), pady=(0,210))
+
+            #Delete every row from the table
+            delete_all_rows = tkboot.Button(self.tab, text="Delete all", command=delete_all_from_table)
+            delete_all_rows_tip = Hovertip(delete_all_rows, 'Delete all rows from table')
+            delete_all_rows.grid(row=2, column=1, padx=(535,0), pady=(0,120))
 
             #Table widget for specific dates
             self.date_table = TTK.Treeview(self.tab, height=5)
@@ -553,7 +564,7 @@ class graphPage(tk.Frame):
             self.dropdown_state = TTK.Combobox(self.tab, font="Helvetica 12")
             self.dropdown_state.set('Select state...')
             self.dropdown_state['state'] = 'readonly'
-            self.dropdown_state['values'] = (['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
+            self.dropdown_state['values'] = (['All states', 'AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
             self.dropdown_state.bind('<<ComboboxSelected>>', gen_counties)
             self.dropdown_state.grid(row=1, column=1, padx=(0, 190), pady=(20, 20))
 
@@ -561,24 +572,12 @@ class graphPage(tk.Frame):
             self.dropdown_county = TTK.Combobox(self.tab, font="Helvetica 12")
             self.dropdown_county.set('Select county...')
             self.dropdown_county['state'] = 'readonly'
+            self.dropdown_county['values'] = (['No state selected'])
             self.dropdown_county.bind('<<ComboboxSelected>>', gen_table)
             self.dropdown_county.grid(row=1, column=1, padx=(290, 0), pady=(20, 20))
 
-            #Home button
-            self.button_back = TTK.Button(self.tab, width="15", text="Back to home", bootstyle="blue", command=lambda: controller.show_frame("StartPage"))
-            self.button_back.grid(row=0, column=1, padx=(0,250), pady=(100, 10))
-
-            #Add instance to notebook button
-            self.button_notebook_add = TTK.Button(self.tab, width="25", text="Add instance to notebook", bootstyle="blue")
-            self.button_notebook_add.grid(row=0, column=0, padx=(10,580), pady=(50, 20))
-
-            #Dropdown for datatype selection
-            self.plot_type = TTK.Combobox(self.tab, font="Helvetica 12")
-            self.plot_type.set('Select data type...')
-            self.plot_type['state'] = 'readonly'
-            self.plot_type['values'] = ['Line', 'Yearly Offset']
-            self.plot_type.bind('<<ComboboxSelected>>', gen_plot_type)
-            self.plot_type.grid(row=6, column=1,  padx=(0, 190), pady=(30, 0))
+            self.button2 = TTK.Button(self.tab, text = "Open map", width="15", bootstyle="secondary", command=lambda: controller.open_map("TODO:"))
+            self.button2.grid(row=0, column=1, padx=(0,250), pady=(50, 10))
 
             #Dropdown Widget for equation selection
             self.dropdown_equations = TTK.Combobox(self.tab, font="Helvetica 12")
@@ -608,13 +607,13 @@ class graphPage(tk.Frame):
                 text="Graph it!", 
                 bootstyle=DEFAULT
             )
-            self.data_submit.grid(row=9, column=1, padx=(0,173), pady=(50,0))
-            self.data_submit.focus_set()
-
+            self.data_submit.grid(row=9, column=1, padx=(0,185), pady=(50,0))
+    
             # Generate Table Rows
             gen_table()
             return self.tab
 
+                
         # Exporting data to csv
         def save_csv_file():
             if self.export_csv_df is not None:
@@ -637,10 +636,21 @@ class graphPage(tk.Frame):
         # Scatter Box Split checkbox
         self.plot_points_var = tk.IntVar()
         self.plot_points = TTK.Checkbutton(self.tab, text='Enable Scatter Plotting', variable=self.plot_points_var)
-        self.plot_points.grid(row=4, column=1,  padx=(650, 0), pady=(0, 0))
+        self.plot_points.grid(row=5, column=1,  padx=(365, 0), pady=(10, 0))
         scatterTip = Hovertip(self.plot_points, 'Check to enable scatter plotting on graph')
 
-        
+        #Dropdown for plot type  selection
+        self.plot_type = TTK.Combobox(self.tab, font="Helvetica 12")
+        self.plot_type.set('Select plot type...')
+        self.plot_type['state'] = 'readonly'
+        self.plot_type['values'] = ['Line', 'Yearly Offset']
+        self.plot_type.bind('<<ComboboxSelected>>', gen_plot_type)
+        self.plot_type.grid(row=6, column=1,  padx=(0, 190), pady=(30, 0))
+        datatypeTip = Hovertip(self.plot_type, 'Select plot type')
+
+        # Generate Table Rows
+        gen_table()
+
 # WIDGETS ----------------------------------------------------------------------------       
         
 def start_ui():
