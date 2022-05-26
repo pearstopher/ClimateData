@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import tkinter as tk
-from tkinter import LEFT, ttk
+from tkinter import LEFT, ttk, Canvas
 import ttkbootstrap as tkboot
 from ttkbootstrap import ttk as TTK
 from ttkbootstrap import font as tkfont
@@ -11,12 +11,14 @@ from database import *
 import plotting
 import re
 from itertools import chain
+import matplotlib
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 import MapUI
 from idlelib.tooltip import Hovertip
 from PyQt5.QtWidgets import *                   #pip install PyQt5
 from export_csv import export_csv
 import numpy as np
+import os
 
 # Dictionaries
 degree_dict = {
@@ -132,6 +134,13 @@ class App(tk.Tk):
             self.frames[self.tab_counter - 1][data[loop]] = current_frame
             current_frame.grid(row=0, column=0)
             loop += 1
+   
+    #Logic for deleting a tab 
+    def destroy_tab(self):
+        for F in self.container.winfo_children():
+            if str(F)==self.container.select():
+                F.destroy()
+                return
 
 
     def __init__(self, *args, **kwargs):
@@ -166,7 +175,19 @@ class App(tk.Tk):
            bootstyle=DEFAULT
         )
         self.new_tab.grid(row=0, column=0, padx=(0,1300), pady=(0,600))
-        
+        self.new_tabTip = Hovertip(self.new_tab, 'Create a new notebook tab')
+
+        #Delete button for a notebook tab
+        self.delete_tab = tkboot.Button(
+            self,
+            command=self.destroy_tab,
+            width="10",
+            text="Delete tab",
+            bootstyle=DEFAULT
+        )
+        self.delete_tab.grid(row=0, column=0, padx=(0,1070), pady=(0,600))
+        self.delete_tabTip = Hovertip(self.delete_tab, 'Delete the current notebook tab')
+
 
     def show_frame(self, page_name):
         frame = self.frames[page_name]
@@ -240,6 +261,10 @@ class graphPage(tk.Frame):
 
         #The data has been entered/ selected by the user. Here is it:
         def on_enter_data():
+            fig_numbers = [x.num
+                for x in matplotlib._pylab_helpers.Gcf.get_all_fig_managers()]
+            print("FIG NUMBERS BEFORE: " , fig_numbers)
+
              #user input for dates is invalid, call validate_dates function and don't send data
             if validate_dates(self.begin_year.get(), self.end_year.get()) == False:
                 tkboot.dialogs.Messagebox.show_error(f"Invalid date entry. \nEntry rules: \n- Entry must be in form: 'month/year' \n- Years must be in chronological order \n- Years must be four digits \n- Entry example: '06/1993'\n", title='Invalid date entry')
@@ -330,10 +355,9 @@ class graphPage(tk.Frame):
                                                      'plots_per_graph' : len(df_list), 'names' : (remove_alaska(states) if data_type in state_data_types else counties)})
 
 
-
-            canvas = FigureCanvasTkAgg(fig, master = master)  
-            canvas.draw()
-            canvas.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
+            image_graph = FigureCanvasTkAgg(fig, master = master)  
+            image_graph.draw()
+            image_graph.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
 
             # Coefficient Button
             if drop_down == 'Connected':
@@ -345,9 +369,6 @@ class graphPage(tk.Frame):
                     self.export_csv_button = None
                     self.export_csv_df = None
             else:
-                self.button_coeff = TTK.Button(self.tab, width="15", text="View Coefficients", bootstyle="blue")
-                self.button_coeff.grid(row=9, column=1, padx=(220,0), pady=(50, 0))
-
                 self.export_csv_df = export_csv(process_type=process_type, df_list=df_list,
                                                 state_dict=(states if data_type in state_data_types else temp_dict),
                                                 date_range={'begin_month': begin_month, 'begin_year': begin_year,
@@ -357,7 +378,7 @@ class graphPage(tk.Frame):
 
                 # Export CSV Button
                 self.export_csv_button = TTK.Button(self.tab, command=save_csv_file ,width="16", text="Export data to CSV", bootstyle="blue")
-                self.export_csv_button.grid(row=9, column=1, padx=(537,0), pady=(50, 0))
+                self.export_csv_button.grid(row=9, column=1, padx=(250,0), pady=(50, 0))
 
         def gen_plot_type(event=None):
             if event.widget.get() == 'Yearly Offset':
@@ -434,6 +455,10 @@ class graphPage(tk.Frame):
             else:
                 state = event.widget.get()
             data = get_counties_for_state(state)
+            if state == 'All states':
+                print("All states selected")
+                #logic for all states selection goes here
+                self.dropdown_county['values'] = all_counties
 
             print("Your query returned this data: ")
             data = [ x[0] for x in data ]
@@ -481,6 +506,7 @@ class graphPage(tk.Frame):
             self.data_table.grid(row=2, column=1, pady=(0,83), padx=(250, 235))
             print("This: ", self.data_table.get_children())
 
+
         def widgets(frame):
             self.tab = tk.Frame(frame, width=1920, height=1080)
 
@@ -500,17 +526,6 @@ class graphPage(tk.Frame):
 
             self.end_date_label = tkboot.Label(self.tab, font="10", text="Date range end: ", bootstyle="inverse-dark")
             self.end_date_label.grid(row=5, column=1, padx=(0, 263), pady=(0,0))
-
-            """
-            self.end_date_label.grid(row=5, column=1, padx=(0, 265), pady=(0,0))
-            self.specific_months = TTK.Combobox(self.tab, font="Helvetica 12")
-            self.specific_months.set('Select months')
-            self.specific_months['state'] = 'readonly'
-            self.specific_months['values'] = ('All months', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December') 
-            self.specific_months.bind('<<ComboboxSelected>>', gen_specific_date_table) 
-            self.specific_months.grid(row=5, column=1, padx=(400, 0))
-            """
-            
 
             # Initialize Table Widget
             self.data_table = TTK.Treeview(self.tab, height=7)
@@ -548,7 +563,7 @@ class graphPage(tk.Frame):
             self.dropdown_state = TTK.Combobox(self.tab, font="Helvetica 12")
             self.dropdown_state.set('Select state...')
             self.dropdown_state['state'] = 'readonly'
-            self.dropdown_state['values'] = (['AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
+            self.dropdown_state['values'] = (['All states', 'AK','AL','AR','AZ','CA','CO','CT','DE','FL','GA','IA','ID','IL','IN','KS','KY','LA','MA','MD','ME','MI','MN','MO','MS','MT','NC','ND','NE','NH','NJ','NM','NV','NY','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VA','VT','WA','WI','WV','WY'])
             self.dropdown_state.bind('<<ComboboxSelected>>', gen_counties)
             self.dropdown_state.grid(row=1, column=1, padx=(0, 190), pady=(20, 20))
 
