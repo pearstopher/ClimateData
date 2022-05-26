@@ -375,7 +375,7 @@ class graphPage(tk.Frame):
                                                 'end_month': end_month, 'end_year': end_year}, data_type=data_type,
                                                 deg=polynomial_degree, deriv=(0 if derivitive_degree is None else derivitive_degree),
                                                 drought_data=(True if data_type in state_data_types else False),
-                                                yearly_offset_diff=double_plot_diff)
+                                                yearly_offset_diff=(None if double_plot_diff <= 0 else double_plot_diff))
 
                 # Export CSV Button
                 self.export_csv_button = TTK.Button(self.tab, command=save_csv_file ,width="16", text="Export data to CSV", bootstyle="blue")

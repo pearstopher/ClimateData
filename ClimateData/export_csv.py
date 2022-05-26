@@ -104,11 +104,21 @@ def export_csv_split_months_by_county(df_list, state_dict, date_range, data_type
             else:
                 deriv_coeff_cols_formatted.append(f"{letter}x^{deriv_coeff_cols_size}'")
 
-        cols = np.hstack(['State', 'County', 'Month', data_cols_names, coeff_cols_formatted,
-                          deriv_coeff_cols_formatted])
+        # For if Yearly Offset
+        if yearly_offset_diff is not None:
+            cols = np.hstack(['State', 'County', 'Month', data_cols_names, coeff_cols_formatted,
+                              deriv_coeff_cols_formatted,
+                              [f'{coeff}_{yearly_offset_diff}_year_offset' for coeff in coeff_cols_formatted],
+                              [f'{coeff}_{yearly_offset_diff}_year_offset' for coeff in deriv_coeff_cols_formatted]])
+        else:
+            cols = np.hstack(['State', 'County', 'Month', data_cols_names, coeff_cols_formatted,
+                              deriv_coeff_cols_formatted])
     else:
-        # cols = np.hstack(['State', 'County', 'Month', data_cols_names, coeff_cols[:deg+1]])
-        cols = np.hstack(['State', 'County', 'Month', data_cols_names, coeff_cols_formatted])
+        if yearly_offset_diff is not None:
+            cols = np.hstack(['State', 'County', 'Month', data_cols_names, coeff_cols_formatted,
+                              [f'{coeff}_{yearly_offset_diff}_year_offset' for coeff in coeff_cols_formatted]])
+        else:
+            cols = np.hstack(['State', 'County', 'Month', data_cols_names, coeff_cols_formatted])
 
     # Append line by line to transpose data
     data_rows = []
@@ -147,9 +157,24 @@ def export_csv_split_months_by_county(df_list, state_dict, date_range, data_type
                 # Get deriv if exist, get derivative coefficients
                 if deriv > 0:
                     deriv_coeffs = np.polyder(coeffs[::-1], deriv)
-                    data_rows.append(np.hstack([state, county, month, temperature_data_values, coeffs[::-1], deriv_coeffs]))
+                    if yearly_offset_diff is not None:
+                        diff_coeffs = poly.polyfit(x[:-yearly_offset_diff], y[:-yearly_offset_diff], deg)
+                        new_y = np.polyval([e for e in reversed(diff_coeffs)], x)
+                        yearly_offset_coeffs = poly.polyfit(x, new_y, deg)
+                        yearly_offset_deriv_coeffs = np.polyder(yearly_offset_coeffs[::-1], deriv)
+                        data_rows.append(np.hstack([state, county, month, temperature_data_values, coeffs[::-1], deriv_coeffs,
+                                                    yearly_offset_coeffs[::-1], yearly_offset_deriv_coeffs]))
+                    else:
+                        data_rows.append(np.hstack([state, county, month, temperature_data_values, coeffs[::-1], deriv_coeffs]))
                 else:
-                    data_rows.append(np.hstack([state, county, month, temperature_data_values, coeffs[::-1]]))
+                    if yearly_offset_diff is not None:
+                        diff_coeffs = poly.polyfit(x[:-yearly_offset_diff], y[:-yearly_offset_diff], deg)
+                        new_y = np.polyval([e for e in reversed(diff_coeffs)], x)
+                        yearly_offset_coeffs = poly.polyfit(x, new_y, deg)
+                        data_rows.append(np.hstack([state, county, month, temperature_data_values, coeffs[::-1],
+                                                    yearly_offset_coeffs[::-1]]))
+                    else:
+                        data_rows.append(np.hstack([state, county, month, temperature_data_values, coeffs[::-1]]))
 
                 # Iterate next month between year range
                 month_cell_index += 1
@@ -218,7 +243,6 @@ def export_csv_split_months_by_state(df_list, state_list, date_range, data_type,
         else:
             cols = np.hstack(['State', 'Month', data_cols_names, coeff_cols_formatted,
                               deriv_coeff_cols_formatted])
-
     else:
         # For if Yearly Offset
         if yearly_offset_diff is not None:
@@ -259,9 +283,25 @@ def export_csv_split_months_by_state(df_list, state_list, date_range, data_type,
                 # Get deriv if exist, get derivative coefficients
                 if deriv > 0:
                     deriv_coeffs = np.polyder(coeffs[::-1], deriv)
-                    data_rows.append(np.hstack([state, month, temperature_data_values, coeffs[::-1], deriv_coeffs]))
+
+                    # If yearly offset, calculate diff polynomial
+                    if yearly_offset_diff is not None:
+                        diff_coeffs = poly.polyfit(x[:-yearly_offset_diff], y[:-yearly_offset_diff], deg)
+                        new_y = np.polyval([e for e in reversed(diff_coeffs)], x)
+                        yearly_offset_coeffs = poly.polyfit(x, new_y, deg)
+                        yearly_offset_deriv_coeffs = np.polyder(yearly_offset_coeffs[::-1], deriv)
+                        data_rows.append(np.hstack([state, month, temperature_data_values, coeffs[::-1], deriv_coeffs,
+                                                    yearly_offset_coeffs[::-1], yearly_offset_deriv_coeffs]))
+                    else:
+                        data_rows.append(np.hstack([state, month, temperature_data_values, coeffs[::-1], deriv_coeffs]))
                 else:
-                    data_rows.append(np.hstack([state, month, temperature_data_values, coeffs[::-1]]))
+                    if yearly_offset_diff is not None:
+                        diff_coeffs = poly.polyfit(x[:-yearly_offset_diff], y[:-yearly_offset_diff], deg)
+                        new_y = np.polyval([e for e in reversed(diff_coeffs)], x)
+                        yearly_offset_coeffs = poly.polyfit(x, new_y, deg)
+                        data_rows.append(np.hstack([state, month, temperature_data_values, coeffs[::-1], yearly_offset_coeffs[::-1]]))
+                    else:
+                        data_rows.append(np.hstack([state, month, temperature_data_values, coeffs[::-1]]))
 
                 # Iterate next month between year range
                 month_cell_index += 1
@@ -302,11 +342,24 @@ def export_csv_year_by_county(df_list, state_dict, deg, deriv, yearly_offset_dif
             else:
                 deriv_coeff_cols_formatted.append(f"{letter}x^{deriv_coeff_cols_size}'")
 
-        cols = np.hstack(['State', 'County', coeff_cols_formatted, deriv_coeff_cols_formatted])
-    else:
-        cols = np.hstack(['State', 'County', coeff_cols_formatted])
+        # For if Yearly Offset
+        if yearly_offset_diff is not None:
+            cols = np.hstack(['State', 'County', coeff_cols_formatted,
+                              deriv_coeff_cols_formatted,
+                              [f'{coeff}_{yearly_offset_diff}_year_offset' for coeff in coeff_cols_formatted],
+                              [f'{coeff}_{yearly_offset_diff}_year_offset' for coeff in deriv_coeff_cols_formatted]])
+        else:
+            cols = np.hstack(['State', 'County', coeff_cols_formatted, deriv_coeff_cols_formatted])
 
-    # cols = np.hstack(['State', 'County', coeff_cols[:deg + 1]])
+        # cols = np.hstack(['State', 'County', coeff_cols_formatted, deriv_coeff_cols_formatted])
+    else:
+        if yearly_offset_diff is not None:
+            cols = np.hstack(['State', 'County', coeff_cols_formatted,
+                              [f'{coeff}_{yearly_offset_diff}_year_offset' for coeff in coeff_cols_formatted]])
+        else:
+            cols = np.hstack(['State', 'County', coeff_cols_formatted])
+        # cols = np.hstack(['State', 'County', coeff_cols_formatted])
+
 
     county_index = 0
     county_df_list = []
@@ -328,9 +381,24 @@ def export_csv_year_by_county(df_list, state_dict, deg, deriv, yearly_offset_dif
             coeffs_df = None
             if deriv > 0:
                 deriv_coeffs = np.polyder(coeffs[::-1], deriv)
-                coeffs_df = pd.DataFrame([np.hstack([state, county, coeffs[::-1], deriv_coeffs])], columns=cols)
+                if yearly_offset_diff is not None:
+                    diff_coeffs = poly.polyfit(x[:-yearly_offset_diff], y[:-yearly_offset_diff], deg)
+                    new_y = np.polyval([e for e in reversed(diff_coeffs)], x)
+                    yearly_offset_coeffs = poly.polyfit(x, new_y, deg)
+                    yearly_offset_deriv_coeffs = np.polyder(yearly_offset_coeffs[::-1], deriv)
+                    coeffs_df = pd.DataFrame([np.hstack([state, county, coeffs[::-1], deriv_coeffs,
+                                                yearly_offset_coeffs[::-1], yearly_offset_deriv_coeffs])], columns=cols)
+                else:
+                    coeffs_df = pd.DataFrame([np.hstack([state, county, coeffs[::-1], deriv_coeffs])], columns=cols)
             else:
-                coeffs_df = pd.DataFrame([np.hstack([state, county, coeffs[::-1]])], columns=cols)
+                if yearly_offset_diff is not None:
+                    diff_coeffs = poly.polyfit(x[:-yearly_offset_diff], y[:-yearly_offset_diff], deg)
+                    new_y = np.polyval([e for e in reversed(diff_coeffs)], x)
+                    yearly_offset_coeffs = poly.polyfit(x, new_y, deg)
+                    coeffs_df = pd.DataFrame([np.hstack([state, county, coeffs[::-1], yearly_offset_coeffs[::-1]])],
+                                             columns=cols)
+                else:
+                    coeffs_df = pd.DataFrame([np.hstack([state, county, coeffs[::-1]])], columns=cols)
 
             # Concat
             temp_full_df = pd.concat([coeffs_df, county_df])
@@ -381,9 +449,22 @@ def export_csv_year_by_state(df_list, state_list, deg, deriv, yearly_offset_diff
             else:
                 deriv_coeff_cols_formatted.append(f"{letter}x^{deriv_coeff_cols_size}'")
 
-        cols = np.hstack(['State', coeff_cols_formatted, deriv_coeff_cols_formatted])
+        # For if Yearly Offset
+        if yearly_offset_diff is not None:
+            cols = np.hstack(['State', coeff_cols_formatted,
+                              deriv_coeff_cols_formatted,
+                              [f'{coeff}_{yearly_offset_diff}_year_offset' for coeff in coeff_cols_formatted],
+                              [f'{coeff}_{yearly_offset_diff}_year_offset' for coeff in deriv_coeff_cols_formatted]])
+        else:
+            cols = np.hstack(['State', coeff_cols_formatted,
+                              deriv_coeff_cols_formatted])
+        # cols = np.hstack(['State', coeff_cols_formatted, deriv_coeff_cols_formatted])
     else:
-        cols = np.hstack(['State', coeff_cols_formatted])
+        if yearly_offset_diff is not None:
+            cols = np.hstack(['State', coeff_cols_formatted,
+                              [f'{coeff}_{yearly_offset_diff}_year_offset' for coeff in coeff_cols_formatted]])
+        else:
+            cols = np.hstack(['State', coeff_cols_formatted])
 
     # cols = np.hstack(['State', 'County', coeff_cols[:deg + 1]])
 
@@ -405,9 +486,23 @@ def export_csv_year_by_state(df_list, state_list, deg, deriv, yearly_offset_diff
         coeffs_df = None
         if deriv > 0:
             deriv_coeffs = np.polyder(coeffs[::-1], deriv)
-            coeffs_df = pd.DataFrame([np.hstack([state, coeffs[::-1], deriv_coeffs])], columns=cols)
+            if yearly_offset_diff is not None:
+                diff_coeffs = poly.polyfit(x[:-yearly_offset_diff], y[:-yearly_offset_diff], deg)
+                new_y = np.polyval([e for e in reversed(diff_coeffs)], x)
+                yearly_offset_coeffs = poly.polyfit(x, new_y, deg)
+                yearly_offset_deriv_coeffs = np.polyder(yearly_offset_coeffs[::-1], deriv)
+                coeffs_df = pd.DataFrame([np.hstack([state, coeffs[::-1], deriv_coeffs, yearly_offset_coeffs[::-1],
+                                                     yearly_offset_deriv_coeffs])], columns=cols)
+            else:
+                coeffs_df = pd.DataFrame([np.hstack([state, coeffs[::-1], deriv_coeffs])], columns=cols)
         else:
-            coeffs_df = pd.DataFrame([np.hstack([state, coeffs[::-1]])], columns=cols)
+            if yearly_offset_diff is not None:
+                diff_coeffs = poly.polyfit(x[:-yearly_offset_diff], y[:-yearly_offset_diff], deg)
+                new_y = np.polyval([e for e in reversed(diff_coeffs)], x)
+                yearly_offset_coeffs = poly.polyfit(x, new_y, deg)
+                coeffs_df = pd.DataFrame([np.hstack([state, coeffs[::-1], yearly_offset_coeffs[::-1]])], columns=cols)
+            else:
+                coeffs_df = pd.DataFrame([np.hstack([state, coeffs[::-1]])], columns=cols)
 
         # Concat
         temp_full_df = pd.concat([coeffs_df, county_df])
