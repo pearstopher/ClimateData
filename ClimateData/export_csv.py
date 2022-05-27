@@ -185,6 +185,7 @@ def export_csv_split_months_by_county(df_list, state_dict, date_range, data_type
 
     # Create df
     df = pd.DataFrame(data_rows, columns=cols)
+    print("Df ready to export")
     return df
 
 # Export CSV only for drought data
@@ -308,6 +309,7 @@ def export_csv_split_months_by_state(df_list, state_list, date_range, data_type,
 
     # Create df
     df = pd.DataFrame(data_rows, columns=cols)
+    print("Df ready to export")
     return df
 
 
@@ -415,6 +417,7 @@ def export_csv_year_by_county(df_list, state_dict, deg, deriv, yearly_offset_dif
 
     df = pd.concat(county_df_list)
     df = df.replace(np.nan, '', regex=True)
+    print("Df ready to export")
     return df
 
 # Export CSV (no split months) w/ drought data
@@ -518,10 +521,12 @@ def export_csv_year_by_state(df_list, state_list, deg, deriv, yearly_offset_diff
 
     df = pd.concat(state_df_list)
     df = df.replace(np.nan, '', regex=True)
+    print("Df ready to export")
     return df
 
 
 def export_csv(process_type, df_list, state_dict, date_range, data_type, deg, deriv, drought_data, yearly_offset_diff):
+    print("Creating export csv df")
     if drought_data == True:
         if process_type == 'monthly':
             return export_csv_split_months_by_state(df_list, state_dict, date_range, data_type, deg, deriv, yearly_offset_diff)
