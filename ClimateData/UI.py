@@ -281,6 +281,7 @@ class graphPage(tk.Frame):
 
             drop_down       = self.dropdown_equations.get()
             plot_points     = self.plot_points_var.get()
+            hide_legend     = self.plot_hide_legend_var.get()
             monthly_split   = self.monthly_check_var.get()
 
             connected_curve = None
@@ -352,7 +353,8 @@ class graphPage(tk.Frame):
                                                      'plot_points': plot_points, 'connected_curve': connected_curve,
                                                      'begin_month': monthsIdx[begin_month], 'end_month': monthsIdx[end_month],
                                                      'degree': polynomial_degree, 'deriv_degree': derivitive_degree,
-                                                     'plots_per_graph' : len(df_list), 'names' : (remove_alaska(states) if data_type in state_data_types else counties)})
+                                                     'plots_per_graph' : len(df_list), 'names' : (remove_alaska(states) if data_type in state_data_types else counties),
+                                                     'show_legend': not hide_legend})
 
 
             image_graph = FigureCanvasTkAgg(fig, master = master)  
@@ -637,6 +639,12 @@ class graphPage(tk.Frame):
         self.plot_points = TTK.Checkbutton(self.tab, text='Enable Scatter Plotting', variable=self.plot_points_var)
         self.plot_points.grid(row=5, column=1,  padx=(365, 0), pady=(10, 0))
         scatterTip = Hovertip(self.plot_points, 'Check to enable scatter plotting on graph')
+
+        # Hide Plot Legend checkbox
+        self.plot_hide_legend_var = tk.IntVar()
+        self.plot_hide_legend = TTK.Checkbutton(self.tab, text='Hide Plot Legend', variable=self.plot_hide_legend_var)
+        self.plot_hide_legend.grid(row=6, column=1,  padx=(330, 0), pady=(10, 0))
+        hideLegendTip = Hovertip(self.plot_hide_legend, 'Check to disable the legend on the graph')
 
         #Dropdown for plot type  selection
         self.plot_type = TTK.Combobox(self.tab, font="Helvetica 12")
