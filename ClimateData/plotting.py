@@ -126,8 +126,9 @@ def process_data(plot_vars_map, process_type, df_list):
         vals_to_cut = diff * year_size
 
         for xarr, yarr in zip(x_data_list, y_data_list):
-            new_x = xarr[:-vals_to_cut]
-            new_y = yarr[:-vals_to_cut]
+            new_x = xarr
+            p = poly.polyfit(xarr[:-vals_to_cut], yarr[:-vals_to_cut], plot_vars_map['degree'])
+            new_y = np.polyval([e for e in reversed(p)], new_x)
             new_x_vals.append(new_x)
             new_y_vals.append(new_y)
 
