@@ -9,6 +9,8 @@ import numpy as np
 import string
 import pandas as pd
 
+#Just writing this comment to make sure I am where I should be ok?. 
+
 # Predefined lists
 states = ['AK', 'AL', 'AR', 'AZ', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL', 'GA',
           'HI', 'IA', 'ID', 'IL', 'IN', 'KS', 'KY', 'LA', 'MA', 'MD', 'ME',
