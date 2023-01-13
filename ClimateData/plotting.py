@@ -40,7 +40,9 @@ def to_date(x_data):
     return mdates.num2date(x_data_formatted)
 
 
-def plot(ptype, df_list, plot_vars_map):
+def plot(ptype, df_list, plot_vars_map, ymin, ymax):
+
+    print("Ymin: " + ymin + "\nYmax: " + ymax)
 
     x_data_list, y_data_list, plot_vars_map = process_data(plot_vars_map, plot_vars_map['process_type'], df_list)
 
@@ -146,6 +148,7 @@ def process_data(plot_vars_map, process_type, df_list):
 
 def connected_scatter(x, y, deg, plots_per_graph, names, plot_points, connected_curve, show_legend):
     fig, ax1 = plt.subplots()
+    plt.ylim((0, 100)) # <-- this
 
     colors = cm.rainbow(np.linspace(0, 1, len(names)))
     for x, y, county, color in zip(x, y, names, colors):
