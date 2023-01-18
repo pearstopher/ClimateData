@@ -20,7 +20,8 @@ from PyQt5.QtWidgets import *                   #pip install PyQt5
 from export_csv import export_csv
 import numpy as np
 import os
-from datetime import date
+# from datetime import date
+import datetime
 
 # Dictionaries
 degree_dict = {
@@ -544,11 +545,21 @@ class graphPage(tk.Frame):
 
             self.end_date_ent = tkboot.Entry(self.tab, textvariable=self.end_year, width=10)
              #get_latest_date
-            today = date.today()
-            latestDate = today.strftime("%d/%m/%Y")
-            nextMonth = "0"+ str(int(latestDate[3:5])-1)
-            latestDate = nextMonth + latestDate[5:]
-            self.end_date_ent.insert(0, latestDate)
+            # today = date.today()
+            # latestDate = today.strftime("%d/%m/%Y")
+            # nextMonth = "0"+ str(int(latestDate[3:5])-1)
+            # latestDate = nextMonth + latestDate[5:]
+            # self.end_date_ent.insert(0, latestDate)
+
+            # just start at the first day of this month
+            this_month_first = datetime.date.today().replace(day=1)
+            # and then go back a day to get last month
+            last_month_last = this_month_first - datetime.timedelta(days=1)
+            # now inject the date as mm/yyyy
+            self.end_date_ent.insert(0, last_month_last.strftime("%m/%Y"))
+            # this will be most recent full month of data
+
+
             self.end_date_ent.grid(row=2, column=1, padx=(0, 0), pady=(200,30))
 
             self.begin_date_label = tkboot.Label(self.tab, font="10", text="Date range begin: ", bootstyle="inverse-dark")
