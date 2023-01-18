@@ -364,10 +364,6 @@ class graphPage(tk.Frame):
 
             counties = list(chain(*counties))
 
-            # add xlim and ylim
-            ymin = self.entry_ymin.get()
-            ymax = self.entry_ymax.get()
-
             fig, x_data, y_data = plotting.plot(plot_type, df_list, {'process_type': process_type, 'double_plot_diff': double_plot_diff,
                                                      'plot_points': plot_points, 'connected_curve': connected_curve,
                                                      'begin_month': monthsIdx[begin_month], 'end_month': monthsIdx[end_month],
@@ -573,6 +569,7 @@ class graphPage(tk.Frame):
             self.entry_ymin.grid(row=1, column=0, padx=(100,220), pady=(0,10))
             self.label_ymin = TTK.Label(self.tab, font="Helvetica 12", text="ymin", width=4)
             self.label_ymin.grid(row=1, column=0, padx=(0, 220), pady=(0, 10))
+
    
 
             # Initialize Table Widget
@@ -653,20 +650,6 @@ class graphPage(tk.Frame):
             self.dropdown_graphs.bind('<<ComboboxSelected>>', gen_datatype_columns)
             self.dropdown_graphs.grid(row=5, column=1,  padx=(0, 190),pady=(0,10))
             datatypeTip = Hovertip(self.dropdown_graphs, 'Select which type of weather data to graph')
-            
-            #Y Scale selection
-            self.entry_ymax = TTK.Entry(self.tab, font="Helvetica 12", width=4)
-            self.entry_ymax.bind('<<ComboboxSelected>>', gen_equation)
-            self.entry_ymax.grid(row=1, column=0,  padx=(100, 0), pady=(0, 10))
-            self.label_ymax = TTK.Label(self.tab, font="Helvetica 12", text="ymax", width=4)
-            self.label_ymax.grid(row=1, column=0,  padx=(0, 0), pady=(0, 10))
-
-            self.entry_ymin = TTK.Entry(self.tab, font="Helvetica 12", width=4)
-            self.entry_ymin.bind('<<ComboboxSelected>>', gen_equation)
-            self.entry_ymin.grid(row=1, column=0,  padx=(100, 220), pady=(0, 10))
-            self.label_ymin = TTK.Label(self.tab, font="Helvetica 12", text="ymin", width=4)
-            self.label_ymin.grid(row=1, column=0,  padx=(0, 220), pady=(0, 10))
-
 
 
             #Button for submitting all that the user has entered
