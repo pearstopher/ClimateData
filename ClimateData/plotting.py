@@ -50,11 +50,13 @@ def plot(ptype, df_list, plot_vars_map):
         pass
     elif ptype == 'poly_deriv':
         return plot_poly_deriv(x_data_list, y_data_list, plot_vars_map['degree'], plot_vars_map['deriv_degree'], 
-                               plot_vars_map['plots_per_graph'], plot_vars_map['names'], plot_vars_map['show_legend'])
+                               plot_vars_map['plots_per_graph'], plot_vars_map['names'], plot_vars_map['show_legend'],
+                               {'y_max': plot_vars_map['y_max'], 'y_min': plot_vars_map['y_min']})
     elif ptype == 'scatter_poly':
         return scatter_poly(x_data_list, y_data_list, plot_vars_map['degree'], 
                             plot_vars_map['plots_per_graph'], plot_vars_map['names'],
-                            plot_vars_map['plot_points'], plot_vars_map['show_legend'])
+                            plot_vars_map['plot_points'], plot_vars_map['show_legend'],
+                            {'y_max': plot_vars_map['y_max'], 'y_min': plot_vars_map['y_min']})
     elif ptype == 'connected':
         return connected_scatter(x_data_list, y_data_list, plot_vars_map['degree'], plot_vars_map['plots_per_graph'], 
                                  plot_vars_map['names'], plot_vars_map['plot_points'], plot_vars_map['connected_curve'],
@@ -179,11 +181,19 @@ def connected_scatter(x, y, deg, plots_per_graph, names, plot_points, connected_
 
     return fig, x, y
 
-def scatter_poly(x, y, deg, plots_per_graph, counties, plot_points, show_legend):
+def scatter_poly(x, y, deg, plots_per_graph, counties, plot_points, show_legend, ax_lim):
     # Example of what coeffs and fiteq do, for a 3rd degree polynomial
     #d, c, b, a = poly.polyfit(x, y, 3)
     #fiteq = lambda x: a * x ** 3 + b * x ** 2 + c * x + d
     fig, ax1 = plt.subplots()
+
+    current_axis = plt.gca()  # Grab the current axis
+
+    # Check if the user input limits for the y-axis
+    if ax_lim['y_max'] != "" and ax_lim['y_min'] != "":
+        y_upper_lim = int(ax_lim['y_max'])
+        y_lower_lim = int(ax_lim['y_min'])
+        current_axis.set_ylim((y_lower_lim, y_upper_lim))
 
     colors = cm.rainbow(np.linspace(0, 1, len(counties)))
     for x, y, county, color in zip(x, y, counties, colors):
@@ -213,11 +223,20 @@ def scatter_poly(x, y, deg, plots_per_graph, counties, plot_points, show_legend)
     #plt.show()
     return fig, x, y
 
-def plot_poly_deriv(x, y, deg, deriv_deg, plots_per_graph, counties, show_legend):
+def plot_poly_deriv(x, y, deg, deriv_deg, plots_per_graph, counties, show_legend, ax_lim):
     
     new_x = []
     new_y = []
     fig, ax1 = plt.subplots()
+
+    current_axis = plt.gca()  # Grab the current axis
+
+    # Check if the user input limits for the y-axis
+    if ax_lim['y_max'] != "" and ax_lim['y_min'] != "":
+        y_upper_lim = int(ax_lim['y_max'])
+        y_lower_lim = int(ax_lim['y_min'])
+        current_axis.set_ylim((y_lower_lim, y_upper_lim))
+
     colors = cm.rainbow(np.linspace(0, 1, len(counties)))
     for x, y, county, color in zip(x, y, counties, colors):
         coeffs = poly.polyfit(x, y, deg)
