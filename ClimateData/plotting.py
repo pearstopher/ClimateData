@@ -40,11 +40,9 @@ def to_date(x_data):
     return mdates.num2date(x_data_formatted)
 
 
-def plot(ptype, df_list, plot_vars_map, ymin, ymax):
+def plot(ptype, df_list, plot_vars_map):
 
-    print("Ymin: " + ymin + "\nYmax: " + ymax)
-
-    x_data_list, y_data_list, plot_vars_map = process_data(plot_vars_map, plot_vars_map['process_type'], df_list)
+    x_data_list, y_data_list, plot_vars_map= process_data(plot_vars_map, plot_vars_map['process_type'], df_list)
 
     if ptype == 'scatter':
         pass
@@ -60,7 +58,7 @@ def plot(ptype, df_list, plot_vars_map, ymin, ymax):
     elif ptype == 'connected':
         return connected_scatter(x_data_list, y_data_list, plot_vars_map['degree'], plot_vars_map['plots_per_graph'], 
                                  plot_vars_map['names'], plot_vars_map['plot_points'], plot_vars_map['connected_curve'],
-                                 plot_vars_map['show_legend'])
+                                 plot_vars_map['show_legend'], {'y_max': plot_vars_map['y_max'], 'y_min': plot_vars_map['y_min']})
     else:
         print('Invalid plot type!')
 
@@ -146,9 +144,15 @@ def process_data(plot_vars_map, process_type, df_list):
 
     return x_data_list, y_data_list, plot_vars_map
 
-def connected_scatter(x, y, deg, plots_per_graph, names, plot_points, connected_curve, show_legend):
+def connected_scatter(x, y, deg, plots_per_graph, names, plot_points, connected_curve, show_legend, ax_lim):
     fig, ax1 = plt.subplots()
-    plt.ylim((0, 100)) # <-- this
+    current_axis = plt.gca()  # Grab the current axis
+
+    # Check if the user input limits for the y-axis
+    if ax_lim['y_max'] != "" and ax_lim['y_min'] != "":
+        y_upper_lim = int(ax_lim['y_max'])
+        y_lower_lim = int(ax_lim['y_min'])
+        current_axis.set_ylim((y_lower_lim, y_upper_lim))
 
     colors = cm.rainbow(np.linspace(0, 1, len(names)))
     for x, y, county, color in zip(x, y, names, colors):
@@ -167,10 +171,12 @@ def connected_scatter(x, y, deg, plots_per_graph, names, plot_points, connected_
         if plot_points:
             ax1.scatter(x, y, s=4, color=color)
 
+
     ax1.set_title(f'Connected Plot')
     if show_legend:
         ax1.legend()
     cursor = mplcursors.cursor()
+
     return fig, x, y
 
 def scatter_poly(x, y, deg, plots_per_graph, counties, plot_points, show_legend):

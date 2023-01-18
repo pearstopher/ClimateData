@@ -241,6 +241,10 @@ class graphPage(tk.Frame):
         self.ent2 = None
         self.deriv_label = None
 
+        # Y-axis limit inputs
+        self.y_lim = None
+        self.y_min = None
+        """""
         def on_submit():
             #user input is invalid, call validate_dates function
             if validate_dates(self.begin_year.get(), self.end_year.get()) == False:    
@@ -264,6 +268,8 @@ class graphPage(tk.Frame):
             else:
                 print("Degree is: ")
                 print(self.ent.get())
+
+        """
 
         #The data has been entered/ selected by the user. Here is it:
         def on_enter_data():
@@ -289,6 +295,8 @@ class graphPage(tk.Frame):
             plot_points     = self.plot_points_var.get()
             hide_legend     = self.plot_hide_legend_var.get()
             monthly_split   = self.monthly_check_var.get()
+            y_max           = self.entry_ymax.get()
+            y_min           = self.entry_ymin.get()
 
             connected_curve = None
             derivitive_degree = None
@@ -365,14 +373,13 @@ class graphPage(tk.Frame):
                                                      'begin_month': monthsIdx[begin_month], 'end_month': monthsIdx[end_month],
                                                      'degree': polynomial_degree, 'deriv_degree': derivitive_degree,
                                                      'plots_per_graph' : len(df_list), 'names' : (remove_alaska(states) if data_type in state_data_types else counties),
-                                                     'show_legend': not hide_legend},
-                                                ymin, ymax)
+                                                     'show_legend': not hide_legend, 'y_max': y_max, 'y_min': y_min})
 
 
             image_graph = FigureCanvasTkAgg(fig, master = master)  
             image_graph.draw()
             image_graph.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
-
+            
             # Coefficient Button
             if drop_down == 'Connected':
                 if self.button_coeff is not None:
@@ -456,7 +463,7 @@ class graphPage(tk.Frame):
             columns = event.widget.get()
             #Data type 'columns' for database function 'get_data_for_counties_dataset'
             print("Data type in correct format is: " + datatype_dict[columns])
-
+            
         def delete_from_table():
             for row in self.data_table.selection():
                 self.data_table.delete(row)
@@ -554,6 +561,20 @@ class graphPage(tk.Frame):
             self.end_date_label = tkboot.Label(self.tab, font="10", text="Date range end: ", bootstyle="inverse-dark")
             self.end_date_label.grid(row=2, column=1, padx=(0, 260), pady=(200,30))
 
+            #Entry box for y-axis limits 
+            self.entry_ymax = TTK.Entry(self.tab, font="Helvetica 12", width=4)
+            self.entry_ymax.bind('<<ComboboxSelected>>', gen_equation)
+            self.entry_ymax.grid(row=1, column=0, padx=(100,0), pady=(0,10))
+            self.label_ymax = TTK.Label(self.tab, font="Helvetica 12", text="ymax", width=4)
+            self.label_ymax.grid(row=1, column=0, padx=(0, 0), pady=(0, 10))
+            
+            self.entry_ymin = TTK.Entry(self.tab, font="Helvetica 12", width=4)
+            self.entry_ymin.bind('<<ComboboxSelected>>', gen_equation)
+            self.entry_ymin.grid(row=1, column=0, padx=(100,220), pady=(0,10))
+            self.label_ymin = TTK.Label(self.tab, font="Helvetica 12", text="ymin", width=4)
+            self.label_ymin.grid(row=1, column=0, padx=(0, 220), pady=(0, 10))
+   
+
             # Initialize Table Widget
             self.data_table = TTK.Treeview(self.tab, height=7)
             self.data_table['columns'] = ('state', 'county_name', 'county_code', 'country')
@@ -645,6 +666,7 @@ class graphPage(tk.Frame):
             self.entry_ymin.grid(row=1, column=0,  padx=(100, 220), pady=(0, 10))
             self.label_ymin = TTK.Label(self.tab, font="Helvetica 12", text="ymin", width=4)
             self.label_ymin.grid(row=1, column=0,  padx=(0, 220), pady=(0, 10))
+
 
 
             #Button for submitting all that the user has entered
