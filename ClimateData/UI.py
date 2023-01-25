@@ -545,8 +545,16 @@ class graphPage(tk.Frame):
             self.end_date_ent = tkboot.Entry(self.tab, textvariable=self.end_year, width=10)
              #get_latest_date
             today = date.today()
+            # Handles January case to shift back one year
+            if(today.month == 1):
+                endMonth = 12
+                today = today.replace(year = int(today.year) -1)
+            else:
+                endMonth = today.month - 1
+            nextMonth = str(int(endMonth))
+            if(endMonth < 10):
+                nextMonth = "0" + nextMonth
             latestDate = today.strftime("%d/%m/%Y")
-            nextMonth = "0"+ str(int(latestDate[3:5])-1)
             latestDate = nextMonth + latestDate[5:]
             self.end_date_ent.insert(0, latestDate)
             self.end_date_ent.grid(row=2, column=1, padx=(0, 0), pady=(200,30))

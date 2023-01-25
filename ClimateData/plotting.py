@@ -155,6 +155,9 @@ def connected_scatter(x, y, deg, plots_per_graph, names, plot_points, connected_
         y_upper_lim = int(ax_lim['y_max'])
         y_lower_lim = int(ax_lim['y_min'])
         current_axis.set_ylim((y_lower_lim, y_upper_lim))
+    
+    # Horizontal axis line at x=0
+    plt.axhline(0, color='black', linestyle='solid', linewidth="0.5")
 
     colors = cm.rainbow(np.linspace(0, 1, len(names)))
     for x, y, county, color in zip(x, y, names, colors):
@@ -194,6 +197,9 @@ def scatter_poly(x, y, deg, plots_per_graph, counties, plot_points, show_legend,
         y_upper_lim = int(ax_lim['y_max'])
         y_lower_lim = int(ax_lim['y_min'])
         current_axis.set_ylim((y_lower_lim, y_upper_lim))
+
+    # Horizontal axis line at x=0
+    plt.axhline(0, color='black', linestyle='solid', linewidth="0.5")
 
     colors = cm.rainbow(np.linspace(0, 1, len(counties)))
     for x, y, county, color in zip(x, y, counties, colors):
@@ -237,6 +243,9 @@ def plot_poly_deriv(x, y, deg, deriv_deg, plots_per_graph, counties, show_legend
         y_lower_lim = int(ax_lim['y_min'])
         current_axis.set_ylim((y_lower_lim, y_upper_lim))
 
+    # Horizontal axis line at x=0
+    plt.axhline(0, color='black', linestyle='solid', linewidth="0.5")
+    
     colors = cm.rainbow(np.linspace(0, 1, len(counties)))
     for x, y, county, color in zip(x, y, counties, colors):
         coeffs = poly.polyfit(x, y, deg)
