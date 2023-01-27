@@ -119,6 +119,22 @@ def validate_degree(degree):
 
 class App(tk.Tk):
 
+    # determine UI scale in relation to it's initial dimensions
+    # unused atm but could be useful for dynamically scaling tricky elements
+    def scale(self, axis="x"):
+        w = 1920
+        h = 1080
+
+        new_w = self.winfo_width()
+        new_h = self.winfo_height()
+
+        mod_w = new_w / w
+        mod_h = new_h / h
+
+        print("Window size:", new_w, "x", new_h)
+
+        return mod_w if axis == "x" else mod_h
+
     #Logic for generating a tab
     def gen_tab(self):
         self.tab_counter += 1
@@ -140,7 +156,7 @@ class App(tk.Tk):
             self.frames[self.tab_counter - 1][data[loop]] = current_frame
             current_frame.grid(row=0, column=0)
             loop += 1
-   
+
     #Logic for deleting a tab 
     def destroy_tab(self):
         for F in self.container.winfo_children():
@@ -157,18 +173,20 @@ class App(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
         self.title('Climate Data')
         self.geometry('1920x1080')
+        # self.state('zoomed')  # you can add this to start maximized :)
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
         tkboot.Style('darkly')
 
         self.app = QApplication([])
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
-        self.container = ttk.Notebook(self)
+        self.container = ttk.Notebook(self, width=1920, height=1080)  # the "notebook" needs to be assigned to fill the window
 
         self.container.grid(row=0, column=0)
         self.gen_tab()
         self.container.grid_rowconfigure(0, weight=1)
         self.container.grid_columnconfigure(0, weight=1)
+
 
          #Button for generating a notebook tab
         self.new_tab = tkboot.Button(
@@ -178,7 +196,7 @@ class App(tk.Tk):
            text="New tab",
            bootstyle=DEFAULT
         )
-        self.new_tab.grid(row=0, column=0, padx=(0), pady=(0,550))
+        self.new_tab.grid(row=0, column=0, padx=(0,150), pady=(0,0), sticky='ne')  # stick to top right corner
         self.new_tabTip = Hovertip(self.new_tab, 'Create a new notebook tab')
         
         #Delete button for a notebook tab
@@ -189,10 +207,10 @@ class App(tk.Tk):
             text="Delete tab",
             bootstyle=DEFAULT
         )
-        self.delete_tab.grid(row=0, column=0, padx=(250,0), pady=(0,550))
+        self.delete_tab.grid(row=0, column=0, padx=(0, 50), pady=(0,0), sticky='ne')  # stick to top right corner
         self.delete_tabTip = Hovertip(self.delete_tab, 'Delete the current notebook tab')
         
-        
+
        
 
     def show_frame(self, page_name):
@@ -533,7 +551,19 @@ class graphPage(tk.Frame):
             self.tab = tk.Frame(frame, width=1920, height=1080)
             self.tab.grid_columnconfigure(0, weight=1)
             self.tab.grid_rowconfigure(0, weight=1)
-            
+
+            self.tab.grid_columnconfigure(1, weight=1) # set the second column, now they will be equal width
+
+            # and set all the rows (there's eight!)
+            self.tab.grid_rowconfigure(1, weight=1)
+            self.tab.grid_rowconfigure(2, weight=1)
+            self.tab.grid_rowconfigure(3, weight=1)
+            self.tab.grid_rowconfigure(4, weight=1)
+            self.tab.grid_rowconfigure(5, weight=1)
+            self.tab.grid_rowconfigure(6, weight=1)
+            self.tab.grid_rowconfigure(7, weight=1)
+
+
             #Notebook   
             self.notebook_label = tk.Label(self.tab, font="12")
             self.notebook_label.grid(row=1, column=0, padx=(10, 500), pady=10)
@@ -552,7 +582,7 @@ class graphPage(tk.Frame):
             self.end_date_ent.grid(row=2, column=1, padx=(0, 0), pady=(200,30))
 
             self.begin_date_label = tkboot.Label(self.tab, font="10", text="Date range begin: ", bootstyle="inverse-dark")
-            self.begin_date_label.grid(row=2, column=1, padx=(0, 250), pady=(150,30))        
+            self.begin_date_label.grid(row=2, column=1, padx=(0, 250), pady=(150,30))
 
             self.end_date_label = tkboot.Label(self.tab, font="10", text="Date range end: ", bootstyle="inverse-dark")
             self.end_date_label.grid(row=2, column=1, padx=(0, 260), pady=(200,30))
@@ -674,11 +704,11 @@ class graphPage(tk.Frame):
                                               defaultextension='.csv')
                 self.export_csv_df.to_csv(file_name, sep=',', encoding='utf-8', index=False)
 
-        frame = ttk.Notebook(self)
+        frame = ttk.Notebook(self, width=1920, height=1080)  # again its the notebook that needs to fill
         frame.pack(fill='both', pady=10, expand=True)
         tabs = ["Notebook1", "Notebook2", "Notebook3", "Notebook4"]
         tab1 = widgets(frame)
-        frame.add(tab1, text = "Main") 
+        frame.add(tab1, text = "Main")
 
         # Monthly Split checkbox
         self.monthly_check_var = tk.IntVar()
