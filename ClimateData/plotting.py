@@ -152,8 +152,8 @@ def connected_scatter(x, y, deg, plots_per_graph, names, plot_points, connected_
 
     # Check if the user input limits for the y-axis
     if ax_lim['y_max'] != "" and ax_lim['y_min'] != "":
-        y_upper_lim = int(ax_lim['y_max'])
-        y_lower_lim = int(ax_lim['y_min'])
+        y_upper_lim = float(ax_lim['y_max'])
+        y_lower_lim = float(ax_lim['y_min'])
         current_axis.set_ylim((y_lower_lim, y_upper_lim))
     
     # Horizontal axis line at x=0
@@ -194,8 +194,8 @@ def scatter_poly(x, y, deg, plots_per_graph, counties, plot_points, show_legend,
 
     # Check if the user input limits for the y-axis
     if ax_lim['y_max'] != "" and ax_lim['y_min'] != "":
-        y_upper_lim = int(ax_lim['y_max'])
-        y_lower_lim = int(ax_lim['y_min'])
+        y_upper_lim = float(ax_lim['y_max'])
+        y_lower_lim = float(ax_lim['y_min'])
         current_axis.set_ylim((y_lower_lim, y_upper_lim))
 
     # Horizontal axis line at x=0
@@ -239,8 +239,8 @@ def plot_poly_deriv(x, y, deg, deriv_deg, plots_per_graph, counties, show_legend
 
     # Check if the user input limits for the y-axis
     if ax_lim['y_max'] != "" and ax_lim['y_min'] != "":
-        y_upper_lim = int(ax_lim['y_max'])
-        y_lower_lim = int(ax_lim['y_min'])
+        y_upper_lim = float(ax_lim['y_max'])
+        y_lower_lim = float(ax_lim['y_min'])
         current_axis.set_ylim((y_lower_lim, y_upper_lim))
 
     # Horizontal axis line at x=0
