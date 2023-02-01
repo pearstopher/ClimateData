@@ -390,9 +390,9 @@ class graphPage(tk.Frame):
                                                      'show_legend': not hide_legend, 'y_max': y_max, 'y_min': y_min})
 
 
-            image_graph = FigureCanvasTkAgg(fig, master = master)  
+            image_graph = FigureCanvasTkAgg(fig, master=self.tab)  # try and attach to the right element here
             image_graph.draw()
-            image_graph.get_tk_widget().grid(row=0, column=0, pady=(50, 0), padx=(10, 600))
+            image_graph.get_tk_widget().grid(row=2, column=0, sticky="nwes", rowspan=8, padx=(20,20), pady=(20,20))
             
             # Coefficient Button
             if drop_down == 'Connected':
@@ -549,10 +549,10 @@ class graphPage(tk.Frame):
 
         def widgets(frame):
             self.tab = tk.Frame(frame, width=1920, height=1080)
-            self.tab.grid_columnconfigure(0, weight=1)
-            self.tab.grid_rowconfigure(0, weight=1)
+            self.tab.grid_columnconfigure(0, weight=1, uniform="main_columns")  # need to set a uniform group to force equal width
+            self.tab.grid_rowconfigure(0, weight=0)  # smush this one! might need it later tho
 
-            self.tab.grid_columnconfigure(1, weight=1) # set the second column, now they will be equal width
+            self.tab.grid_columnconfigure(1, weight=1, uniform="main_columns") # set the second column, now they will be equal width
 
             # and set all the rows (there's eight!)
             self.tab.grid_rowconfigure(1, weight=1)
@@ -562,6 +562,10 @@ class graphPage(tk.Frame):
             self.tab.grid_rowconfigure(5, weight=1)
             self.tab.grid_rowconfigure(6, weight=1)
             self.tab.grid_rowconfigure(7, weight=1)
+
+            # show where the graph will be even when it hasn't been generated yet
+            self.empty_grid = tkboot.Label(self.tab, background="#181818")
+            self.empty_grid.grid(row=2, column=0, sticky="nwes", rowspan=8, padx=(20,20), pady=(20,20))
 
 
             #Notebook   
