@@ -119,21 +119,6 @@ def validate_degree(degree):
 
 class App(tk.Tk):
 
-    # determine UI scale in relation to it's initial dimensions
-    # unused atm but could be useful for dynamically scaling tricky elements
-    def scale(self, axis="x"):
-        w = 1920
-        h = 1080
-
-        new_w = self.winfo_width()
-        new_h = self.winfo_height()
-
-        mod_w = new_w / w
-        mod_h = new_h / h
-
-        print("Window size:", new_w, "x", new_h)
-
-        return mod_w if axis == "x" else mod_h
 
     #Logic for generating a tab
     def gen_tab(self):
