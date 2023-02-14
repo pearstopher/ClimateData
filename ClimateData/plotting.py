@@ -177,7 +177,7 @@ def connected_scatter(x, y, deg, plots_per_graph, names, plot_points, connected_
     ax1.set_title(f'Connected Plot')
     if show_legend:
         ax1.legend()
-    cursor = mplcursors.cursor()
+    cursor = mplcursors.cursor(multiple=True)
 
     return fig, x, y
 
@@ -219,7 +219,7 @@ def scatter_poly(x, y, deg, plots_per_graph, counties, plot_points, show_legend,
     #          rowLabels=[ascii_lowercase[x] for x in range(deg+1)], 
     #          colLabels=['Poly Coeffs'], loc='right', colWidths = [0.2])
     #plt.text(15, 3.4, 'Coefficients', size=12)
-    cursor = mplcursors.cursor()
+    cursor = mplcursors.cursor(multiple=True)
     #plt.show()
     return fig, x, y
 
@@ -258,7 +258,7 @@ def plot_poly_deriv(x, y, deg, deriv_deg, plots_per_graph, counties, show_legend
     ax1.set_title(f'Derivitive deg={deriv_deg} of polynomial fit deg={deg}')
     if show_legend:
         ax1.legend()
-    cursor = mplcursors.cursor()
+    cursor = mplcursors.cursor(multiple=True)
     return fig, new_x, new_y
 
 def tkinter_scatter_poly(x, y, deg, show_legend):
