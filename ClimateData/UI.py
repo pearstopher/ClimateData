@@ -551,6 +551,8 @@ class graphPage(tk.Frame):
             self.tab.grid_rowconfigure(5, weight=1)
             self.tab.grid_rowconfigure(6, weight=1)
             self.tab.grid_rowconfigure(7, weight=1)
+            self.tab.grid_rowconfigure(8, weight=1)
+            self.tab.grid_rowconfigure(9, weight=1)
 
             # show where the graph will be even when it hasn't been generated yet
             self.empty_grid = tkboot.Label(self.tab, background="#181818")
