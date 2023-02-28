@@ -409,9 +409,9 @@ class graphPage(tk.Frame):
         def gen_plot_type(event=None):
             if event.widget.get() == 'Yearly Offset':
                 self.ent3 = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
-                self.ent3.grid(row=6, column=1, padx=(240,0), pady=(30,0))
+                self.ent3.grid(row=3, column=1, padx=(240,0), pady=(30,0))
                 self.year_offset = tk.Label(self.tab, font="10", text="Year Diff: ")
-                self.year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+                self.year_offset.grid(row=3, column=1, padx=(100, 0), pady=(30,0))
             else:
                 if self.ent3 is not None:
                     self.ent3.destroy()
