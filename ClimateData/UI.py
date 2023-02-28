@@ -403,7 +403,7 @@ class graphPage(tk.Frame):
                                                                             double_plot_diff <= 0 else double_plot_diff))
 
                 # Export CSV Button
-                self.export_csv_button = TTK.Button(self.tab, command=save_csv_file ,width="16", text="Export data to CSV", bootstyle="blue")
+                self.export_csv_button = TTK.Button(self.tab, command=save_csv_file, width="19", text="Export data to CSV", bootstyle="blue")
                 self.export_csv_button.grid(row=9, column=1, padx=(250,0), pady=(50, 0))
 
         def gen_plot_type(event=None):
