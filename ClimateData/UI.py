@@ -22,6 +22,10 @@ import numpy as np
 import os
 from datetime import date
 
+# lets adjust the maximum size from a convenient spot
+x_max = 4096
+y_max = 2160
+
 # Dictionaries
 degree_dict = {
     "Linear"     : 1,
@@ -123,7 +127,7 @@ class App(tk.Tk):
     #Logic for generating a tab
     def gen_tab(self):
         self.tab_counter += 1
-        tab = tk.Frame(self.container, width=1920, height=1080)
+        tab = tk.Frame(self.container, width=x_max, height=y_max)
         tab.grid_columnconfigure(0, weight=1)
         tab.grid_rowconfigure(0, weight=1)
         self.container.add(tab, text=f'Tab {self.tab_counter}')
@@ -157,15 +161,15 @@ class App(tk.Tk):
 
         tk.Tk.__init__(self, *args, **kwargs)
         self.title('Climate Data')
-        self.geometry('1920x1080')
-        # self.state('zoomed')  # you can add this to start maximized :)
+        self.geometry(str(x_max) + 'x' + str(y_max))
+        self.state('zoomed')  # you can add this to start maximized :)
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
         tkboot.Style('darkly')
 
         self.app = QApplication([])
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
-        self.container = ttk.Notebook(self, width=1920, height=1080)  # the "notebook" needs to be assigned to fill the window
+        self.container = ttk.Notebook(self, width=x_max, height=y_max)  # the "notebook" needs to be assigned to fill the window
 
         self.container.grid(row=0, column=0)
         self.gen_tab()
@@ -533,7 +537,7 @@ class graphPage(tk.Frame):
 
 
         def widgets(frame):
-            self.tab = tk.Frame(frame, width=1920, height=1080)
+            self.tab = tk.Frame(frame, width=x_max, height=y_max)
             self.tab.grid_columnconfigure(0, weight=1, uniform="main_columns")  # need to set a uniform group to force equal width
             self.tab.grid_rowconfigure(0, weight=0)  # smush this one! might need it later tho
 
@@ -693,7 +697,7 @@ class graphPage(tk.Frame):
                                               defaultextension='.csv')
                 self.export_csv_df.to_csv(file_name, sep=',', encoding='utf-8', index=False)
 
-        frame = ttk.Notebook(self, width=1920, height=1080)  # again its the notebook that needs to fill
+        frame = ttk.Notebook(self, width=x_max, height=y_max)  # again its the notebook that needs to fill
         frame.pack(fill='both', pady=10, expand=True)
         tabs = ["Notebook1", "Notebook2", "Notebook3", "Notebook4"]
         tab1 = widgets(frame)
