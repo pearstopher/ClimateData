@@ -162,7 +162,7 @@ class App(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
         self.title('Climate Data')
         self.geometry(str(x_max) + 'x' + str(y_max))
-        self.state('zoomed')  # you can add this to start maximized :)
+        self.state('zoomed')  # start maximized
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
         tkboot.Style('darkly')
