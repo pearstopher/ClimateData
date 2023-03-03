@@ -775,7 +775,6 @@ class graphPage(tk.Frame):
 
             # Grab the list of state and counties to restore table
             rows = self.save_state_import_df.loc[0]['table_list']
-            print('Saved states and counties list' + rows)
 
             # Grab all UI elements to restore
             equation        = self.save_state_import_df.loc[0]['equation']
