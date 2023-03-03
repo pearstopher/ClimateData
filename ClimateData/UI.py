@@ -309,6 +309,8 @@ class graphPage(tk.Frame):
             monthly_split   = self.monthly_check_var.get()
             y_max           = self.entry_ymax.get()
             y_min           = self.entry_ymin.get()
+            plot_dropdown   = self.plot_type.get()
+            graph_type      = self.dropdown_graphs.get()
 
             connected_curve = None
             derivitive_degree = None
@@ -376,6 +378,9 @@ class graphPage(tk.Frame):
 
             counties = list(chain(*counties))
 
+            print('Testing dataframe:')
+            print(temp_dict)
+
             fig, x_data, y_data = plotting.plot(plot_type, df_list, {'process_type': process_type, 'double_plot_diff': double_plot_diff,
                                                      'plot_points': plot_points, 'connected_curve': connected_curve,
                                                      'begin_month': monthsIdx[begin_month], 'end_month': monthsIdx[end_month],
@@ -389,14 +394,15 @@ class graphPage(tk.Frame):
                                                      'begin_month': monthsIdx[begin_month], 'end_month': monthsIdx[end_month],
                                                      'degree': polynomial_degree, 'deriv_degree': derivitive_degree,
                                                      'plots_per_graph' : len(df_list), 'names' : (remove_alaska(states) if data_type in state_data_types else counties),
-                                                     'show_legend': not hide_legend, 'y_max': y_max, 'y_min': y_min}],
+                                                     'show_legend': not hide_legend, 'y_max': y_max, 'y_min': y_min, 'table_list': temp_dict,
+                                                      'equation': drop_down, 'monthly_split': monthly_split, 'plot_dropdown': plot_dropdown, 'graph_type': graph_type}],
                                                      columns = ('plot_type', 'df_list',
-                                                     'process_type', 'double_plot_diff',
-                                                     'plot_points', 'connected_curve',
-                                                     'begin_month', 'end_month',
-                                                     'degree', 'deriv_degree',
-                                                     'plots_per_graph', 'names',
-                                                     'show_legend', 'y_max', 'y_min'))
+                                                     'process_type', 'double_plot_diff', 'plot_points', 
+                                                     'connected_curve', 'begin_month', 'end_month',
+                                                     'degree', 'deriv_degree', 'plots_per_graph', 'names',
+                                                     'show_legend', 'y_max', 'y_min', 'table_list' , 'equation',
+                                                      'monthly_split', 'plot_dropdown','graph_type'))
+
 #End of Save State Code
 
             image_graph = FigureCanvasTkAgg(fig, master=self.tab)  # try and attach to the right element here
@@ -426,7 +432,25 @@ class graphPage(tk.Frame):
                 self.export_csv_button = TTK.Button(self.tab, command=save_csv_file ,width="16", text="Export data to CSV", bootstyle="blue")
                 self.export_csv_button.grid(row=9, column=1, padx=(250,0), pady=(50, 0))
 
+        # If Yearly offset is selected, imput box for Yearly Diff appears
+        def yearly_offset(plot_type):
+            if plot_type == "Yearly Offset":     
+                self.ent3 = tkboot.Entry(self.tab, width="6", textvariable=plot_type)
+                self.ent3.grid(row=6, column=1, padx=(240,0), pady=(30,0))
+                self.year_offset = tk.Label(self.tab, font="10", text="Year Diff: ")
+                self.year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+            else:
+                if self.ent3 is not None:
+                    self.ent3.destroy()
+                    self.ent3 = None
+                    self.year_offset.destroy()
+                    self.year_offset = None
+   
+
         def gen_plot_type(event=None):
+            plot_type = event.widget.get()
+            yearly_offset(plot_type)
+            """
             if event.widget.get() == 'Yearly Offset':
                 self.ent3 = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
                 self.ent3.grid(row=6, column=1, padx=(240,0), pady=(30,0))
@@ -438,6 +462,9 @@ class graphPage(tk.Frame):
                     self.ent3 = None
                     self.year_offset.destroy()
                     self.year_offset = None
+
+                    """
+                    
 
         def gen_equation(event=None):
             # Remove all degree / deriv boxes on click and repopulate if necessary
@@ -745,6 +772,19 @@ class graphPage(tk.Frame):
            
             plot_type = self.save_state_import_df.loc[0]['plot_type']
             df_list = self.save_state_import_df.loc[0]['df_list']
+
+            # Grab the list of state and counties to restore table
+            rows = self.save_state_import_df.loc[0]['table_list']
+            print('Saved states and counties list' + rows)
+
+            # Grab all UI elements to restore
+            equation        = self.save_state_import_df.loc[0]['equation']
+            plot_points     = self.save_state_import_df.loc[0]['plot_points']
+            show_legend     = self.save_state_import_df.loc[0]['show_legend'] 
+            monthly_split   = self.save_state_import_df.loc[0]['monthly_split']
+            plot_dropdown   = self.save_state_import_df.loc[0]['plot_dropdown']
+            graph_type      = self.save_state_import_df.loc[0]['graph_type']
+
             plot_vars_map = {'process_type': self.save_state_import_df.loc[0]['process_type'],
                              'double_plot_diff': self.save_state_import_df.loc[0]['double_plot_diff'],
                              'plot_points': self.save_state_import_df.loc[0]['plot_points'],
@@ -758,7 +798,52 @@ class graphPage(tk.Frame):
                              'show_legend': self.save_state_import_df.loc[0]['show_legend'],
                              'y_max': self.save_state_import_df.loc[0]['y_max'],
                              'y_min': self.save_state_import_df.loc[0]['y_min']}
+           
+            # TODO: Date range beging, date range end, ymin, ymax, 
+            # TODO: Restore Yearly Diff, Derivitive, Degree boxes when dropdown choices are selected
 
+
+            print('Testing vars: ')
+            print("Equation: " + equation)
+            print("Plot_type: " + plot_type)
+            print("Plot_dropdown:" + plot_dropdown)
+            #print("Plot_point " + plot_points) 
+            # print("Show legend:" + show_legend)
+            # print("Monthly split " + monthly_split)
+            
+            # Restore the checkbuttons state
+            if(plot_points):
+                self.plot_points.state(['selected'])
+            if(monthly_split):
+                self.monthly_check.state(['selected'])
+            if(show_legend == 0):
+                self.plot_hide_legend.state(['selected'])
+
+            # Restore the state of dropdowns: equations, plot type, graphs
+            self.dropdown_equations.set(equation)
+            self.plot_type.set(plot_dropdown)
+            self.dropdown_graphs.set(graph_type)
+
+            # Check if the equation is special case: "n-degree", "n-degree derivative", or "connected curve"
+            check_eq(equation)
+            yearly_offset(plot_dropdown)
+            
+            # Import cases for state and county table
+            # Case 1: All states and counties
+            # Case 2: Specific state and all counties
+            # Case 3: List of states and list of counties
+            # Restoring all the table data
+            for state, county in rows.items():
+                print(f'The county of {state} is ') 
+                for line in county:
+                    print(line)
+                    line = get_selected_counties_for_state(state, line)
+                    for row in line:
+                        self.data_table.insert(parent='', index='end', values=row)
+                    self.data_table.grid(row=2, column=1, pady=(0,83), padx=(250, 235))
+
+
+                        
             dbfile.close()
 
             #Proof of Concept Style Style, can't graph b/c of df_list
@@ -766,6 +851,31 @@ class graphPage(tk.Frame):
             image_graph = FigureCanvasTkAgg(fig, master=self.tab)  # try and attach to the right element here
             image_graph.draw()
             image_graph.get_tk_widget().grid(row=2, column=0, sticky="nwes", rowspan=8, padx=(20,20), pady=(20,20))
+
+        # Checks Check if the equation is either, "n-degree", "n-degree derivative", or "connected curve"
+        # If any apply then additional degree/derivative entry box needs to be restored
+        def check_eq(equation):
+
+            if equation == "n-degree..":  
+                self.ent = tkboot.Entry(self.tab, width = "6", textvariable = equation)
+                self.ent.grid(row = 4, column = 1, padx = (230, 0), pady = (10,0))
+                self.degree_label = tk.Label(self.tab, font="10", text="Degree: ")
+                self.degree_label.grid(row = 4, column = 1, padx = (100, 0), pady = (10,0))
+            elif equation == 'n-degree derivative':
+                self.ent = tkboot.Entry(self.tab, width="6", textvariable=equation)
+                self.ent.grid(row=4, column=1, padx=(230, 0), pady=(10,0))
+                self.degree_label = tk.Label(self.tab, font="10", text="Degree: ")
+                self.degree_label.grid(row=4, column=1, padx=(100, 0), pady=(10,0))
+                self.ent2 = tkboot.Entry(self.tab, width="6")
+                self.ent2.grid(row=5, column=1, padx=(260, 0), pady=(10,0))
+                self.deriv_label = tk.Label(self.tab, font="10", text="Derivitive: ")
+                self.deriv_label.grid(row=5, column=1, padx=(110, 0), pady=(10,0))
+            elif equation == "Connected-Curve":
+                self.ent = tkboot.Entry(self.tab, width="6", textvariable=equation)
+                self.ent.grid(row=4, column=1, padx=(230, 0), pady=(10,0))
+                self.degree_label = tk.Label(self.tab, font="10", text="Degree: ")
+                self.degree_label.grid(row=4, column=1, padx=(100, 0), pady=(10,0))
+
 #End of Save State Code
                 
         # Exporting data to csv
