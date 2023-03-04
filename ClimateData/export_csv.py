@@ -529,8 +529,8 @@ def export_csv_year_by_state(df_list, state_list, deg, deriv, yearly_offset_diff
 def export_csv(process_type, df_list, state_dict, date_range, data_type, deg, deriv, drought_data, yearly_offset_diff):
     print("Creating export csv df")
     #build list of coeffs, dylans edit for poly bug
-    for i in range(0, deg+1):
-        coeff_cols.append(str("a_"+ str(i)))
+    for i in reversed(range(0, deg+1)):
+        coeff_cols.append(str("a"+ str(i)))
     
 
     if drought_data == True:
