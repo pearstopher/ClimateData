@@ -7,6 +7,7 @@ from ttkbootstrap import ttk as TTK
 from ttkbootstrap import font as tkfont
 from ttkbootstrap.constants import *
 from tkinter.filedialog import asksaveasfilename
+from tkinter.filedialog import askopenfilename          #Save State Code: used for import
 import psycopg2
 from database import *
 import plotting
@@ -21,6 +22,11 @@ from export_csv import export_csv
 import numpy as np
 import os
 from datetime import date
+import pickle       #Save State Code: pickle, used for import and export
+
+# lets adjust the maximum size from a convenient spot
+x_max = 4096
+y_max = 2160
 
 # Dictionaries
 degree_dict = {
@@ -123,7 +129,7 @@ class App(tk.Tk):
     #Logic for generating a tab
     def gen_tab(self):
         self.tab_counter += 1
-        tab = tk.Frame(self.container, width=1920, height=1080)
+        tab = tk.Frame(self.container, width=x_max, height=y_max)
         tab.grid_columnconfigure(0, weight=1)
         tab.grid_rowconfigure(0, weight=1)
         self.container.add(tab, text=f'Tab {self.tab_counter}')
@@ -157,15 +163,15 @@ class App(tk.Tk):
 
         tk.Tk.__init__(self, *args, **kwargs)
         self.title('Climate Data')
-        self.geometry('1920x1080')
-        # self.state('zoomed')  # you can add this to start maximized :)
+        self.geometry(str(x_max) + 'x' + str(y_max))
+        self.state('zoomed')  # start maximized
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
         tkboot.Style('darkly')
 
         self.app = QApplication([])
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
-        self.container = ttk.Notebook(self, width=1920, height=1080)  # the "notebook" needs to be assigned to fill the window
+        self.container = ttk.Notebook(self, width=x_max, height=y_max)  # the "notebook" needs to be assigned to fill the window
 
         self.container.grid(row=0, column=0)
         self.gen_tab()
@@ -233,6 +239,13 @@ class graphPage(tk.Frame):
         self.export_csv_df = None
         self.export_csv_button = None
         self.button_coeff = None
+
+#Save State Code
+        self.save_state_export_df = None
+        self.save_state_export_button = None
+        self.save_state_import_df = None
+        self.save_state_import_button = None
+#End of Save State Code
 
         # Yearly Offset Input Selection
         self.ent3 = None
@@ -374,6 +387,21 @@ class graphPage(tk.Frame):
                                                      'plots_per_graph' : len(df_list), 'names' : (remove_alaska(states) if data_type in state_data_types else counties),
                                                      'show_legend': not hide_legend, 'y_max': y_max, 'y_min': y_min})
 
+#Save State Code: capture the data needed to be saved into the df on enter data. Instead of saving plot_vars_map, save what is needed to build plot_vars_map
+            self.save_state_export_df = pd.DataFrame([{'plot_type':plot_type, 'df_list':df_list, 'process_type': process_type, 'double_plot_diff': double_plot_diff,
+                                                     'plot_points': plot_points, 'connected_curve': connected_curve,
+                                                     'begin_month': monthsIdx[begin_month], 'end_month': monthsIdx[end_month],
+                                                     'degree': polynomial_degree, 'deriv_degree': derivitive_degree,
+                                                     'plots_per_graph' : len(df_list), 'names' : (remove_alaska(states) if data_type in state_data_types else counties),
+                                                     'show_legend': not hide_legend, 'y_max': y_max, 'y_min': y_min}],
+                                                     columns = ('plot_type', 'df_list',
+                                                     'process_type', 'double_plot_diff',
+                                                     'plot_points', 'connected_curve',
+                                                     'begin_month', 'end_month',
+                                                     'degree', 'deriv_degree',
+                                                     'plots_per_graph', 'names',
+                                                     'show_legend', 'y_max', 'y_min'))
+#End of Save State Code
 
             image_graph = FigureCanvasTkAgg(fig, master=self.tab)  # try and attach to the right element here
             image_graph.draw()
@@ -399,15 +427,15 @@ class graphPage(tk.Frame):
                                                                             double_plot_diff <= 0 else double_plot_diff))
 
                 # Export CSV Button
-                self.export_csv_button = TTK.Button(self.tab, command=save_csv_file ,width="16", text="Export data to CSV", bootstyle="blue")
+                self.export_csv_button = TTK.Button(self.tab, command=save_csv_file, width="19", text="Export data to CSV", bootstyle="blue")
                 self.export_csv_button.grid(row=9, column=1, padx=(250,0), pady=(50, 0))
 
         def gen_plot_type(event=None):
             if event.widget.get() == 'Yearly Offset':
                 self.ent3 = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
-                self.ent3.grid(row=6, column=1, padx=(240,0), pady=(30,0))
+                self.ent3.grid(row=3, column=1, padx=(240,0), pady=(30,0))
                 self.year_offset = tk.Label(self.tab, font="10", text="Year Diff: ")
-                self.year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+                self.year_offset.grid(row=3, column=1, padx=(100, 0), pady=(30,0))
             else:
                 if self.ent3 is not None:
                     self.ent3.destroy()
@@ -533,7 +561,7 @@ class graphPage(tk.Frame):
 
 
         def widgets(frame):
-            self.tab = tk.Frame(frame, width=1920, height=1080)
+            self.tab = tk.Frame(frame, width=x_max, height=y_max)
             self.tab.grid_columnconfigure(0, weight=1, uniform="main_columns")  # need to set a uniform group to force equal width
             self.tab.grid_rowconfigure(0, weight=0)  # smush this one! might need it later tho
 
@@ -547,6 +575,8 @@ class graphPage(tk.Frame):
             self.tab.grid_rowconfigure(5, weight=1)
             self.tab.grid_rowconfigure(6, weight=1)
             self.tab.grid_rowconfigure(7, weight=1)
+            self.tab.grid_rowconfigure(8, weight=1)
+            self.tab.grid_rowconfigure(9, weight=1)
 
             # show where the graph will be even when it hasn't been generated yet
             self.empty_grid = tkboot.Label(self.tab, background="#181818")
@@ -678,21 +708,71 @@ class graphPage(tk.Frame):
             self.dropdown_graphs.grid(row=5, column=1,  padx=(0, 190),pady=(0,10))
             datatypeTip = Hovertip(self.dropdown_graphs, 'Select which type of weather data to graph')
 
-
             #Button for submitting all that the user has entered
             self.data_submit = tkboot.Button(
-                self.tab, 
+                self.tab,
                 command=on_enter_data,
-                width="25", 
-                text="Graph it!", 
+                width="25",
+                text="Graph it!",
                 bootstyle=DEFAULT
             )
             self.data_submit.grid(row=9, column=1, padx=(0,185), pady=(50,0))
-    
+
+#Save State Code
+            # Export Button
+            self.save_state_export_button = TTK.Button(self.tab, command=save_state_export ,width="25", text="Save State Export", bootstyle=DEFAULT)
+            self.save_state_export_button.grid(row=8, column=1, padx=(250,0), pady=(50, 0))
+
+            # Import Button
+            self.save_state_import_button = tkboot.Button(self.tab, command=save_state_import, width="25", text="Save State Import", bootstyle=DEFAULT)
+            self.save_state_import_button.grid(row=8, column=1, padx=(0,185), pady=(50,0))
+#End of Save State Code
+   
             # Generate Table Rows
             gen_table()
             return self.tab
 
+#Save State Code
+        # Code the Save State Export Button triggers
+        def save_state_export():
+            if self.save_state_export_df is not None:
+                file_name = asksaveasfilename()
+                # Its important to use binary mode
+                dbfile = open(file_name, 'ab')
+                # source, destination
+                pickle.dump(self.save_state_export_df, dbfile)                    
+                dbfile.close()
+
+        # Code the Save State Import Button triggers
+        def save_state_import():
+            file_name = askopenfilename()
+            dbfile = open(file_name, 'rb')
+            self.save_state_import_df = pickle.load(dbfile)
+           
+            plot_type = self.save_state_import_df.loc[0]['plot_type']
+            df_list = self.save_state_import_df.loc[0]['df_list']
+            plot_vars_map = {'process_type': self.save_state_import_df.loc[0]['process_type'],
+                             'double_plot_diff': self.save_state_import_df.loc[0]['double_plot_diff'],
+                             'plot_points': self.save_state_import_df.loc[0]['plot_points'],
+                             'connected_curve': self.save_state_import_df.loc[0]['connected_curve'],
+                             'begin_month': self.save_state_import_df.loc[0]['begin_month'],
+                             'end_month': self.save_state_import_df.loc[0]['end_month'],
+                             'degree': self.save_state_import_df.loc[0]['degree'],
+                             'deriv_degree': self.save_state_import_df.loc[0]['deriv_degree'],
+                             'plots_per_graph' : self.save_state_import_df.loc[0]['plots_per_graph'],
+                             'names' : self.save_state_import_df.loc[0]['names'],
+                             'show_legend': self.save_state_import_df.loc[0]['show_legend'],
+                             'y_max': self.save_state_import_df.loc[0]['y_max'],
+                             'y_min': self.save_state_import_df.loc[0]['y_min']}
+
+            dbfile.close()
+
+            #Proof of Concept Style Style, can't graph b/c of df_list
+            fig, x_data, y_data = plotting.plot(plot_type, df_list, plot_vars_map)
+            image_graph = FigureCanvasTkAgg(fig, master=self.tab)  # try and attach to the right element here
+            image_graph.draw()
+            image_graph.get_tk_widget().grid(row=2, column=0, sticky="nwes", rowspan=8, padx=(20,20), pady=(20,20))
+#End of Save State Code
                 
         # Exporting data to csv
         def save_csv_file():
@@ -701,7 +781,7 @@ class graphPage(tk.Frame):
                                               defaultextension='.csv')
                 self.export_csv_df.to_csv(file_name, sep=',', encoding='utf-8', index=False)
 
-        frame = ttk.Notebook(self, width=1920, height=1080)  # again its the notebook that needs to fill
+        frame = ttk.Notebook(self, width=x_max, height=y_max)  # again its the notebook that needs to fill
         frame.pack(fill='both', pady=10, expand=True)
         tabs = ["Notebook1", "Notebook2", "Notebook3", "Notebook4"]
         tab1 = widgets(frame)
