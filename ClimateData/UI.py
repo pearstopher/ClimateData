@@ -402,7 +402,13 @@ class graphPage(tk.Frame):
                                                      'degree', 'deriv_degree', 'plots_per_graph', 'names',
                                                      'show_legend', 'y_max', 'y_min', 'table_list' , 'equation',
                                                       'monthly_split', 'plot_dropdown','graph_type'))
-
+            
+            print(f'printing tempg_dict: {temp_dict}')
+            state_county_list = []
+            for state, counties in temp_dict.items():
+                for county in counties:
+                    state_county_list.append({"state": state, "county": county})
+            print(f'This is the df for state and county {state_county_list}')
 #End of Save State Code
 
             image_graph = FigureCanvasTkAgg(fig, master=self.tab)  # try and attach to the right element here
