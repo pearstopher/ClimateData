@@ -775,11 +775,81 @@ class graphPage(tk.Frame):
 #End of Save State Code
                 
         # Exporting data to csv
+
+        #function for calculating standard error
+        def get_standard_error(x_inputs, y_inputs):
+            #build polyfit input values for calc
+            y_mean = np.mean(y_inputs)
+            x_mean = np.mean(x_inputs)
+            n = len(y_inputs)
+            x_sum = 0
+            y_sum = 0
+            x_y_sum = 0     
+
+            for x in x_inputs:
+                x_sum += (x-x_mean)**2
+
+            for y in y_inputs:
+                y_sum += (y-y_mean)**2      
+
+            for x,y in zip(x_inputs,y_inputs):
+                x_y_sum += (x - x_mean) * (y - y_mean)
+
+            #use polyfit list to calc standard error  
+            stndrd_err = np.sqrt((1/(n-2)) * (y_sum - ((x_y_sum**2)/x_sum)))        
+
+            return stndrd_err 
+
         def save_csv_file():
             if self.export_csv_df is not None:
+                polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
+                print(polynomial_degree)
+                print(self.export_csv_df)
+                exportdf = self.export_csv_df
+                #grab the name of the type of data, located in the last column
+                dataName = self.export_csv_df.columns[-1]
+                steyxList = [''] * len(self.export_csv_df)
+                steyx11List = [''] * len(self.export_csv_df)
+                smoothedData = [''] * len(self.export_csv_df)
+                #grab the indecies of the counties
+                indecies = np.where(self.export_csv_df['County'] != '')[0].tolist()
+                #add on the end of the list to indecies to facilitate end on last loop
+                indecies.append(len(self.export_csv_df))
+                #this grabs a row based on numeric index
+                #print(self.export_csv_df.iloc[indecies[0]])
+
+                for i in range(1,len(indecies)):
+                    #define the slice of data were looking at
+                    start = indecies[i-1]
+                    end = indecies[i]
+
+                    #these years should be the same in each loop, but keeping this here just in case
+                    years = self.export_csv_df.Year.values[start:end].astype(int)
+                    #OKAY SO HERE'S THE DEAL, this fucntion was originally created with the assumption that the columns of the dataframe were in the following order:
+                    #State, County, Year, N number coefficients where N is the degree of the line, and ONE column of data, as the split months function can't export csv.
+                    #AT SOME POINT between February 28th 2023, and March 4th 2023, this behavior changed without me pulling any changes, and started including an EXTRA column of data AND I DON'T KNOW WHY
+                    #This data is labeled as February, which would be a great start for the split months data export, but this occors when not splitting months.
+                    #In any case, this fix *SHOULD* grab the correct coeffs assuming the first 3 columns and the polynomial_degree get don't start changing too
+                    coeffs = self.export_csv_df.iloc[start].to_numpy()[3:3+polynomial_degree+1]
+                    coeffs = coeffs.astype(float)
+                    yearcount = 0
+                    for j in range(start,end):
+                        smoothedData[j] = np.polyval(coeffs,int(years[yearcount]))
+                        yearcount+=1
+                    steyxList[start] = get_standard_error(years,smoothedData[start:end])
+                    yearcount = 5
+                    for k in range(start+5,end-5):
+                        steyx11List[k] = get_standard_error(years[yearcount-5:yearcount+6],smoothedData[k-5:k+6])
+                        yearcount += 1
+
+
+                exportdf['Smoothed Data'] = smoothedData
+                exportdf['STEYX'] = steyxList
+                exportdf['STEYX 11'] = steyx11List
+
                 file_name = asksaveasfilename(filetypes=[("CSV files", "*.csv")],
                                               defaultextension='.csv')
-                self.export_csv_df.to_csv(file_name, sep=',', encoding='utf-8', index=False)
+                exportdf.to_csv(file_name, sep=',', encoding='utf-8', index=False)
 
         frame = ttk.Notebook(self, width=x_max, height=y_max)  # again its the notebook that needs to fill
         frame.pack(fill='both', pady=10, expand=True)
