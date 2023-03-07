@@ -7,7 +7,7 @@ from ttkbootstrap import ttk as TTK
 from ttkbootstrap import font as tkfont
 from ttkbootstrap.constants import *
 from tkinter.filedialog import asksaveasfilename
-from tkinter.filedialog import askopenfilename          #Save State Code: used for import
+from tkinter.filedialog import askopenfilename, askopenfilenames          #Save State Code: used for import
 import psycopg2
 from database import *
 import plotting
@@ -23,6 +23,10 @@ import numpy as np
 import os
 from datetime import date
 import pickle       #Save State Code: pickle, used for import and export
+
+# lets adjust the maximum size from a convenient spot
+x_max = 4096
+y_max = 2160
 
 # Dictionaries
 degree_dict = {
@@ -125,7 +129,7 @@ class App(tk.Tk):
     #Logic for generating a tab
     def gen_tab(self):
         self.tab_counter += 1
-        tab = tk.Frame(self.container, width=1920, height=1080)
+        tab = tk.Frame(self.container, width=x_max, height=y_max)
         tab.grid_columnconfigure(0, weight=1)
         tab.grid_rowconfigure(0, weight=1)
         self.container.add(tab, text=f'Tab {self.tab_counter}')
@@ -159,15 +163,15 @@ class App(tk.Tk):
 
         tk.Tk.__init__(self, *args, **kwargs)
         self.title('Climate Data')
-        self.geometry('1920x1080')
-        # self.state('zoomed')  # you can add this to start maximized :)
+        self.geometry(str(x_max) + 'x' + str(y_max))
+        self.state('zoomed')  # start maximized
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
         tkboot.Style('darkly')
 
         self.app = QApplication([])
         self.title_font = tkfont.Font(family='Helvetica', size=18, weight="bold", slant="italic")
-        self.container = ttk.Notebook(self, width=1920, height=1080)  # the "notebook" needs to be assigned to fill the window
+        self.container = ttk.Notebook(self, width=x_max, height=y_max)  # the "notebook" needs to be assigned to fill the window
 
         self.container.grid(row=0, column=0)
         self.gen_tab()
@@ -443,7 +447,7 @@ class graphPage(tk.Frame):
                                                                             double_plot_diff <= 0 else double_plot_diff))
 
                 # Export CSV Button
-                self.export_csv_button = TTK.Button(self.tab, command=save_csv_file ,width="16", text="Export data to CSV", bootstyle="blue")
+                self.export_csv_button = TTK.Button(self.tab, command=save_csv_file, width="19", text="Export data to CSV", bootstyle="blue")
                 self.export_csv_button.grid(row=9, column=1, padx=(250,0), pady=(50, 0))
 
         # If Yearly offset is selected, imput box for Yearly Diff appears
@@ -467,9 +471,9 @@ class graphPage(tk.Frame):
             """
             if event.widget.get() == 'Yearly Offset':
                 self.ent3 = tkboot.Entry(self.tab, width="6", textvariable=event.widget.get())
-                self.ent3.grid(row=6, column=1, padx=(240,0), pady=(30,0))
+                self.ent3.grid(row=3, column=1, padx=(240,0), pady=(30,0))
                 self.year_offset = tk.Label(self.tab, font="10", text="Year Diff: ")
-                self.year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+                self.year_offset.grid(row=3, column=1, padx=(100, 0), pady=(30,0))
             else:
                 if self.ent3 is not None:
                     self.ent3.destroy()
@@ -580,7 +584,9 @@ class graphPage(tk.Frame):
             else:
                 county_name = event.widget.get()
                 state = self.dropdown_state.get()
-            if county_name in [ self.data_table.item(x)['values'][1] for x in self.data_table.get_children()]:
+            if (county_name, state) in [(self.data_table.item(x)['values'][1],
+                                         self.data_table.item(x)['values'][0])
+                                        for x in self.data_table.get_children()]:
                 return
             if state == 'All States':
                 data = get_all_counties_all_data()
@@ -598,7 +604,7 @@ class graphPage(tk.Frame):
 
 
         def widgets(frame):
-            self.tab = tk.Frame(frame, width=1920, height=1080)
+            self.tab = tk.Frame(frame, width=x_max, height=y_max)
             self.tab.grid_columnconfigure(0, weight=1, uniform="main_columns")  # need to set a uniform group to force equal width
             self.tab.grid_rowconfigure(0, weight=0)  # smush this one! might need it later tho
 
@@ -612,6 +618,8 @@ class graphPage(tk.Frame):
             self.tab.grid_rowconfigure(5, weight=1)
             self.tab.grid_rowconfigure(6, weight=1)
             self.tab.grid_rowconfigure(7, weight=1)
+            self.tab.grid_rowconfigure(8, weight=1)
+            self.tab.grid_rowconfigure(9, weight=1)
 
             # show where the graph will be even when it hasn't been generated yet
             self.empty_grid = tkboot.Label(self.tab, background="#181818")
@@ -911,8 +919,11 @@ class graphPage(tk.Frame):
 
         # Code the Table Export Button triggers
         def table_import():
-            file_name = askopenfilename()
-            self.table_import_df = pd.read_csv(file_name,  sep=',')
+            # allow user to open multiple files
+            file_names = askopenfilenames()
+            # loop through each file to make one big panda
+            self.table_import_df = pd.concat((pd.read_csv(f, sep=',') for f in file_names),
+                                             ignore_index=True)
 
             if self.table_import_df is not None:
                 for index in range(len(self.table_import_df.index)):
@@ -923,6 +934,11 @@ class graphPage(tk.Frame):
                     row = get_selected_counties_for_state(state, county)
                     # Insert the row back into state county table
                     for val in row:
+                        # copied (and improved) logic to prevent duplicate insertions
+                        if (county, state) in [(self.data_table.item(x)['values'][1],
+                                                self.data_table.item(x)['values'][0])
+                                               for x in self.data_table.get_children()]:
+                            return
                         self.data_table.insert(parent='', index='end', values=val)
                     
 #End of Save State Code
@@ -934,7 +950,7 @@ class graphPage(tk.Frame):
                                               defaultextension='.csv')
                 self.export_csv_df.to_csv(file_name, sep=',', encoding='utf-8', index=False)
 
-        frame = ttk.Notebook(self, width=1920, height=1080)  # again its the notebook that needs to fill
+        frame = ttk.Notebook(self, width=x_max, height=y_max)  # again its the notebook that needs to fill
         frame.pack(fill='both', pady=10, expand=True)
         tabs = ["Notebook1", "Notebook2", "Notebook3", "Notebook4"]
         tab1 = widgets(frame)
