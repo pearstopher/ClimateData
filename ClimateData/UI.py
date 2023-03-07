@@ -415,6 +415,8 @@ class graphPage(tk.Frame):
                 for county in counties:
                     state_county_list.append({"state": state, "county": county})
             print(f'This is the df for state and county {state_county_list}')
+            self.table_export_df = pd.DataFrame(state_county_list)
+
 #End of Save State Code
 
             image_graph = FigureCanvasTkAgg(fig, master=self.tab)  # try and attach to the right element here
@@ -899,11 +901,30 @@ class graphPage(tk.Frame):
         #3/6:
         # Code the Table Export Button triggers
         def table_export():
-            print("table export stub")
+            if self.table_export_df is not None:
+                file_name = asksaveasfilename(filetypes=[("text file", "*.txt")],
+                                        defaultextension='.txt')
+                print(f'THis is the filename: {file_name}')
+                self.table_export_df.to_csv(file_name, sep=',', index=False, header=['state', 'counties'])
+            else:
+                print("table export stub")
 
         # Code the Table Export Button triggers
         def table_import():
-            print("table import stub")
+            file_name = askopenfilename()
+            self.table_import_df = pd.read_csv(file_name,  sep=',')
+
+            if self.table_import_df is not None:
+                for index in range(len(self.table_import_df.index)):
+                    state = self.table_import_df['state'][index]
+                    county = self.table_import_df['counties'][index]
+
+                    # Grab the row of data for the table
+                    row = get_selected_counties_for_state(state, county)
+                    # Insert the row back into state county table
+                    for val in row:
+                        self.data_table.insert(parent='', index='end', values=val)
+                    
 #End of Save State Code
                 
         # Exporting data to csv
