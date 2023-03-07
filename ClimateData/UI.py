@@ -241,6 +241,12 @@ class graphPage(tk.Frame):
         self.save_state_export_button = None
         self.save_state_import_df = None
         self.save_state_import_button = None
+
+#3/6: txt and table import
+        self.table_export_df = None
+        self.table_export_button = None
+        self.table_import_df = None
+        self.table_import_button = None
 #End of Save State Code
 
         # Yearly Offset Input Selection
@@ -747,6 +753,15 @@ class graphPage(tk.Frame):
             # Import Button
             self.save_state_import_button = tkboot.Button(self.tab, command=save_state_import, width="25", text="Save State Import", bootstyle=DEFAULT)
             self.save_state_import_button.grid(row=8, column=1, padx=(0,185), pady=(50,0))
+
+            #3/6: Buttons
+            # Table Export Button
+            self.table_export_button = TTK.Button(self.tab, command=table_export ,width="25", text="Table Export (txt)", bootstyle=DEFAULT)
+            self.table_export_button.grid(row=7, column=1, padx=(250,0), pady=(50, 0))
+
+            # Table Import Button
+            self.table_import_button = tkboot.Button(self.tab, command=table_import, width="25", text="Table Import (txt)", bootstyle=DEFAULT)
+            self.table_import_button.grid(row=7, column=1, padx=(0,185), pady=(50,0))
 #End of Save State Code
    
             # Generate Table Rows
@@ -875,6 +890,14 @@ class graphPage(tk.Frame):
                 self.degree_label = tk.Label(self.tab, font="10", text="Degree: ")
                 self.degree_label.grid(row=4, column=1, padx=(100, 0), pady=(10,0))
 
+        #3/6:
+        # Code the Table Export Button triggers
+        def table_export():
+            print("table export stub")
+
+        # Code the Table Export Button triggers
+        def table_import():
+            print("table import stub")
 #End of Save State Code
                 
         # Exporting data to csv
