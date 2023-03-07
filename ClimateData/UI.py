@@ -584,7 +584,9 @@ class graphPage(tk.Frame):
             else:
                 county_name = event.widget.get()
                 state = self.dropdown_state.get()
-            if county_name in [ self.data_table.item(x)['values'][1] for x in self.data_table.get_children()]:
+            if (county_name, state) in [(self.data_table.item(x)['values'][1],
+                                         self.data_table.item(x)['values'][0])
+                                        for x in self.data_table.get_children()]:
                 return
             if state == 'All States':
                 data = get_all_counties_all_data()
@@ -932,9 +934,10 @@ class graphPage(tk.Frame):
                     row = get_selected_counties_for_state(state, county)
                     # Insert the row back into state county table
                     for val in row:
-                        # copied logic to prevent duplicate insertions
-                        if county in [self.data_table.item(x)['values'][1]
-                                      for x in self.data_table.get_children()]:
+                        # copied (and improved) logic to prevent duplicate insertions
+                        if (county, state) in [(self.data_table.item(x)['values'][1],
+                                                self.data_table.item(x)['values'][0])
+                                               for x in self.data_table.get_children()]:
                             return
                         self.data_table.insert(parent='', index='end', values=val)
                     
