@@ -7,7 +7,7 @@ from ttkbootstrap import ttk as TTK
 from ttkbootstrap import font as tkfont
 from ttkbootstrap.constants import *
 from tkinter.filedialog import asksaveasfilename
-from tkinter.filedialog import askopenfilename          #Save State Code: used for import
+from tkinter.filedialog import askopenfilename, askopenfilenames          #Save State Code: used for import
 import psycopg2
 from database import *
 import plotting
@@ -917,8 +917,11 @@ class graphPage(tk.Frame):
 
         # Code the Table Export Button triggers
         def table_import():
-            file_name = askopenfilename()
-            self.table_import_df = pd.read_csv(file_name,  sep=',')
+            # allow user to open multiple files
+            file_names = askopenfilenames()
+            # loop through each file to make one big panda
+            self.table_import_df = pd.concat((pd.read_csv(f, sep=',') for f in file_names),
+                                             ignore_index=True)
 
             if self.table_import_df is not None:
                 for index in range(len(self.table_import_df.index)):
@@ -929,6 +932,10 @@ class graphPage(tk.Frame):
                     row = get_selected_counties_for_state(state, county)
                     # Insert the row back into state county table
                     for val in row:
+                        # copied logic to prevent duplicate insertions
+                        if county in [self.data_table.item(x)['values'][1]
+                                      for x in self.data_table.get_children()]:
+                            return
                         self.data_table.insert(parent='', index='end', values=val)
                     
 #End of Save State Code
