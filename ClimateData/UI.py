@@ -938,7 +938,7 @@ class graphPage(tk.Frame):
                         if (county, state) in [(self.data_table.item(x)['values'][1],
                                                 self.data_table.item(x)['values'][0])
                                                for x in self.data_table.get_children()]:
-                            return
+                            continue
                         self.data_table.insert(parent='', index='end', values=val)
                     
 #End of Save State Code
