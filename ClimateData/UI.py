@@ -448,15 +448,15 @@ class graphPage(tk.Frame):
 
                 # Export CSV Button
                 self.export_csv_button = TTK.Button(self.tab, command=save_csv_file, width="19", text="Export data to CSV", bootstyle="blue")
-                self.export_csv_button.grid(row=9, column=1, padx=(250,0), pady=(50, 0))
+                self.export_csv_button.grid(row=9, column=1, padx=(250,0), pady=(0, 0))
 
         # If Yearly offset is selected, imput box for Yearly Diff appears
         def yearly_offset(plot_type):
             if plot_type == "Yearly Offset":     
                 self.ent3 = tkboot.Entry(self.tab, width="6", textvariable=plot_type)
-                self.ent3.grid(row=6, column=1, padx=(240,0), pady=(30,0))
+                self.ent3.grid(row=3, column=1, padx=(260,0), pady=(0,0))
                 self.year_offset = tk.Label(self.tab, font="10", text="Year Diff: ")
-                self.year_offset.grid(row=6, column=1, padx=(100, 0), pady=(30,0))
+                self.year_offset.grid(row=3, column=1, padx=(120, 0), pady=(0,0))
             else:
                 if self.ent3 is not None:
                     self.ent3.destroy()
