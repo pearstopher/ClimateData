@@ -759,25 +759,25 @@ class graphPage(tk.Frame):
                 text="Graph it!",
                 bootstyle=DEFAULT
             )
-            self.data_submit.grid(row=9, column=1, padx=(0,185), pady=(50,0))
+            self.data_submit.grid(row=9, column=1, padx=(0,185), pady=(0,0))
 
 #Save State Code
             # Export Button
             self.save_state_export_button = TTK.Button(self.tab, command=save_state_export ,width="25", text="Save State Export", bootstyle=DEFAULT)
-            self.save_state_export_button.grid(row=8, column=1, padx=(250,0), pady=(50, 0))
+            self.save_state_export_button.grid(row=8, column=1, padx=(250,0), pady=(0, 0))
 
             # Import Button
             self.save_state_import_button = tkboot.Button(self.tab, command=save_state_import, width="25", text="Save State Import", bootstyle=DEFAULT)
-            self.save_state_import_button.grid(row=8, column=1, padx=(0,185), pady=(50,0))
+            self.save_state_import_button.grid(row=8, column=1, padx=(0,185), pady=(0,0))
 
             #3/6: Buttons
             # Table Export Button
             self.table_export_button = TTK.Button(self.tab, command=table_export ,width="25", text="Table Export (txt)", bootstyle=DEFAULT)
-            self.table_export_button.grid(row=7, column=1, padx=(250,0), pady=(50, 0))
+            self.table_export_button.grid(row=7, column=1, padx=(250,0), pady=(0, 0))
 
             # Table Import Button
             self.table_import_button = tkboot.Button(self.tab, command=table_import, width="25", text="Table Import (txt)", bootstyle=DEFAULT)
-            self.table_import_button.grid(row=7, column=1, padx=(0,185), pady=(50,0))
+            self.table_import_button.grid(row=7, column=1, padx=(0,185), pady=(0,0))
 #End of Save State Code
    
             # Generate Table Rows
