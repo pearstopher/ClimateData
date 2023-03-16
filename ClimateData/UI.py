@@ -971,6 +971,11 @@ class graphPage(tk.Frame):
 
         def save_csv_file():
             if self.export_csv_df is not None:
+                file_name = asksaveasfilename(filetypes=[("CSV files", "*.csv")],
+                                              defaultextension='.csv')
+                orig_file_name = file_name[0:-4] + ".original" + file_name[-4:]
+                self.export_csv_df.to_csv(orig_file_name, sep=',', encoding='utf-8', index=False)
+
                 polynomial_degree = degree_dict[self.dropdown_equations.get()] if self.ent == None else int(self.ent.get())
                 print(polynomial_degree)
                 print(self.export_csv_df)
@@ -1016,8 +1021,6 @@ class graphPage(tk.Frame):
                 exportdf['STEYX'] = steyxList
                 exportdf['STEYX 11'] = steyx11List
 
-                file_name = asksaveasfilename(filetypes=[("CSV files", "*.csv")],
-                                              defaultextension='.csv')
                 exportdf.to_csv(file_name, sep=',', encoding='utf-8', index=False)
 
         frame = ttk.Notebook(self, width=x_max, height=y_max)  # again its the notebook that needs to fill
